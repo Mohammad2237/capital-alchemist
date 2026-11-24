@@ -54,5 +54,5 @@ excluded and labelled as such in the report.
 
 ## Credits
 
-Voices: Palestinian Arabic, generated offline with Sofelia-TTS-82M (Apache-2.0, a Kokoro-82M fine-tune) via `Tools/voices/make_voices_sofelia.py`; men use the same voice pitched down. Older MP3 voices (edge-tts, `make_voices.py`) remain as a fallback for browsers without Ogg. Models: KayKit by Kay Lousberg (CC0). Engine: three.js (MIT). Font: Amiri (SIL OFL). Project-made models,
+Voices: Palestinian Arabic, generated offline with Sofelia-TTS-82M (Apache-2.0, a Kokoro-82M fine-tune) via `Tools/voices/make_voices_sofelia.py`; men use the same voice re-voiced with the WORLD vocoder (lower pitch and deeper vocal tract). Older MP3 voices (edge-tts, `make_voices.py`) remain as a fallback for browsers without Ogg. Models: KayKit by Kay Lousberg (CC0). Engine: three.js (MIT). Font: Amiri (SIL OFL). Project-made models,
 sounds (synthesised) and code: the CAPITAL team. See `ASSET_LICENSES.md`.

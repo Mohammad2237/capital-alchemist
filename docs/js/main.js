@@ -68,7 +68,7 @@ let game;
     renderer.render(scene, camera);
   });
   window.__capital = game; // handy for automated checks
-  const BUILD = "إصدار r8"; game.ui.build = BUILD; const k = document.getElementById("keys"); k.textContent += "  •  " + BUILD;
+  const BUILD = "إصدار r9"; game.ui.build = BUILD; const k = document.getElementById("keys"); k.textContent += "  •  " + BUILD;
   const sm = new URLSearchParams(location.search).get("smoke");
   if (sm !== null) import("./smoke.js").then(m => m.runSmoke(game, +sm)).catch(e => { window.__smoke = { failed: 1, log: ["FAIL " + e.message] }; document.title = "SMOKE FAIL"; console.error(e); });
 })();
