@@ -14,7 +14,7 @@ export class UI {
     this.canvas = document.createElement("canvas"); this.canvas.width = 1024; this.canvas.height = 720;
     this.ctx = this.canvas.getContext("2d");
     this.tex = new THREE.CanvasTexture(this.canvas); this.tex.colorSpace = THREE.SRGBColorSpace;
-    this.panel = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.703), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: false }));
+    this.panel = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 0.879), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: false }));
     this.panel.renderOrder = 10; this.panel.visible = false; scene.add(this.panel);
     this.hits = []; this.dirty = true; this.following = true;
   }
@@ -76,7 +76,7 @@ export class UI {
     const to = this.panel.position.clone().sub(head); to.y = 0;
     if (to.angleTo(fwd) > 0.65 || to.length() > 2.4 || to.length() < 0.6) this.following = true;
     if (this.following) {
-      const target = head.clone().addScaledVector(fwd, 1.25); target.y = head.y - 0.25;
+      const target = head.clone().addScaledVector(fwd, 1.35); target.y = head.y - 0.2;
       this.panel.position.lerp(target, Math.min(1, dt * 3));
       this.panel.lookAt(head);
       if (this.panel.position.distanceTo(target) < 0.03) this.following = false;
@@ -86,35 +86,41 @@ export class UI {
   draw() {
     const c = this.ctx, W = 1024, H = 720, s = this.st; this.hits = [];
     c.clearRect(0, 0, W, H);
-    const panel = (x, y, w, h, fill, stroke) => { c.fillStyle = fill; c.strokeStyle = stroke; c.lineWidth = 4; c.beginPath(); c.roundRect(x, y, w, h, 14); c.fill(); c.stroke(); };
+    const panel = (x, y, w, h, fill, stroke) => { c.fillStyle = fill; c.strokeStyle = stroke; c.lineWidth = 5; c.beginPath(); c.roundRect(x, y, w, h, 16); c.fill(); c.stroke(); };
     c.direction = "rtl"; c.textBaseline = "middle"; c.textAlign = "center";
-    // top: step + purse
-    if (s.objective) { panel(140, 10, 744, 70, "rgba(20,27,23,.92)", "#8c6123"); c.fillStyle = "#f1dcae"; c.font = "36px Amiri"; c.fillText(s.objective, 512, 46); }
-    panel(10, 10, 120, 70, "rgba(20,27,23,.92)", "#8c6123"); c.fillStyle = "#ffcf7a"; c.font = "bold 38px Amiri"; c.fillText(String(s.cash), 70, 46);
-    if (s.toast) { c.fillStyle = "#ffcf7a"; c.font = "30px Amiri"; c.fillText(s.toast, 512, 110); }
-    if (s.progress) { c.fillStyle = "#ffcf7a"; c.font = "32px Amiri"; c.fillText(s.progress, 512, 150); }
+    // top: the one current step (big) + purse
+    if (s.objective) { panel(150, 6, 868, 92, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffe7b0"; c.font = "bold 50px Amiri"; c.fillText(fit(c, s.objective, 840), 584, 54); }
+    panel(6, 6, 136, 92, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffcf7a"; c.font = "bold 48px Amiri"; c.fillText(String(s.cash), 74, 54);
+    if (s.toast) { c.fillStyle = "#ffcf7a"; c.font = "bold 40px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(fit(c, s.toast, 980), 512, 126); c.fillText(fit(c, s.toast, 980), 512, 132); }
+    if (s.progress) { c.fillStyle = "#7dffc0"; c.font = "bold 42px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(s.progress, 512, 174); c.fillText(s.progress, 512, 174); }
     const box = s.talk || s.modal;
     if (box) {
-      const y0 = 190, h = 420;
-      panel(30, y0, 964, h, "#e8d4a6", "#73501c");
-      c.fillStyle = "#301e13";
-      if (s.talk) { c.font = "bold 30px Amiri"; c.fillStyle = "#22392f"; c.fillText(s.talk.speaker, 512, y0 + 36); c.fillStyle = "#301e13"; }
-      else { c.font = "bold 36px Amiri"; c.fillText(s.modal.title, 512, y0 + 38); }
-      c.font = "30px Amiri"; const lines = wrap(c, s.talk ? s.talk.line : s.modal.body, 880);
-      lines.slice(0, 6).forEach((l, i) => c.fillText(l, 512, y0 + 90 + i * 38));
-      this.drawButtons(box.choices, y0 + h - 100);
-    } else if (s.actions.length) this.drawButtons(s.actions, 520);
-    if (s.subtitle && !s.talk) { panel(40, 630, 944, 80, "rgba(20,27,23,.92)", "#8c6123"); c.fillStyle = "#f1dcae"; c.font = "28px Amiri"; c.fillText(wrap(c, s.subtitle, 900)[0], 512, 670); }
+      const y0 = 228, h = 484, btnY = y0 + h - 118;
+      panel(16, y0, 992, h, "#ecd9ab", "#73501c");
+      if (s.talk) { panel(352, y0 - 26, 320, 58, "#1f3a30", "#c2873a"); c.font = "bold 36px Amiri"; c.fillStyle = "#ffcf7a"; c.fillText(s.talk.speaker, 512, y0 + 3); }
+      else { c.font = "bold 44px Amiri"; c.fillStyle = "#301e13"; c.fillText(s.modal.title, 512, y0 + 46); }
+      c.fillStyle = "#301e13"; const big = !!s.talk; c.font = (big ? "bold 44px" : "32px") + " Amiri";
+      const lines = wrap(c, s.talk ? s.talk.line : s.modal.body, 940), step = big ? 58 : 42, top = y0 + (big ? 80 : 100);
+      lines.slice(0, big ? 5 : 7).forEach((l, i) => c.fillText(l, 512, top + i * step));
+      this.drawButtons(box.choices, btnY);
+    } else if (s.actions.length) this.drawButtons(s.actions, 470);
+    if (s.subtitle && !box) {
+      c.font = "bold 40px Amiri"; const lines = wrap(c, s.subtitle, 950).slice(0, 2), hh = 30 + lines.length * 52;
+      panel(10, H - hh - 6, 1004, hh, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffe7b0";
+      lines.forEach((l, i) => c.fillText(l, 512, H - hh - 6 + 41 + i * 52));
+    }
     this.tex.needsUpdate = true;
   }
   drawButtons(choices, y) {
-    const c = this.ctx, n = choices.length, gap = 16, w = Math.min(300, (920 - gap * (n - 1)) / n), total = n * w + (n - 1) * gap;
+    const c = this.ctx, n = choices.length, gap = 18, w = Math.min(380, (980 - gap * (n - 1)) / n), total = n * w + (n - 1) * gap;
     choices.forEach((ch, i) => {
-      const x = 512 + total / 2 - (i + 1) * w - i * gap; // RTL order
-      c.fillStyle = this.hover === ch ? "#3d6b5a" : "#1f3a30"; c.strokeStyle = "#c2873a"; c.lineWidth = 4;
-      c.beginPath(); c.roundRect(x, y, w, 80, 12); c.fill(); c.stroke();
-      c.fillStyle = "#f1dcae"; c.font = "28px Amiri"; c.fillText(ch.text, x + w / 2, y + 40);
-      this.hits.push({ x, y, w, h: 80, ch });
+      const x = 512 + total / 2 - (i + 1) * w - i * gap, hov = this.hover === ch; // RTL order
+      c.fillStyle = "rgba(0,0,0,.35)"; c.beginPath(); c.roundRect(x + 4, y + 8, w, 100, 16); c.fill();
+      const g = c.createLinearGradient(0, y, 0, y + 100); g.addColorStop(0, hov ? "#4f8f74" : "#2c5a48"); g.addColorStop(1, hov ? "#2f6b55" : "#183328");
+      c.fillStyle = g; c.strokeStyle = hov ? "#ffe08a" : "#c2873a"; c.lineWidth = hov ? 7 : 5;
+      c.beginPath(); c.roundRect(x, y, w, 100, 16); c.fill(); c.stroke();
+      c.fillStyle = "#fff1cf"; c.font = "bold 40px Amiri"; c.fillText(fit(c, ch.text, w - 24), x + w / 2, y + 52);
+      this.hits.push({ x, y, w, h: 100, ch });
     });
   }
   // Controller ray hit -> panel UV -> button.
@@ -139,6 +145,7 @@ export class UI {
   }
 }
 export const wait = ms => new Promise(r => setTimeout(r, ms));
+function fit(c, text, max) { let s = String(text); while (s.length > 4 && c.measureText(s).width > max) s = s.slice(0, -2); return s === String(text) ? s : s + "…"; }
 function wrap(c, text, max) {
   const out = []; for (const para of String(text).split("\n")) {
     let line = ""; for (const w of para.split(" ")) { const t = line ? line + " " + w : w; if (c.measureText(t).width > max && line) { out.push(line); line = w; } else line = t; }

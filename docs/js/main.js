@@ -25,7 +25,7 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 16), new THREE.Shad
   fragmentShader: "uniform vec3 top, mid, low; varying vec3 p; void main(){ float h = p.y; vec3 c = h > 0.0 ? mix(mid, top, pow(clamp(h*1.6,0.,1.),0.7)) : mix(mid, low, clamp(-h*4.,0.,1.)); gl_FragColor = vec4(c,1.0); }",
 }));
 scene.add(sky);
-scene.add(new THREE.HemisphereLight(0x8a7fa0, 0x3a2a1c, 0.9));
+refs.hemi = new THREE.HemisphereLight(0x8a7fa0, 0x3a2a1c, 0.9); scene.add(refs.hemi);
 const sun = new THREE.DirectionalLight(0xffb06b, 2.2);
 sun.position.set(-8, 7, -14); sun.target.position.set(0, 0, 5);
 sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);

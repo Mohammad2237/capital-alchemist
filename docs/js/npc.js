@@ -28,7 +28,7 @@ export class NPC extends Animated {
   async arrive(game) {
     if (this.arrived || this.walking) return; this.walking = true; this.holder.visible = true;
     await sleep(game.fast ? 50 : 900); game.fx.swingDoor(); await sleep(game.fast ? 50 : 800);
-    await this.walk([...L.customerPath.slice(1), this.spot], game);
+    this.game = game; await this.walk([...L.customerPath.slice(1), this.spot], game);
     await this.face(new THREE.Vector3(0, 0, 1)); // toward the counter (+Z into the shop)
     this.play("Idle"); this.walking = false; this.arrived = true;
   }
@@ -46,9 +46,10 @@ export class NPC extends Animated {
   react(happy) { this.whenArrived(() => this.play(happy ? "Cheer" : "Hit_A", 0.2, true)); }
   receive() { this.whenArrived(() => this.play("Interact", 0.2, true)); }
   whenArrived(f) { if (this.arrived) f(); else { const t = setInterval(() => { if (this.arrived) { clearInterval(t); f(); } }, 200); setTimeout(() => clearInterval(t), 8000); } }
-  update(dt, t, dialogue) {
+  update(dt, t, dialogue, eye, game) {
     this.mixer.update(dt);
     const h = this.holder;
+    if (this.path && this.path.length && game && !game.fast && (this.stepT = (this.stepT || 0) - dt) <= 0) { this.stepT = 0.42; const d = eye.distanceTo(h.position); if (d < 9) game.audio.play("step", 0.8 + Math.random() * 0.3, Math.min(0.8, 2.2 / (d + 0.5))); }
     if (this.path && this.path.length) {
       const target = this.path[0], d = target.clone().sub(h.position); d.y = 0;
       const step = this.speed * dt;
@@ -56,6 +57,10 @@ export class NPC extends Animated {
       else { h.position.addScaledVector(d.normalize(), step); turnToward(h, d, dt * 4); }
     } else if (this.faceDir) {
       if (turnToward(h, this.faceDir, dt * 4)) { this.faceDir = null; this.onFace && this.onFace(); }
+    } else if (this.arrived && eye) {
+      // Look at the player while standing at the counter (within a comfortable turn from the counter).
+      const d = eye.clone().sub(h.position); d.y = 0; const want = Math.atan2(d.x, d.z), lim = 1.2;
+      turnToward(h, new THREE.Vector3(Math.sin(THREE.MathUtils.clamp(want, -lim, lim)), 0, Math.cos(THREE.MathUtils.clamp(want, -lim, lim))), dt * 2.5);
     }
     if (this.arrived && dialogue.speaking && dialogue.speaker === this.speaker && t > this.gestureAt) {
       this.gestureAt = t + 2.4; this.play(this.gesture++ % 2 === 0 ? "Interact" : "Use_Item", 0.2, true);
@@ -98,10 +103,19 @@ export class Firas extends Animated {
     const e = this.appear * this.appear * (3 - 2 * this.appear), w = THREE.MathUtils.lerp(0.15, 1, THREE.MathUtils.clamp(e * 1.6 - 0.4, 0, 1));
     this.holder.scale.set(w, Math.max(0.001, e), w);
     // Smooth flight toward the active station.
-    const goal = this.appear >= 1 ? target : this.home;
+    const talking0 = game.dialogue.speaking && game.dialogue.speaker === "فراس";
+    let goal = this.appear >= 1 ? target : this.home;
+    if (this.appear >= 1 && talking0) {
+      const eye = game.camera.getWorldPosition(new THREE.Vector3()), f = new THREE.Vector3(); game.camera.getWorldDirection(f); f.y = 0; f.normalize();
+      const side = new THREE.Vector3(-f.z, 0, f.x);
+      const p = eye.clone().addScaledVector(f, 1.6).addScaledVector(side, 0.55); p.y = eye.y - L.firasHeight - 0.05;
+      if (L.isInside(eye)) { p.x = THREE.MathUtils.clamp(p.x, -4.0, 4.0); p.z = THREE.MathUtils.clamp(p.z, 1.2, 11.4); }
+      if (!this.talkGoal || this.talkGoal.distanceTo(p) > 0.9) this.talkGoal = p; goal = this.talkGoal;
+    } else this.talkGoal = null;
     const k = 1 - Math.exp(-dt * 2.2); const before = this.pos.clone();
     this.pos.lerp(goal, k); const speed = before.distanceTo(this.pos) / Math.max(dt, 1e-4);
     this.holder.position.copy(this.pos).add(new THREE.Vector3(0, Math.sin(t * 1.5) * 0.035, 0));
+    if (speed > 1.2 && !this.zoom) { this.zoom = true; game.audio.play("whoosh", 0.8, 0.35); } else if (speed < 0.3) this.zoom = false;
     if (speed > 0.25 && (this.trail -= dt) <= 0) { this.trail = 0.12; game.fx.sparkle(this.pos.clone().add(new THREE.Vector3(0, 0.5, 0)), 1); }
     // Face the player.
     const cam = new THREE.Vector3(); game.camera.getWorldPosition(cam); const d = cam.sub(this.holder.position); d.y = 0;

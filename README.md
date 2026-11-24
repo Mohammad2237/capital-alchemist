@@ -35,10 +35,10 @@ The earlier Unity version is preserved on the `unity-version` branch.
 | Desktop | Phone | VR headset |
 |---|---|---|
 | WASD walk (Shift run), right-mouse look | Left thumb joystick, drag to look | Left stick walk, right stick snap-turn / push forward to aim a teleport arc |
-| E or left-click: grab / drop / open door | Tap item to grab, tap a spot to drop | Grip: grab; move your hand to stir and crush |
+| E or left-click: grab / drop / open door | Tap item to grab, tap a spot to drop | Grip: grab; move your hand to stir and crush. Trigger at a far item: it flies to your hand; release while pointing at the cauldron/mortar/bottle ring/counter tray and it flies there |
 | F (hold): pour | «اضغط مطولًا للصب» button | Right trigger: pour; trigger on buttons and the door |
 | Q / «انتقل إلى المحطة»: station view | same button | same button: blink-teleport to the floor ring |
-| Tab: encyclopedia, R: restart | «الموسوعة» button | X: encyclopedia |
+| Tab: encyclopedia, R: restart | «الموسوعة» button | X: encyclopedia, B: reset eye height (auto when the floor is missing) |
 
 Each step has a framed point of view on desktop (above the cauldron while stirring, over the mortar, at the
 bottling stand, facing the customer). In VR the camera is never moved for you; a glowing floor ring shows where
@@ -53,5 +53,5 @@ excluded and labelled as such in the report.
 
 ## Credits
 
-Models: KayKit by Kay Lousberg (CC0). Engine: three.js (MIT). Font: Amiri (SIL OFL). Project-made models,
+Voices: Levantine-dialect neural voices generated with `Tools/voices/make_voices.py` (edge-tts) from `DIALOGUE.csv`. Models: KayKit by Kay Lousberg (CC0). Engine: three.js (MIT). Font: Amiri (SIL OFL). Project-made models,
 sounds (synthesised) and code: the CAPITAL team. See `ASSET_LICENSES.md`.

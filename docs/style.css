@@ -17,7 +17,7 @@ button { font-family: inherit; cursor: pointer; }
 #top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; align-items: flex-start; gap: 12px; pointer-events: none; }
 #top > * { pointer-events: auto; }
 #top .left { display: flex; flex-direction: column; gap: 8px; order: 3; }
-#step { flex: 1; max-width: 640px; margin: 0 auto; padding: 10px 18px; text-align: center; font-size: clamp(18px, 2.4vw, 30px);
+#step { flex: 1; max-width: 640px; margin: 0 auto; padding: 10px 18px; text-align: center; font-size: clamp(22px, 2.8vw, 36px); font-weight: 700;
   background: var(--panel); border: 2px solid #8c6123; border-radius: 10px; min-height: 1em; order: 2; }
 #step:empty { visibility: hidden; }
 #purse { order: 1; display: flex; align-items: center; gap: 10px; padding: 8px 16px; background: var(--panel); border: 2px solid #8c6123; border-radius: 10px; font-size: 34px; position: relative; direction: ltr; }
@@ -26,23 +26,23 @@ button { font-family: inherit; cursor: pointer; }
 #delta.show { opacity: 1; transform: translate(-50%, 18px); }
 button.ui, #top button, #talk button, #modal button, #actions button {
   background: linear-gradient(180deg, #2a4a3f, #1b3329); color: var(--paper); border: 2px solid var(--gold); border-radius: 10px;
-  padding: 8px 16px; font-size: clamp(16px, 1.8vw, 24px); box-shadow: 0 4px 10px rgba(0, 0, 0, .45); transition: transform .12s, filter .12s; }
+  padding: 10px 20px; font-size: clamp(19px, 2.1vw, 28px); box-shadow: 0 4px 10px rgba(0, 0, 0, .45); transition: transform .12s, filter .12s; }
 #top button:hover, #talk button:hover, #modal button:hover, #actions button:hover { transform: scale(1.05); filter: brightness(1.25); }
 #top button:active, #talk button:active, #modal button:active, #actions button:active { transform: scale(.96); filter: brightness(1.6) sepia(.4); }
-#toast { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); color: #ffcf7a; font-size: clamp(18px, 2vw, 28px); text-shadow: 0 2px 6px #000; transition: opacity .5s; pointer-events: none; text-align: center; }
+#toast { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); color: #ffcf7a; font-size: clamp(22px, 2.4vw, 32px); text-shadow: 0 2px 6px #000; transition: opacity .5s; pointer-events: none; text-align: center; }
 #progress { position: absolute; top: 58%; left: 50%; transform: translateX(-50%); color: #ffcf7a; font-size: 28px; text-shadow: 0 2px 6px #000; pointer-events: none; }
 #hint { position: absolute; top: 66%; left: 50%; transform: translateX(-50%); font-size: 22px; text-shadow: 0 2px 6px #000; pointer-events: none; text-align: center; }
 #talk { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); width: min(1100px, 92vw); background: #e8d4a6; color: var(--ink);
   border: 3px solid #73501c; border-radius: 12px; padding: 22px 22px 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, .6); }
 #talk .name { position: absolute; top: -22px; right: 24px; background: var(--green); color: #ffcf7a; border: 2px solid var(--gold); border-radius: 8px; padding: 2px 16px; font-size: 22px; }
-#talk .line { margin: 0 0 14px; font-size: clamp(20px, 2.2vw, 30px); }
+#talk .line { margin: 0 0 14px; font-size: clamp(24px, 2.7vw, 36px); font-weight: 700; }
 .choices { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-start; }
 .choices button { flex: 1 1 180px; min-height: 56px; }
 #modal { position: absolute; top: 90px; right: 16px; width: min(560px, 92vw); background: #e8d4a6; color: var(--ink); border: 3px solid #73501c; border-radius: 12px; padding: 18px 22px; box-shadow: 0 10px 30px rgba(0, 0, 0, .6); }
 #modal h3 { margin: 0 0 8px; font-size: 30px; } #modal .body { white-space: pre-line; font-size: 22px; line-height: 1.6; }
 #actions { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; }
 #subtitle { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: min(1000px, 90vw); text-align: center; padding: 12px 20px;
-  background: var(--panel); border: 2px solid #8c6123; border-radius: 10px; font-size: clamp(18px, 2vw, 28px); pointer-events: none; }
+  background: var(--panel); border: 2px solid #8c6123; border-radius: 10px; font-size: clamp(22px, 2.5vw, 34px); font-weight: 700; pointer-events: none; }
 #keys { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 18px; opacity: .7; direction: ltr; transition: opacity 2s; pointer-events: none; }
 #map { position: absolute; right: 16px; top: 120px; width: 300px; background: #e3cf9f; color: var(--ink); border: 3px solid #73501c; border-radius: 12px; padding: 10px; text-align: center; }
 #map canvas { width: 280px; height: 280px; } #map p { margin: 4px 0; font-size: 20px; } #map .small { font-size: 15px; }

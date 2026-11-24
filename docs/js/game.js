@@ -28,13 +28,15 @@ class Dialogue {
   async load() {
     const csv = await (await fetch("assets/DIALOGUE.csv")).text();
     for (const raw of csv.split("\n")) { const c = raw.trim().split(","); if (c.length !== 8 || c[0] === "id") continue; this.lines[c[0]] = { speaker: c[1], text: c[4], dur: parseFloat(c[6]) }; }
+    if (!this.g.fast) this.g.audio.preloadVoices(Object.keys(this.lines));
   }
-  say(...ids) { for (const id of ids) if (this.lines[id]) this.queue.push(id); }
+  say(...ids) { for (const id of ids) if (this.lines[id] && !this.queue.includes(id)) this.queue.push(id); }
   update(dt) {
-    if (this.speaking) { this.left -= dt; if (this.left <= 0) { this.speaking = false; this.speaker = ""; this.g.ui.subtitle(""); this.g.audio.setSpeaking(false); this.gap = 0.15; } return; }
+    if (this.speaking) { this.left -= dt; if (this.left <= 0) { this.speaking = false; this.speaker = ""; this.g.ui.subtitle(""); this.g.audio.setSpeaking(false); this.gap = 0.25; } return; }
     if ((this.gap -= dt) > 0 || !this.queue.length) return;
-    const l = this.lines[this.queue.shift()]; this.speaking = true; this.speaker = l.speaker; this.left = this.g.fast ? 0.05 : l.dur;
-    this.g.ui.subtitle(l.speaker + " — " + l.text); this.g.audio.setSpeaking(true);
+    const id = this.queue.shift(), l = this.lines[id]; this.speaking = true; this.speaker = l.speaker; this.left = this.g.fast ? 0.05 : l.dur;
+    this.g.ui.subtitle(l.speaker + ": " + l.text); this.g.audio.setSpeaking(true);
+    if (!this.g.fast) this.g.audio.speak(id).then(d => { if (d && this.speaker === l.speaker) this.left = Math.max(this.left - (l.dur - d - 0.3), 0.3); });
   }
 }
 
@@ -219,7 +221,7 @@ export class Game {
     if (!this.doorOpened) { this.doorOpened = true; this.fx.openDoor(); }
     const p = new THREE.Vector3(); this.camera.getWorldPosition(p);
     if (!L.isInside(p)) this.teleport(L.insideStart, L.insideYaw);
-    this.phase = P.Purchase; this.unlock(0); this.firas.show(this); this.dialogue.say("S1_F01", "S1_F02", "S1_F03"); this.refresh();
+    this.phase = P.Purchase; this.unlock(0); this.firas.show(this); this.dialogue.say("S1_F01", "S1_F03"); this.refresh();
   }
   purchase(i) {
     if (this.phase !== P.Purchase || !this.fin.purchaseFirst(i)) return;
@@ -260,7 +262,7 @@ export class Game {
       for (const t of [4, 5, 6]) this.unlock(t); this.dialogue.say(s.firstPrice === 30 ? "S2_FA" : "S2_FB");
     } else if (this.phase === P.BatchHandoff && this.fin.deliverBatchBottle(index)) {
       const reject = index === 2 && s.herb === Herb.UseWilted; this.merchant.react(!reject);
-      if (reject) { this.audio.play("reject"); this.dialogue.say("S3_M_REJECT", "S3_FA_SKIP", "S3_SPOIL"); } else this.fx.coinsTo(s.merchantPrice, L.handoff.clone().setY(1.14));
+      if (reject) { this.audio.play("reject"); this.dialogue.say("S3_M_REJECT", "S3_SPOIL"); } else this.fx.coinsTo(s.merchantPrice, L.handoff.clone().setY(1.14));
       if (s.inventoryValue === 0) { this.phase = P.Expenses; this.unlock(8); this.dialogue.say("S3_M_OK"); if (s.supplier === Supplier.Premium) this.dialogue.say("S3_FB"); this.dialogue.say("S3_OPEX"); }
     } else return false;
     this.refresh(); return true;
@@ -268,7 +270,7 @@ export class Game {
   revenueAnswer(ok) {
     if (this.phase !== P.RevenueQuiz) return; this.dialogue.say(ok ? "S2_Q_OK" : "S2_Q_NO");
     if (!ok && this.quizTries++ === 0) { this.ui.toast("حاول مرة أخرى: الإيراد قبل طرح التكاليف"); return; }
-    this.phase = P.Offer; this.dialogue.say(this.state.firstPrice === 30 ? "S2_MA" : "S2_MB", "S2_F03"); this.refresh();
+    this.phase = P.Offer; this.dialogue.say(this.state.firstPrice === 30 ? "S2_MA" : "S2_MB"); this.refresh();
   }
   buyBatch(sup) {
     if (this.phase !== P.Supplier || !this.fin.purchaseBatch(sup)) return;
@@ -297,7 +299,7 @@ export class Game {
     this.teleport(L.insideStart, L.insideYaw, true); this.fx.pile.forEach(c => this.scene.remove(c)); this.fx.pile = [];
     if (next === 1) {
       this.phase = P.Price; await new Item(this, "potion", "جرعة النشاط", 0).build(L.saleBottle); this.unlock(3);
-      this.marketLabel && (this.marketLabel.visible = true); this.customer.arrive(this); this.dialogue.say("S2_C01", "S2_F01", "S2_F02");
+      this.marketLabel && (this.marketLabel.visible = true); this.customer.arrive(this); this.dialogue.say("S2_C01", "S2_F02");
     } else {
       this.phase = P.Supplier; this.unlock(7); this.merchant.arrive(this); this.dialogue.say("S3_F01");
     }
@@ -316,7 +318,7 @@ export class Game {
   stir(turns, dir) {
     if (this.paused || !this.brew.readyToStir || this.brew.readyToBottle) return;
     if (this.map.stir(turns, dir)) { this.audio.play("crystal", 1.2, 0.7); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
-    this.brew.stir(turns); this.swirl = Math.min(3, (this.swirl || 0) + turns * 9);
+    this.brew.stir(turns); this.stirAcc = (this.stirAcc || 0) + turns; if (this.stirAcc > 0.22) { this.stirAcc = 0; this.audio.play("swish", 0.9 + Math.random() * 0.2, 0.7); } this.swirl = Math.min(3, (this.swirl || 0) + turns * 9);
     if (this.brew.readyToBottle) { this.audio.play("chime", 1.25); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
     this.brewObjective();
   }
@@ -376,13 +378,13 @@ export class Game {
     }
   }
   bounceHome(it) {
-    this.audio.play("splash", 1.5, 0.5); const from = it.pos.clone();
-    this.fx.add(new THREE.Object3D(), 0.6, k => { it.obj.position.lerpVectors(from, it.home, k).y += Math.sin(k * Math.PI) * 0.35; if (k >= 1) it.returnHome(); });
+    this.audio.play("whoosh", 1.4, 0.35); const from = it.pos.clone();
+    this.fx.add(new THREE.Object3D(), 0.6, k => { it.obj.position.lerpVectors(from, it.home, k).y += Math.sin(k * Math.PI) * 0.35; if (k >= 1) { it.returnHome(); this.audio.play("thud", 1.3, 0.4); } });
   }
 
   // ---------------------------------------------------------------- player movement + station camera
   teleport(pos, yaw, instant) {
-    const go = () => { this.rig.position.set(pos.x, 0, pos.z); if (this.inVR) { this.rig.rotation.y = yaw - (this.headYaw() - this.rig.rotation.y); } else { this.yaw = yaw; this.pitch = -0.05; this.focused = false; this.glide = 1; } };
+    const go = () => { this.rig.position.set(pos.x, this.inVR ? this.vrLift || 0 : 0, pos.z); if (!instant) this.audio.play("whoosh", 1.1, 0.5); if (this.inVR) { this.rig.rotation.y = yaw - (this.headYaw() - this.rig.rotation.y); } else { this.yaw = yaw; this.pitch = -0.05; this.focused = false; this.glide = 1; } };
     if (instant || !this.inVR) go(); else this.ui.fade(true, 120).then(() => { go(); this.ui.fade(false, 220); });
   }
   headYaw() { const q = new THREE.Quaternion(); this.camera.getWorldQuaternion(q); return new THREE.Euler().setFromQuaternion(q, "YXZ").y; }
@@ -458,7 +460,7 @@ export class Game {
   act() {
     if (this.paused || this.inVR) return; this.audio.start();
     if (this.held) { const it = this.held; this.held = null; it.held = false; this.tryDrop(it); return; }
-    if (this.hover && !this.hover.consumed && this.hover !== this.bottleIn) { this.held = this.hover; this.held.held = true; this.audio.play("chime", 0.9, 0.5); }
+    if (this.hover && !this.hover.consumed && this.hover !== this.bottleIn) { this.held = this.hover; this.held.held = true; this.audio.play("pop", 1, 0.8); }
     else if (this.hoverDoor) this.openShopDoor();
   }
   dropHeld(drop) { if (!this.held) return; const it = this.held; this.held = null; it.held = false; drop ? this.tryDrop(it) : it.returnHome(); }
@@ -487,12 +489,13 @@ export class Game {
       } catch (e) { console.error(e); say("تعذّر بدء الواقع الافتراضي: " + e.message); }
     };
     this.renderer.xr.addEventListener("sessionstart", () => {
-      this.inVR = true; this.dropHeld(false); this.focused = false;
+      this.inVR = true; this.dropHeld(false); this.focused = false; this.vrLift = 0; this.calibrateIn = 1.5; this.renderer.shadowMap.autoUpdate = false; this.renderer.shadowMap.needsUpdate = true; for (const n of this.npcs) n.holder.traverse(o => o.castShadow = false);
       const p = this.rig.position.clone(); this.camera.position.set(0, 0, 0); this.camera.quaternion.identity(); this.rig.position.copy(p); this.rig.rotation.y = this.yaw;
       btn.textContent = "اخرج من الواقع الافتراضي"; this.ui.dirty = true;
+      setTimeout(() => { this.ui.toast("وجّه الشعاع واضغط الزناد للإمساك من بعيد • B لضبط الطول"); this.ui.toastUntil = performance.now() + 7000; }, 1800);
       this.scene.add(this.vrFader);
     });
-    this.renderer.xr.addEventListener("sessionend", () => { this.inVR = false; this.yaw = this.rig.rotation.y; this.rig.rotation.y = 0; this.camera.position.set(0, 1.62, 0); btn.textContent = "ادخل الواقع الافتراضي 🥽"; });
+    this.renderer.xr.addEventListener("sessionend", () => { this.inVR = false; this.rig.position.y = 0; this.renderer.shadowMap.autoUpdate = true; this.yaw = this.rig.rotation.y; this.rig.rotation.y = 0; this.camera.position.set(0, 1.62, 0); btn.textContent = "ادخل الواقع الافتراضي 🥽"; });
     // Head-locked fader so fades/teleports cover the whole headset view.
     this.vrFader = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: 0, depthTest: false }));
     this.vrFader.renderOrder = 99; this.vrFader.position.z = -0.12; this.camera.add(this.vrFader); this.ui.vrFade = { target: 0 };
@@ -511,31 +514,42 @@ export class Game {
     this.arcMark = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.26, 32), new THREE.MeshBasicMaterial({ color: 0x4dffd0, side: THREE.DoubleSide })); this.arcMark.rotation.x = -Math.PI / 2; this.arcMark.visible = false; this.scene.add(this.arcMark);
   }
   updateVR(dt) {
+    if (this.calibrateIn > 0 && (this.calibrateIn -= dt) <= 0) this.calibrate(false);
+    if ((this.shadowT = (this.shadowT || 0) + dt) > 1.5) { this.shadowT = 0; this.renderer.shadowMap.needsUpdate = true; }
+    let vrHover = null;
     for (const h of this.hands) {
       const gp = h.source && h.source.gamepad; if (!gp) continue;
       const btn = k => !!(gp.buttons[k] && gp.buttons[k].pressed), down = k => btn(k) && !h.last[k];
       const trigger = btn(0), squeeze = btn(1), stick = new THREE.Vector2(gp.axes[2] || 0, gp.axes[3] || 0);
       const gripPos = h.grip.getWorldPosition(new THREE.Vector3());
-      // Laser ray: HUD buttons, the shop door.
+      // Laser ray: HUD buttons, the shop door, items far away (grab from afar), drop zones.
       const m = new THREE.Matrix4().extractRotation(h.ray.matrixWorld); this.ray.ray.origin.setFromMatrixPosition(h.ray.matrixWorld); this.ray.ray.direction.set(0, 0, -1).applyMatrix4(m); this.ray.far = 6;
-      const ui = this.ui.rayHit(this.ray); h.line.scale.z = ui ? this.ray.ray.origin.distanceTo(ui.point) : 3;
+      const ui = this.ui.rayHit(this.ray), far = !ui && !h.held ? this.rayItem(this.ray.ray) : null, zone = h.held ? this.rayZone(this.ray.ray) : null;
+      if (far) vrHover = vrHover || far;
+      h.line.scale.z = ui ? this.ray.ray.origin.distanceTo(ui.point) : far ? this.ray.ray.origin.distanceTo(far.pos) : zone ? this.ray.ray.origin.distanceTo(zone.at) : 3;
+      h.line.material.color.set(far || zone ? 0x6dffb0 : 0xffe0a0);
       if (down(0)) {
         if (ui && ui.button) this.ui.click(ui.button);
+        else if (far) this.vrGrab(h, far, true, gp);
         else if (this.phase === P.Intro && refs.door && this.ray.intersectObject(refs.door, true).length) this.openShopDoor();
       }
-      // Grab with the grip button: nearest item within reach of the hand.
+      // Grab with the grip button: nearest item within reach of the hand (or the one the ray points at).
       if (down(1) && !h.held) {
-        let best = null, bd = 0.18;
-        for (const it of this.items) if (!it.consumed && it.obj.visible && it !== this.bottleIn) { const gp2 = it.pos.clone().add(new THREE.Vector3(0, GRIP[it.kind] || 0.08, 0)), d = gp2.distanceTo(gripPos); if (d < bd) { bd = d; best = it; } }
-        if (best) { h.held = best; best.held = true; h.offset = GRIP[best.kind] || 0.08; gp.hapticActuators?.[0]?.pulse?.(0.3, 60); this.audio.play("chime", 0.9, 0.4); }
+        let best = null, bd = 0.2;
+        for (const it of this.items) if (!it.consumed && !it.flying && it.obj.visible && it !== this.bottleIn) { const gp2 = it.pos.clone().add(new THREE.Vector3(0, GRIP[it.kind] || 0.08, 0)), d = gp2.distanceTo(gripPos); if (d < bd) { bd = d; best = it; } }
+        if (best) this.vrGrab(h, best, false, gp); else if (far) this.vrGrab(h, far, false, gp);
       }
       if (h.held) {
         const it = h.held, q = h.grip.getWorldQuaternion(new THREE.Quaternion());
-        it.obj.quaternion.copy(q); it.obj.position.copy(gripPos).sub(new THREE.Vector3(0, h.offset, 0).applyQuaternion(q));
+        const target = gripPos.clone().sub(new THREE.Vector3(0, h.offset, 0).applyQuaternion(q));
+        h.fly = Math.min(1, (h.fly ?? 1) + dt / 0.28);
+        if (h.fly < 1) { it.obj.position.lerpVectors(h.flyFrom, target, h.fly * h.fly * (3 - 2 * h.fly)); it.obj.quaternion.slerp(q, h.fly); }
+        else { it.obj.quaternion.copy(q); it.obj.position.copy(target); }
         if (it.kind === "spoon") this.observeStir(it.pos); if (it.kind === "pestle") this.observePestle(it.pos);
-        if (!squeeze) { h.held = null; it.held = false; it.obj.quaternion.identity(); this.tryDrop(it); }
+        if (h.byTrigger ? !trigger : !squeeze) { h.held = null; it.held = false; it.obj.quaternion.identity(); this.vrRelease(it, zone, gripPos); }
       }
-      if (trigger && h.hand === "right" && this.bottleIn) this.pour(dt);
+      if (h.hand === "right" && down(5)) this.calibrate(true);
+      if (trigger && h.hand === "right" && this.bottleIn && !h.held) this.pour(dt);
       if (h.hand === "left" && down(4)) this.paused ? (this.paused = false, this.refresh()) : this.glossary(0);
       // Locomotion: left stick walks (head-relative), right stick snap-turns or aims a teleport arc.
       if (h.hand === "left" && stick.lengthSq() > 0.04 && !this.paused) {
@@ -544,13 +558,43 @@ export class Game {
       }
       if (h.hand === "right") {
         if (Math.abs(stick.x) > 0.75 && !h.turned && !h.aiming) { const head = this.camera.getWorldPosition(new THREE.Vector3()); this.rig.rotation.y -= Math.sign(stick.x) * Math.PI / 6;
-          const after = this.camera.getWorldPosition(new THREE.Vector3()); this.rig.position.add(head.sub(after)).setY(0); h.turned = true; }
+          const after = this.camera.getWorldPosition(new THREE.Vector3()); this.rig.position.add(head.sub(after)).setY(this.vrLift || 0); h.turned = true; }
         if (Math.abs(stick.x) < 0.3) h.turned = false;
         if (stick.y < -0.7) { h.aiming = true; this.aimArc(h.ray); } else if (h.aiming) { h.aiming = false; this.arc.visible = this.arcMark.visible = false; if (this.arcTarget) this.teleport(this.arcTarget, this.headYaw()); }
       }
       for (let k = 0; k < gp.buttons.length; k++) h.last[k] = btn(k);
     }
+    this.hover = vrHover;
     this.ui.vrFade && (this.vrFader.material.opacity += (this.ui.vrFade.target - this.vrFader.material.opacity) * Math.min(1, dt * 12));
+  }
+  // Eye height: if the headset reports a low (or missing) floor, lift the player to a standing eye height.
+  calibrate(force) {
+    const y = this.camera.position.y; if (!force && y > 1.25) return;
+    this.vrLift = THREE.MathUtils.clamp(1.6 - y, -0.6, 1.7); this.rig.position.y = this.vrLift;
+    if (force) { this.ui.toast("تم ضبط الطول"); this.audio.play("chime", 1.2, 0.6); }
+  }
+  rayItem(ray) {
+    let best = null, bd = 0.13;
+    for (const it of this.items) { if (it.consumed || it.flying || it.held || !it.obj.visible || it === this.bottleIn) continue;
+      const c = it.pos.clone().add(new THREE.Vector3(0, 0.07, 0)), far = c.distanceTo(ray.origin), d = ray.distanceToPoint(c) - far * 0.012;
+      if (far < 8 && d < bd) { bd = d; best = it; } }
+    return best;
+  }
+  rayZone(ray) {
+    const zones = [{ at: L.liquid.clone().setY(1.12), r: 0.65 }, { at: L.mortar.clone().setY(1.0), r: 0.3 }, { at: L.bottleSocket.clone().setY(1.05), r: 0.3 }, { at: L.handoff.clone().setY(1.1), r: 0.45 }];
+    return zones.find(z => ray.distanceToPoint(z.at) < z.r && ray.origin.distanceTo(z.at) < 8) || null;
+  }
+  vrGrab(h, it, byTrigger, gp) {
+    h.held = it; it.held = true; h.byTrigger = byTrigger; h.offset = GRIP[it.kind] || 0.08;
+    const near = it.pos.distanceTo(h.grip.getWorldPosition(new THREE.Vector3())) < 0.3; h.fly = near ? 1 : 0; h.flyFrom = it.pos.clone();
+    gp.hapticActuators?.[0]?.pulse?.(0.35, 60); this.audio.play(near ? "pop" : "whoosh", near ? 1 : 1.3, 0.7);
+  }
+  // Release: if the ray points at a station (cauldron, mortar, bottle ring, counter tray) the item flies there.
+  vrRelease(it, zone, handPos) {
+    if (!zone || handPos.distanceTo(zone.at) < 0.5) { this.tryDrop(it); return; }
+    const from = it.pos.clone(); it.flying = true; this.audio.play("whoosh", 1.2, 0.5);
+    this.fx.add(new THREE.Object3D(), 0.45, k => { it.obj.position.lerpVectors(from, zone.at, k * k * (3 - 2 * k)).y += Math.sin(k * Math.PI) * 0.4;
+      if (k >= 1 && it.flying) { it.flying = false; this.tryDrop(it); } });
   }
   aimArc(ctrl) {
     const pts = [], p = ctrl.getWorldPosition(new THREE.Vector3()), v = new THREE.Vector3(0, 0, -1).applyQuaternion(ctrl.getWorldQuaternion(new THREE.Quaternion())).multiplyScalar(6.5);
@@ -561,6 +605,15 @@ export class Game {
     this.arcMark.visible = !!this.arcTarget; if (this.arcTarget) this.arcMark.position.copy(this.arcTarget).setY(0.02);
   }
 
+  // Fewer lights on headsets/phones: the fire plus the 3 nearest lamps (constant count = no shader recompiles).
+  budgetLights() {
+    const all = refs.lights || [], low = this.inVR || this.touchUsed, max = low ? 4 : 99;
+    if (refs.hemi) refs.hemi.intensity = low ? 1.3 : 0.9;
+    if (all.length <= max) { all.forEach(l => l.visible = true); return; }
+    const eye = this.camera.getWorldPosition(new THREE.Vector3()), wp = l => l.getWorldPosition(new THREE.Vector3());
+    const sorted = all.slice().sort((a, b) => (b === refs.fire) - (a === refs.fire) || wp(a).distanceToSquared(eye) - wp(b).distanceToSquared(eye));
+    sorted.forEach((l, i) => l.visible = i < max);
+  }
   // ---------------------------------------------------------------- frame
   update(dt, t) {
     this.dialogue.update(dt);
@@ -598,9 +651,10 @@ export class Game {
     this.fx.tint = this.map.tint; this.fx.golden = this.map.inZone;
     if (refs.liquid) { const target = new THREE.Color(0x14261f).lerp(this.batch && this.state.supplier === Supplier.Premium ? new THREE.Color(0x29cc8c) : this.state.herb === Herb.UseWilted && this.batch ? new THREE.Color(0x47803f) : new THREE.Color(0x21ab6b), b.stirring);
       refs.liquid.material.color.lerp(target, Math.min(1, dt * 3)); refs.liquid.material.emissive.copy(refs.liquid.material.color); refs.liquid.position.y = L.liquid.y + Math.sin(t * 3) * 0.004; }
-    if (this.pourT > 0) { this.pourT -= dt; }
+    if (this.pourT > 0) { this.pourT -= dt; } this.audio.setPouring(this.pourT > 0);
+    if ((this.lightT = (this.lightT || 0) - dt) <= 0) { this.lightT = 0.4; this.budgetLights(); }
     this.fx.update(dt, t, this);
-    for (const n of this.npcs) n.update(dt, t, this.dialogue);
+    const eyeNow = this.camera.getWorldPosition(new THREE.Vector3()); for (const n of this.npcs) n.update(dt, t, this.dialogue, eyeNow, this);
     if (this.firas) this.firas.update(dt, t, this, (Stations[name] && name !== "ending" ? Stations[name].firas : L.firasSpot));
     this.ui.update(dt, this.state.cash, this.inVR);
     // Alchemy map panel (desktop/phone) while mixing or stirring.

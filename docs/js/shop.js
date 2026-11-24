@@ -12,12 +12,12 @@ let seed = 20261126;
 const R01 = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const pick = a => a[Math.floor(R01() * a.length)];
 
-export const refs = { flickers: [], flames: [], door: null, liquid: null, root: null };
+export const refs = { flickers: [], flames: [], lights: [], fire: null, hemi: null, door: null, liquid: null, root: null };
 let root;
 // Unity-coordinate placement helper: P(url, x, y, z, unityYaw, opts)
 const P = (url, x, y, z, yaw = 0, o = {}) => place(o.parent || root, url, U(x, y, z), { ...o, yaw: -yaw });
 function light(x, y, z, color, intensity, range, flicker) {
-  const l = new THREE.PointLight(color, intensity, range, 1.6); l.position.copy(U(x, y, z)); root.add(l);
+  const l = new THREE.PointLight(color, intensity, range, 1.6); l.position.copy(U(x, y, z)); root.add(l); refs.lights.push(l);
   if (flicker) refs.flickers.push({ l, base: intensity, seed: x * 13 + z * 7 });
   return l;
 }
@@ -112,7 +112,7 @@ export async function buildShop(scene) {
     f.scale.set(0.16, 0.38, 0.16); f.position.set(c.x + Math.cos(a) * 0.32, 0.18 + (i % 2) * 0.06, c.z + Math.sin(a) * 0.32);
     root.add(f); refs.flames.push({ m: f, base: f.scale.clone(), seed: i });
   }
-  light(0, 0.45, 6.2, 0xff7326, 14, 10, true);
+  refs.fire = light(0, 0.45, 6.2, 0xff7326, 14, 10, true);
   J(P(D("barrel_small"), 1.05, 0.02, 5.25, 0, { height: 0.6 }));
   J(P(D("stool"), -1.15, 0, 7.2, 30, { height: 0.5, collider: true }));
 
