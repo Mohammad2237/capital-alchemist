@@ -21,9 +21,10 @@ namespace Capital
         }
         public bool Accept(IngredientInteraction item)
         {
-            if(GameManager.I.InteractionPaused || !brew.Progress.Add(item.Kind)){UIManager.I.Toast("تحقق من الوصفة أولًا");return false;}
+            if(GameManager.I.InteractionPaused || !brew.Progress.Add(item.Kind)){UIManager.I.Toast(brew.Progress.ReadyToStir?"المرجل ممتلئ — حرّك الآن":"ليس الآن");return false;}
             Color burst=item.Kind=="crystal"?new Color(.3f,.55f,1f):item.Kind=="water"?new Color(.4f,.85f,1f):new Color(.85f,.25f,.12f);
             ShopFx.I?.Bits(ShopLayout.Liquid+Vector3.up*.05f,burst,9);ShopFx.I?.Sparkle(ShopLayout.Liquid+Vector3.up*.1f,8);
+            BrewMap.I?.AddIngredient(item.Kind);
             item.Consume();AudioManager.I.Play(Sfx.Splash,Random.Range(.9f,1.1f));brew.UpdateObjective();return true;
         }
         public void Observe(Vector3 position,bool held)
@@ -34,13 +35,16 @@ namespace Capital
             float angle=Mathf.Atan2(d.z,d.x)*Mathf.Rad2Deg;
             if(lastAngle.HasValue)
             {
-                float delta=Mathf.Abs(Mathf.DeltaAngle(lastAngle.Value,angle));
-                if(delta<60) Stir(delta/360);
+                float signed=Mathf.DeltaAngle(lastAngle.Value,angle),delta=Mathf.Abs(signed);
+                // Seen from above, a falling angle is clockwise: the map marker curves right.
+                if(delta<60) Stir(delta/360,signed<0?1:-1);
             }
             lastAngle=angle;
         }
-        public void Stir(float turns)
+        public void Stir(float turns)=>Stir(turns,0);
+        public void Stir(float turns,int dir)
         {
+            if(!GameManager.I.InteractionPaused && brew.Progress.ReadyToStir && !brew.Progress.ReadyToBottle)BrewMap.I?.Stir(turns,dir);
             if(GameManager.I.InteractionPaused || brew.Progress.ReadyToBottle)return;
             brew.Progress.Stir(turns);brew.UpdateObjective();swirlEnergy=Mathf.Min(3,swirlEnergy+turns*9);
             if(brew.Progress.ReadyToBottle){AudioManager.I.Cue(1.25f);ShopFx.I?.Sparkle(transform.position+Vector3.up*.2f,14);}

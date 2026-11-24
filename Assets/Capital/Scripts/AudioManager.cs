@@ -11,6 +11,7 @@ namespace Capital
         public static AudioManager I;
         AudioSource effects, ambience, bubbles;
         readonly Dictionary<Sfx,AudioClip> clips=new Dictionary<Sfx,AudioClip>();
+        readonly Dictionary<Sfx,float> lastPlayed=new Dictionary<Sfx,float>();
         const int Rate=44100;
 
         void Awake()
@@ -27,10 +28,11 @@ namespace Capital
             for(int i=0;i<a.Length;i++)
             {
                 low=Mathf.Lerp(low,(float)rng.NextDouble()*2-1,.05f);
-                if(rng.NextDouble()<.0004)crackle=.5f; crackle*=.993f;
-                a[i]=low*.09f+crackle*((float)rng.NextDouble()*2-1)*.25f;
+                if(rng.NextDouble()<.00025)crackle=.25f; crackle*=.996f;
+                a[i]=low*.06f+crackle*Mathf.Sin(i*.9f)*.12f;
             }
-            fire.SetData(a,0); ambience.clip=fire; ambience.loop=true; ambience.volume=.2f; ambience.Play();
+            fire.SetData(a,0); ambience.clip=fire; ambience.loop=true; ambience.volume=.12f; ambience.Play();
+            effects.volume=.75f;
         }
 
         public void Cue(float pitch=1) { effects.pitch=pitch; effects.PlayOneShot(clips[Sfx.Chime]); }
@@ -38,6 +40,9 @@ namespace Capital
         public void Play(Sfx s,float pitch=1,float volume=1)
         {
             if(!clips.TryGetValue(s,out var c))return;
+            // The same sound never stacks within a few frames (no harsh doubled hits).
+            if(lastPlayed.TryGetValue(s,out float when) && Time.unscaledTime-when<.06f)return;
+            lastPlayed[s]=Time.unscaledTime;
             effects.pitch=pitch; effects.PlayOneShot(c,volume);
         }
 
@@ -50,13 +55,13 @@ namespace Capital
                 bubbles.clip=BubbleLoop();bubbles.loop=true;bubbles.spatialBlend=1;bubbles.minDistance=.6f;bubbles.maxDistance=6;bubbles.volume=0;bubbles.Play();
             }
             bubbles.transform.position=at;
-            bubbles.volume=Mathf.Lerp(bubbles.volume,Mathf.Clamp01(intensity)*.55f,Time.deltaTime*3);
+            bubbles.volume=Mathf.Lerp(bubbles.volume,Mathf.Clamp01(intensity)*.32f,Time.deltaTime*3);
         }
 
         void Update()
         {
             bool speaking=DialogueManager.I && DialogueManager.I.Speaking;
-            ambience.volume=Mathf.Lerp(ambience.volume,speaking ? .07f:.2f,Time.deltaTime*4);
+            ambience.volume=Mathf.Lerp(ambience.volume,speaking ? .05f:.12f,Time.deltaTime*4);
         }
 
         static AudioClip Make(string name,float seconds,System.Func<float,int,float> f)

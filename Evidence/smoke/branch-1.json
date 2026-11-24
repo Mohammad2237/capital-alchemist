@@ -99,6 +99,16 @@
             "inventory": 0
         },
         {
+            "id": "craft-batch-2",
+            "kind": "craft",
+            "cash": 0,
+            "revenue": 0,
+            "cogs": 0,
+            "spoilage": 0,
+            "opex": 0,
+            "inventory": 0
+        },
+        {
             "id": "craft-batch-1",
             "kind": "craft",
             "cash": 0,
@@ -110,16 +120,6 @@
         },
         {
             "id": "craft-batch-0",
-            "kind": "craft",
-            "cash": 0,
-            "revenue": 0,
-            "cogs": 0,
-            "spoilage": 0,
-            "opex": 0,
-            "inventory": 0
-        },
-        {
-            "id": "craft-batch-2",
             "kind": "craft",
             "cash": 0,
             "revenue": 0,

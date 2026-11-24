@@ -18,7 +18,7 @@ namespace Capital
         GameObject wilt;
         public void Begin(bool batch)
         {
-            Batch=batch;Progress=new RecipeProgress();Filled=0;
+            Batch=batch;Progress=new RecipeProgress();Filled=0;BrewMap.I?.ResetMap();
             if(wilt)Destroy(wilt);
             Mortar=NewAt<MortarController>("Mortar interaction",MortarPosition);Mortar.Initialize(this);
             Cauldron=NewAt<CauldronController>("Cauldron interaction",CauldronPosition);Cauldron.Initialize(this);
@@ -51,7 +51,7 @@ namespace Capital
             if(!UIManager.I || GameDirector.I.Phase!=Phase.Brew && GameDirector.I.Phase!=Phase.BatchBrew)return;
             string title=Batch?"حضّر الطلبية دفعة واحدة":"اصنع جرعة النشاط";
             string task=!Progress.herbInMortar?"ضع العشبة في الهاون":!Progress.crushed?"اسحق العشبة بالمدقة":!Progress.ReadyToStir?"أضف المسحوق والبلورة والماء إلى المرجل":!Progress.ReadyToBottle?"حرّك المجداف دائريًا داخل المرجل":Bottler.Current?"أمل القارورة للتعبئة: اضغط F مطولًا":"ضع قارورة فارغة في حلقة التعبئة";
-            UIManager.I.Objective(title+"\n"+task);
+            UIManager.I.Objective(task);
             UIManager.I.Progress(!Progress.crushed && Progress.herbInMortar?"السحق: "+Progress.strokes+" / 5":Progress.ReadyToStir&&!Progress.ReadyToBottle?"المزج: "+Mathf.RoundToInt(Progress.stirring*100)+"%":Progress.ReadyToBottle?"القوارير: "+Filled+" / "+(Batch?3:1):"");
             if(Progress.herbInMortar&&!Progress.crushed)UIManager.I.Actions(new Choice("مساعدة الحركة: ضربة سحق",()=>Mortar.Stroke()));
             else if(Progress.ReadyToStir&&!Progress.ReadyToBottle)UIManager.I.Actions(new Choice("مساعدة الحركة: دورة تحريك",()=>Cauldron.Stir(.25f)));

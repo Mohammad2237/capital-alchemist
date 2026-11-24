@@ -106,7 +106,22 @@ def torus(name, R, r, loc, material, seg=20, rot=(0, 0, 0)):
     o = obj_from_bm(name, bm, material); o.location = loc; o.rotation_euler = rot
     return o
 
+INK = lambda: mat("Ink", (0.06, 0.035, 0.02), 0, 1.0)
+OUTLINE = {"cauldron_big": 0.012, "fire_pit": 0.0, "shop_door": 0.0, "entrance_wall": 0.0, "sales_counter": 0.006,
+           "parchment_board": 0.0, "hanging_herbs_green": 0.0, "hanging_herbs_lavender": 0.0, "shop_sign": 0.006}
+
+def ink(o, thickness):
+    """Inverted-hull outline: a slightly larger shell, normals flipped, dark ink material."""
+    if thickness <= 0 or o.type != 'MESH': return
+    o.data.materials.append(INK())
+    m = o.modifiers.new("Ink", 'SOLIDIFY')
+    m.thickness = thickness; m.offset = 1.0; m.use_flip_normals = True; m.use_rim = False
+    m.material_offset = len(o.data.materials) - 1
+
 def export(name):
+    t = OUTLINE.get(name, 0.0035)
+    for o in list(bpy.context.scene.objects):
+        if not any(s in o.name for s in ("Water", "Glow", "Ember")): ink(o, t)
     for o in bpy.context.scene.objects: o.select_set(True)
     path = os.path.join(OUT, name + ".fbx")
     bpy.ops.export_scene.fbx(filepath=path, use_selection=True, apply_scale_options='FBX_SCALE_UNITS',
@@ -114,16 +129,27 @@ def export(name):
                              mesh_smooth_type='FACE', use_mesh_modifiers=True)
     print("EXPORTED", path)
 
-# ---------------- big cauldron (rim 0.95 m high, 1.3 m across) ----------------
+# ---------------- big cauldron (rim 0.95 m high, 1.3 m across), ornate ----------------
 reset()
-lathe("CauldronBody", [(0.18, 0.28), (0.45, 0.32), (0.64, 0.45), (0.72, 0.6), (0.7, 0.75), (0.62, 0.88), (0.6, 0.95), (0.54, 0.95), (0.56, 0.86)], IRON(), 24)
-torus("CauldronRim", 0.6, 0.045, (0, 0, 0.955), IRON(), 28)
+lathe("CauldronBody", [(0.18, 0.28), (0.45, 0.32), (0.64, 0.45), (0.72, 0.6), (0.7, 0.75), (0.62, 0.88), (0.6, 0.95), (0.54, 0.95), (0.56, 0.86)], IRON(), 32)
+torus("CauldronRim", 0.6, 0.05, (0, 0, 0.955), BRASS(), 32)
+torus("RuneBand", 0.715, 0.03, (0, 0, 0.66), BRASS(), 32)
+torus("LowerBand", 0.6, 0.02, (0, 0, 0.42), BRASS(), 28)
+for i in range(8):
+    a = i * 2 * math.pi / 8
+    # Medallions: brass rings with a teal gem, set into the belly.
+    md = torus("Medallion%d" % i, 0.07, 0.014, (math.cos(a) * 0.735, math.sin(a) * 0.735, 0.585), BRASS(), 14, (0, math.radians(90), a))
+    gem = ico("Gem%d Glow" % i, 0.035, (math.cos(a) * 0.745, math.sin(a) * 0.745, 0.585), TEAL(), (1, 1, 1), 1)
+for i in range(16):
+    a = i * 2 * math.pi / 16
+    ico("Rivet%d" % i, 0.018, (math.cos(a) * 0.655, math.sin(a) * 0.655, 0.93), BRASS(), (1, 1, 0.7), 1)
 for i in range(3):
-    a = i * 2 * math.pi / 3
-    leg = box("Leg%d" % i, (0.09, 0.09, 0.36), (math.cos(a) * 0.4, math.sin(a) * 0.4, 0.17), IRON(), (0, math.radians(14) * (1 if i % 2 else -1), a))
-for s in (-1, 1):
-    torus("Handle%d" % s, 0.12, 0.02, (s * 0.75, 0, 0.78), IRON(), 14, (math.radians(90), 0, 0))
-    box("Lug%d" % s, (0.1, 0.08, 0.08), (s * 0.69, 0, 0.84), IRON())
+    a = i * 2 * math.pi / 3 + math.pi / 6
+    box("Leg%d" % i, (0.1, 0.1, 0.34), (math.cos(a) * 0.42, math.sin(a) * 0.42, 0.19), IRON(), (0, 0, a))
+    ico("Claw%d" % i, 0.085, (math.cos(a) * 0.47, math.sin(a) * 0.47, 0.04), IRON(), (1.4, 1.0, 0.6), 1).rotation_euler = (0, 0, a)
+for s_ in (-1, 1):
+    torus("Handle%d" % s_, 0.14, 0.026, (s_ * 0.78, 0, 0.78), BRASS(), 16, (math.radians(90), 0, 0))
+    box("Lug%d" % s_, (0.12, 0.1, 0.1), (s_ * 0.7, 0, 0.84), IRON())
 export("cauldron_big")
 
 # ---------------- fire pit ----------------
@@ -138,7 +164,8 @@ export("fire_pit")
 
 # ---------------- mortar + pestle ----------------
 reset()
-lathe("Mortar", [(0.12, 0.0), (0.16, 0.03), (0.17, 0.11), (0.15, 0.15), (0.12, 0.15), (0.09, 0.07), (0.0, 0.06)], STONE(), 14)
+lathe("Mortar", [(0.12, 0.0), (0.16, 0.03), (0.17, 0.11), (0.15, 0.15), (0.12, 0.15), (0.09, 0.07), (0.0, 0.06)], STONE(), 18)
+torus("MortarBand", 0.168, 0.01, (0, 0, 0.09), BRASS(), 24)
 export("mortar")
 reset()
 lathe("Pestle", [(0.0, 0.0), (0.04, 0.012), (0.045, 0.04), (0.026, 0.09), (0.022, 0.25), (0.028, 0.27), (0.0, 0.285)], STONE(), 10)
@@ -151,29 +178,44 @@ box("Blade", (0.12, 0.025, 0.26), (0, 0, 0.13), WOOD())
 ico("Knob", 0.035, (0, 0, 1.1), DARKWOOD())
 export("stir_paddle")
 
-# ---------------- ingredients ----------------
+# ---------------- ingredients (hand-crafted, storybook look) ----------------
+PETAL = lambda: mat("HerbPetal", (0.78, 0.13, 0.12))
+PETAL2 = lambda: mat("HerbPetalDeep", (0.55, 0.06, 0.1))
+POLLEN = lambda: mat("Pollen", (0.98, 0.78, 0.25), 0, 0.6, emit=(0.6, 0.4, 0.05))
+LEAFG = lambda: mat("HerbLeaf", (0.24, 0.48, 0.16))
 reset()
-cyl("Stem", 0.008, 0.2, (0, 0, 0.1), STEM(), 6)
-for i in range(7):
-    l = ico("Leaf%d" % i, 0.05, (0.03 * (1 if i % 2 else -1), 0, 0.05 + i * 0.022), LEAF(), (1.5, 0.4, 0.7), 1)
-    l.rotation_euler = (0, math.radians(30 if i % 2 else -30), i * 0.9)
+cyl("Stem", 0.008, 0.18, (0, 0, 0.09), STEM(), 6)
+for i in range(4):
+    lf = ico("Leaf%d" % i, 0.045, (0.035 * math.cos(i * 1.6), 0.035 * math.sin(i * 1.6), 0.04 + i * 0.025), LEAFG(), (1.8, 0.45, 0.25), 1)
+    lf.rotation_euler = (0, math.radians(-25), i * 1.6)
+for ring, (r, n, matf, tilt) in enumerate([(0.045, 7, PETAL2, 55), (0.032, 6, PETAL, 35)]):
+    for i in range(n):
+        a = i * 2 * math.pi / n + ring * 0.4
+        pe = ico("Petal%d_%d" % (ring, i), 0.03, (math.cos(a) * r, math.sin(a) * r, 0.2 + ring * 0.012), matf(), (1.6, 0.8, 0.35), 1)
+        pe.rotation_euler = (0, math.radians(-tilt), a)
+ico("Pollen Glow", 0.018, (0, 0, 0.215), POLLEN(), (1, 1, 0.7), 1)
 export("herb_red")
 reset()
-for i, (x, y, h, t) in enumerate([(0, 0, 0.14, 0), (0.035, 0.02, 0.1, 0.35), (-0.03, 0.025, 0.09, -0.3), (0.01, -0.035, 0.08, 0.25)]):
-    bm = bmesh.new(); bmesh.ops.create_cone(bm, cap_ends=True, segments=6, radius1=0.022, radius2=0.022, depth=h)
+for i, (x, y, h, tx, ty) in enumerate([(0, 0, 0.16, 0, 0), (0.04, 0.02, 0.11, 0.35, 0.1), (-0.035, 0.03, 0.1, -0.3, 0.2),
+                                       (0.012, -0.04, 0.09, 0.15, -0.35), (-0.03, -0.025, 0.07, -0.25, -0.3), (0.045, -0.02, 0.06, 0.45, -0.2)]):
+    bm = bmesh.new(); bmesh.ops.create_cone(bm, cap_ends=True, segments=6, radius1=0.02 + h * 0.08, radius2=0.02 + h * 0.08, depth=h)
     tip = [v for v in bm.verts if v.co.z > 0]
-    for v in tip: v.co.z += 0.018
-    bmesh.ops.pointmerge(bm, verts=tip, merge_co=Vector((0, 0, h / 2 + 0.025)))
-    o = obj_from_bm("Shard%d" % i, bm, CRYSTAL()); o.location = (x, y, h / 2); o.rotation_euler = (t, t * 0.6, 0)
-ico("Base", 0.04, (0, 0, 0.01), STONE(), (1.2, 1.2, 0.4))
+    bmesh.ops.pointmerge(bm, verts=tip, merge_co=Vector((0, 0, h / 2 + 0.03)))
+    o = obj_from_bm("Shard%d" % i, bm, CRYSTAL()); o.location = (x, y, h / 2 + 0.015); o.rotation_euler = (tx, ty, i)
+ico("Core Glow", 0.03, (0, 0, 0.06), mat("CrystalCore", (0.6, 0.85, 1.0), 0, 0.1, emit=(0.4, 0.7, 1.0)), (1, 1, 1.4), 1)
+ico("Base", 0.055, (0, 0, 0.01), STONE(), (1.3, 1.3, 0.35))
 export("crystal_blue")
 reset()
-lathe("Flask", [(0.0, 0.0), (0.05, 0.005), (0.07, 0.04), (0.07, 0.08), (0.04, 0.12), (0.018, 0.14), (0.018, 0.2), (0.024, 0.21), (0.0, 0.21)], GLASS(), 12)
-lathe("Water", [(0.0, 0.01), (0.062, 0.03), (0.064, 0.075), (0.0, 0.08)], WATER(), 12)
-cyl("Cork", 0.016, 0.03, (0, 0, 0.215), CORK(), 8)
+lathe("Flask", [(0.0, 0.0), (0.045, 0.004), (0.07, 0.03), (0.078, 0.065), (0.068, 0.1), (0.03, 0.125), (0.019, 0.14), (0.019, 0.2), (0.026, 0.21), (0.0, 0.212)], GLASS(), 16)
+lathe("Water Glow", [(0.0, 0.008), (0.06, 0.025), (0.07, 0.065), (0.055, 0.095), (0.0, 0.1)], WATER(), 16)
+torus("Collar", 0.022, 0.006, (0, 0, 0.165), BRASS(), 12)
+cyl("Cork", 0.017, 0.032, (0, 0, 0.222), CORK(), 8)
+for i in range(3):
+    ico("Bubble%d Glow" % i, 0.006, (0.02 * math.cos(i * 2), 0.02 * math.sin(i * 2), 0.04 + i * 0.02), WATER(), (1, 1, 1), 1)
 export("water_flask")
 reset()
-lathe("Bottle", [(0.0, 0.0), (0.05, 0.004), (0.058, 0.04), (0.05, 0.085), (0.02, 0.11), (0.016, 0.15), (0.021, 0.16), (0.0, 0.16)], GLASS(), 12)
+lathe("Bottle", [(0.0, 0.0), (0.05, 0.004), (0.058, 0.04), (0.05, 0.085), (0.02, 0.11), (0.016, 0.15), (0.021, 0.16), (0.0, 0.16)], GLASS(), 16)
+torus("Band", 0.052, 0.005, (0, 0, 0.07), BRASS(), 16)
 cyl("Cork", 0.014, 0.028, (0, 0, 0.165), CORK(), 8)
 export("potion_bottle")
 

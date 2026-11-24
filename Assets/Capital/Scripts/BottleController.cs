@@ -53,6 +53,8 @@ namespace Capital
             Current=item;fill=0;item.transform.position=transform.position;item.Held=false;
             color=item.Index==2 && brew.Batch && GameManager.I.State.herb==HerbDecision.UseWilted?new Color(.4f,.38f,.27f):
                 brew.Batch && GameManager.I.State.supplier==Supplier.Premium?new Color(.16f,.85f,.56f):new Color(.1f,.72f,.4f);
+            // Craft quality from the alchemy map: a better brew glows brighter.
+            if(BrewMap.I && color.r<.3f)color=Color.Lerp(color*.8f,color*1.35f+new Color(.05f,.05f,0),(BrewMap.I.Quality-1)/2f);
             liquid=ShopArt.Fill(item.transform,0,color);item.transform.rotation=Quaternion.identity;
             brew.UpdateObjective();AudioManager.I.Play(Sfx.Glass,1.1f,.7f);
         }
@@ -77,7 +79,9 @@ namespace Capital
                 Current.Home=Current.transform.position;Current.HomeRotation=Quaternion.identity;
                 ShopArt.Primitive("Parchment label",PrimitiveType.Cube,Current.transform,new Vector3(0,.05f,-.056f),new Vector3(.06f,.04f,.006f),UIManager.Paper,false);
                 if(brew.Batch)GameManager.I.Finance.CraftBatchBottle(Current.Index);
-                ShopFx.I?.Sparkle(Current.transform.position+Vector3.up*.08f,8);
+                int q=BrewMap.I?BrewMap.I.Quality:2;
+                ShopFx.I?.Sparkle(Current.transform.position+Vector3.up*.08f,4+q*4);
+                if(brew.Filled==0)UIManager.I.Toast("جرعة النشاط • "+(BrewMap.I?BrewMap.I.StarsText:""));
                 Current=null;brew.Filled++;AudioManager.I.Play(Sfx.Glass);GameDirector.I.BottleFinished();brew.UpdateObjective();
             }
         }

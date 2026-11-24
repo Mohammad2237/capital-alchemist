@@ -91,7 +91,7 @@ public static class ShopDressing
     {
         // Walkable ground: one big collider under everything (player controller + teleport target).
         BlockCollider("Walk floor", new Vector3(0, -.05f, 2), new Vector3(60, .1f, 60)).layer = 0;
-        Box("Meadow", new Vector3(0, -.08f, 2), new Vector3(60, .1f, 60), Meadow);
+        Box("Meadow", new Vector3(0, -.08f, -10), new Vector3(140, .1f, 120), Meadow);
         // Invisible boundary so nobody wanders off into the meadow.
         BlockCollider("Bound south", new Vector3(0, 1.5f, -9.6f), new Vector3(26, 3, .4f));
         BlockCollider("Bound west", new Vector3(-11, 1.5f, 2), new Vector3(.4f, 3, 24));
@@ -184,12 +184,28 @@ public static class ShopDressing
         Place(D + "crates_stacked.fbx", new Vector3(3.3f, 0, -1.0f), 10, height: 1.2f, collider: true, name: "Crates");
         Place(H + "bench.fbx", new Vector3(2.3f, 0, -1.35f), 0, height: .5f, collider: true, name: "Bench");
         Place(H + "lantern_standing.fbx", new Vector3(-1.3f, 0, -1.6f), 0, height: .55f, name: "Lantern");
-        for (int i = -4; i <= 4; i++)
-        {
-            if (i == 0) { Place(H + "fence_gate.fbx", new Vector3(0, 0, -9), 0, width: 2.2f, name: "Gate"); continue; }
-            Place(H + "fence.fbx", new Vector3(i * 2.2f, 0, -9), 0, width: 2.2f, collider: true, name: "Fence");
-        }
-        var trees = new[] { (-7f, -4f), (7.5f, -3f), (-8.5f, -7.2f), (8.2f, -7.8f), (-6.4f, 3.5f), (7f, 4.5f), (-6.8f, 9.5f), (6.6f, 10.5f), (-10f, 1f), (10.5f, 0f), (-4.8f, -6.8f), (5.2f, -6.2f) };
+        // A small village lane: neighbours across the street and beside the shop, a market stall, a well,
+        // a windmill and hills on the horizon (KayKit Medieval Hexagon, CC0).
+        const string T = K + "Town/";
+        var street = new[] {
+            ("building_home_A_red", -7.2f, -10.2f, 180f, 5.2f), ("building_tavern_red", -1.2f, -11.0f, 180f, 6.2f),
+            ("building_home_B_yellow", 4.6f, -10.4f, 180f, 5.0f), ("building_blacksmith_green", 9.8f, -9.4f, 200f, 5.0f),
+            ("building_home_A_blue", -9.6f, 3.2f, 90f, 5.0f), ("building_home_B_green", 9.6f, 2.6f, -90f, 5.0f) };
+        foreach (var (m, x, z, yaw, h) in street) Place(T + m + ".fbx", new Vector3(x, 0, z), yaw, height: h, collider: true, name: "Neighbour " + m);
+        Place(T + "building_market_yellow.fbx", new Vector3(5.6f, 0, -5.0f), -25, height: 3.0f, collider: true, name: "Market stall");
+        Place(T + "sack.fbx", new Vector3(4.2f, 0, -4.3f), 30, height: .55f, name: "Sack");
+        Place(T + "sack.fbx", new Vector3(4.55f, 0, -4.0f), 75, height: .5f, name: "Sack");
+        Place(T + "crate_open.fbx", new Vector3(6.9f, 0, -3.9f), 10, height: .6f, collider: true, name: "Produce crate");
+        Place(T + "wheelbarrow.fbx", new Vector3(-5.6f, 0, -3.4f), 120, height: .8f, collider: true, name: "Wheelbarrow");
+        Place(T + "building_well_blue.fbx", new Vector3(-5.2f, 0, -6.4f), 0, height: 2.4f, collider: true, name: "Well");
+        Place(T + "tent.fbx", new Vector3(-9.0f, 0, -5.6f), 60, height: 2.4f, collider: true, name: "Trader tent");
+        Place(T + "building_windmill_red.fbx", new Vector3(-16f, 0, -22f), 160, height: 11f, name: "Windmill");
+        Place(T + "hills_B_trees.fbx", new Vector3(14f, 0, -26f), 0, width: 22f, name: "Hills");
+        Place(T + "mountain_A_grass_trees.fbx", new Vector3(-2f, 0, -40f), 0, width: 34f, name: "Mountains");
+        Place(T + "hills_B_trees.fbx", new Vector3(-26f, 0, -14f), 90, width: 20f, name: "Hills");
+        foreach (var (x, y, z) in new[] { (-10f, 13f, -24f), (8f, 15f, -30f), (20f, 12f, -10f) })
+            Place(T + "cloud_big.fbx", new Vector3(x, y, z), R01() * 360, width: 7f, name: "Cloud");
+        var trees = new[] { (-7.6f, -2.6f), (7.8f, -1.8f), (-6.4f, 6.5f), (7f, 7.5f), (-6.8f, 10.5f), (6.6f, 11.5f), (12f, -6f), (-12.5f, -8f) };
         foreach (var (x, z) in trees)
             Place(H + (R01() > .5f ? "tree_pine_yellow_large.fbx" : "tree_pine_orange_medium.fbx"), new Vector3(x, 0, z), R01() * 360, height: 4.5f + R01() * 2, collider: true, name: "Tree");
         for (int i = 0; i < 5; i++) Place(H + Pick(new[] { "path_A", "path_B", "path_C", "path_D" }) + ".fbx", new Vector3((R01() - .5f) * .3f, .01f, -1.6f - i * 1.4f), R01() * 360, width: 1.1f, name: "Path stone");
@@ -371,7 +387,7 @@ public static class ShopDressing
             foreach (var r in go.GetComponentsInChildren<Renderer>())
             {
                 var tex = r.sharedMaterial ? r.sharedMaterial.GetTexture("_BaseMap") : null;
-                var holo = ShopArt.Transparent("Firas hologram", new Color(.35f, 1f, .9f, .62f), 1.1f);
+                var holo = ShopArt.Transparent("Firas hologram", new Color(.45f, 1f, .9f, .88f), .9f, .05f);
                 if (tex) holo.SetTexture("_BaseMap", tex);
                 r.sharedMaterials = Enumerable.Repeat(holo, r.sharedMaterials.Length).ToArray();
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

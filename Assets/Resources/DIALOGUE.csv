@@ -32,3 +32,9 @@ S3_Q_OK,فراس,3,correct,صحيح! حسبت صافي الربح، وليس ا�
 S3_Q_NO,فراس,3,wrong,هذا إجمالي الربح. لا تنسَ مصروفات التشغيل، وخسارة التلف إن حدثت.,S3_Q_NO.wav,5,guide
 S3_END1,فراس,3,end,بدأت بمتجر قديم ورأس مال بسيط، وصنعت وبعت واتخذت قراراتك بنفسك.,S3_END1.wav,5,guide
 S3_END2,فراس,3,end,تذكّر: رصيد المال ليس هو الربح. افهم ما تبيع، وما تنفق، وما تخاطر به.,S3_END2.wav,5,guide
+T1_HELLO,التاجر المتجول,1,trader_arrives,مرحبًا يا صاحب المتجر الجديد! عندي كل مكونات جرعة النشاط.,T1_HELLO.wav,4,customer
+T1_DEAL,التاجر المتجول,1,trader_sells,تفضّل! بضاعة طازجة.,T1_DEAL.wav,2,customer
+T1_BYE,التاجر المتجول,1,trader_leaves,بالتوفيق في جرعتك الأولى! سأمرّ عليك لاحقًا.,T1_BYE.wav,3,customer
+T3_HELLO,التاجر المتجول,3,trader_arrives,سمعت بطلبيتك الكبرى! عندي عرضان: اقتصادي أو ممتاز.,T3_HELLO.wav,4,customer
+T3_CHEAP,التاجر المتجول,3,supplier_cheap,خيار موفّر! لكن افحص الأعشاب جيدًا.,T3_CHEAP.wav,3,customer
+T3_PREMIUM,التاجر المتجول,3,supplier_premium,أفضل ما عندي! جودة ثابتة.,T3_PREMIUM.wav,3,customer

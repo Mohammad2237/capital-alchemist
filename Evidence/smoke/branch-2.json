@@ -89,7 +89,7 @@
             "inventory": 60
         },
         {
-            "id": "craft-batch-0",
+            "id": "craft-batch-2",
             "kind": "craft",
             "cash": 0,
             "revenue": 0,
@@ -109,7 +109,7 @@
             "inventory": 0
         },
         {
-            "id": "craft-batch-2",
+            "id": "craft-batch-0",
             "kind": "craft",
             "cash": 0,
             "revenue": 0,

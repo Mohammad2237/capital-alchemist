@@ -47,8 +47,14 @@ namespace Capital
         {
             if(Consumed || GameManager.I.InteractionPaused)return;
             var brew=GameDirector.I.Brewing;
-            if(Kind=="herb" && Vector3.Distance(transform.position,brew.MortarPosition)<.37f) brew.Mortar.Insert(this);
-            else if((Kind=="crushed" || Kind=="crystal" || Kind=="water") && OverCauldron(transform.position)) brew.Cauldron.Accept(this);
+            if(OverCauldron(transform.position) && Kind!="spoon")
+            {
+                bool ingredient=Kind=="crushed"||Kind=="crystal"||Kind=="water";
+                if(ingredient && brew.Cauldron && brew.Cauldron.Accept(this))return;
+                if(!ingredient)UIManager.I?.Toast(Kind=="herb"?"اسحق العشبة في الهاون أولًا":"هذا لا يوضع في المرجل");
+                StartCoroutine(BounceHome());return;
+            }
+            if(Kind=="herb" && brew.Mortar && Vector3.Distance(transform.position,brew.MortarPosition)<.37f) brew.Mortar.Insert(this);
             else if(Kind=="bottle" && Near(transform.position,brew.BottlePosition,.32f,.6f)) brew.Bottler.Snap(this);
             else if(Kind=="potion" && Near(transform.position,brew.HandoffPosition,.45f,.5f))
             {
@@ -59,6 +65,14 @@ namespace Capital
                     StartCoroutine(MoveToDisplay(rejected));
                 }
             }
+        }
+        // Rejected by the cauldron: a little hop out of the brew, then home.
+        System.Collections.IEnumerator BounceHome()
+        {
+            AudioManager.I?.Play(Sfx.Splash,1.5f,.5f);
+            Vector3 from=transform.position;
+            for(float t=0;t<1;t+=Time.deltaTime/.6f){transform.position=Vector3.Lerp(from,Home,Mathf.SmoothStep(0,1,t))+Vector3.up*Mathf.Sin(t*Mathf.PI)*.35f;yield return null;}
+            ReturnHome();
         }
         System.Collections.IEnumerator MoveToDisplay(bool rejected)
         {

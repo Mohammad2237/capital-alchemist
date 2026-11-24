@@ -24,7 +24,7 @@ namespace Capital
         RectTransform modal, actions;
         Image fade; RTLTextMeshPro cardTitle, cardSubtitle; Renderer vrFader;
         float toastUntil;
-        public bool ModalVisible => modal && modal.gameObject.activeSelf;
+        public bool ModalVisible => modal && modal.gameObject.activeSelf || talk && talk.gameObject.activeSelf;
         public static readonly Color Ink=new Color(.19f,.12f,.075f), Paper=new Color(.9f,.81f,.62f,.98f), Gold=new Color(.76f,.53f,.22f);
         void Awake()
         {
@@ -37,24 +37,30 @@ namespace Capital
             scaler.screenMatchMode=CanvasScaler.ScreenMatchMode.Expand;
             var root=new GameObject("HUD frame",typeof(RectTransform)).GetComponent<RectTransform>();
             root.SetParent(canvas.transform,false);root.anchorMin=root.anchorMax=root.pivot=new Vector2(.5f,.5f);root.sizeDelta=new Vector2(1920,1080);
-            Panel(root,"Top",(60,30,1800,110),new Color(.08f,.105f,.09f,.93f));
-            Text(root,"رأس المال: إرث الكيميائي",(90,44,970,70),40,Paper);
-            cash=Text(root,"",(1320,51,480,55),32,Paper);
-            objective=Text(root,"",(400,140,620,110),30,Paper);
-            hint=Text(root,"",(540,720,840,70),26,Paper);
-            progress=Text(root,"",(700,640,520,55),30,Gold);
-            toast=Text(root,"",(400,255,640,55),28,Gold);
-            var subPanel=Panel(root,"Subtitles",(260,882,1400,114),new Color(.045f,.065f,.06f,.95f));
-            subtitle=Text(subPanel,"",(25,14,1350,90),30,Paper);
-            Text(root,"المشي: WASD • النظر: زر الفأرة الأيمن • الإمساك والإفلات والفتح: E • القرارات: انقر • الموسوعة: Tab • إعادة: R",(150,1020,1620,44),23,Paper);
-            Button(root,"الموسوعة",(60,160,290,64),()=>FindFirstObjectByType<GlossaryManager>().Toggle());
-            Button(root,"وضع العرض",(60,238,290,58),()=>{
+            // Coin purse (top-right): the cash figure counts up/down and each change floats a +/- amount.
+            var purse=Panel(root,"Purse",(1560,26,330,92),new Color(.08f,.105f,.09f,.9f));Frame(purse,new Color(.55f,.38f,.14f));
+            var coin=Panel(purse,"Coin",(18,14,64,64),Gold);coin.GetComponent<Image>().sprite=CircleSprite();
+            Panel(coin,"Coin rim",(12,12,40,40),new Color(.78f,.55f,.18f)).GetComponent<Image>().sprite=CircleSprite();
+            cash=Text(purse,"",(96,10,220,72),46,Paper);cash.alignment=TextAlignmentOptions.MidlineLeft;
+            delta=Text(root,"",(1600,118,260,56),36,Gold);delta.alignment=TextAlignmentOptions.Center;
+            // One short step at a time (top-centre).
+            objectivePanel=Panel(root,"Step",(560,26,800,92),new Color(.08f,.105f,.09f,.9f));Frame(objectivePanel,new Color(.55f,.38f,.14f));
+            objective=Text(objectivePanel,"",(20,8,760,76),34,Paper);objective.alignment=TextAlignmentOptions.Center;
+            hint=Text(root,"",(540,720,840,70),26,Paper);hint.alignment=TextAlignmentOptions.Center;
+            progress=Text(root,"",(700,640,520,55),32,Gold);progress.alignment=TextAlignmentOptions.Center;
+            toast=Text(root,"",(560,128,800,56),30,Gold);toast.alignment=TextAlignmentOptions.Center;
+            subPanel=Panel(root,"Subtitles",(310,900,1300,100),new Color(.045f,.065f,.06f,.92f));Frame(subPanel,new Color(.55f,.38f,.14f));
+            subtitle=Text(subPanel,"",(25,10,1250,80),30,Paper);
+            keys=Text(root,"WASD  •  E  •  Q  •  Tab",(560,1030,800,40),24,new Color(Paper.r,Paper.g,Paper.b,.7f));keys.alignment=TextAlignmentOptions.Center;
+            Button(root,"الموسوعة",(30,26,250,62),()=>FindFirstObjectByType<GlossaryManager>().Toggle());
+            Button(root,"وضع العرض",(290,26,250,62),()=>{
                 GameManager.I.State.presentationMode=!GameManager.I.State.presentationMode;
                 Toast(GameManager.I.State.presentationMode?"وضع العرض مفعّل":"السرعة العادية");});
             actions=Panel(root,"Actions",(560,790,800,76),Color.clear);
-            Button(root,"انتقل إلى المحطة",(60,310,290,58),GoToStation);
+            Button(root,"انتقل إلى المحطة",(30,98,250,56),GoToStation);
             modal=Panel(root,"Parchment",(1060,175,820,560),Paper); modal.gameObject.SetActive(false);
             Frame(modal,new Color(.45f,.3f,.12f));
+            talk=Panel(root,"Talk",(260,690,1400,200),Paper);talk.gameObject.SetActive(false);Frame(talk,new Color(.45f,.3f,.12f));
             fade=Panel(canvas.transform,"Fade",(0,0,1920,1080),Color.black).GetComponent<Image>(); fade.raycastTarget=false;
             var fr=(RectTransform)fade.transform;fr.anchorMin=Vector2.zero;fr.anchorMax=Vector2.one;fr.pivot=new Vector2(.5f,.5f);fr.anchoredPosition=Vector2.zero;fr.sizeDelta=Vector2.zero;
             cardTitle=Text(fade.transform,"",(260,380,1400,120),76,Gold);cardTitle.alignment=TextAlignmentOptions.Center;
@@ -107,14 +113,34 @@ namespace Capital
                 if(Vector3.Angle(toCanvas,f)>38 || toCanvas.magnitude>2.6f || toCanvas.magnitude<.9f)following=true;
                 if(following){Recentre(false);if(Vector3.Angle(toCanvas,f)<6 && Mathf.Abs(toCanvas.magnitude-1.6f)<.15f)following=false;}
             }
-            if(GameManager.I) cash.text="الرصيد: "+GameManager.I.State.Cash+" عملة";
-            if(Time.unscaledTime>toastUntil) toast.text="";
+            if(GameManager.I)
+            {
+                int real=GameManager.I.State.Cash;
+                if(shownCash<0)shownCash=real;
+                if(real!=lastCash){if(lastCash>=0){int d=real-lastCash;delta.text=(d>0?"+":"")+d;delta.color=d>0?new Color(.45f,1f,.55f):new Color(1f,.45f,.35f);deltaUntil=Time.unscaledTime+1.6f;}lastCash=real;}
+                shownCash=Mathf.MoveTowards(shownCash,real,Mathf.Max(20,Mathf.Abs(real-shownCash)*3)*Time.unscaledDeltaTime);
+                cash.text=Mathf.RoundToInt(shownCash).ToString();
+            }
+            float dl=deltaUntil-Time.unscaledTime;delta.alpha=Mathf.Clamp01(dl);delta.rectTransform.anchoredPosition=new Vector2(1600,-118-(1.6f-Mathf.Clamp(dl,0,1.6f))*30);
+            float tl=toastUntil-Time.unscaledTime;toast.alpha=Mathf.Clamp01(tl*1.5f);if(tl<=0)toast.text="";
+            subPanel.gameObject.SetActive(!string.IsNullOrEmpty(subtitle.text)&&!TalkVisible);
+            objectivePanel.gameObject.SetActive(!string.IsNullOrEmpty(objective.text));
+            keys.alpha=Mathf.Clamp01(1-(Time.timeSinceLevelLoad-25)/3f)*.7f;keys.gameObject.SetActive(!xrHead&&keys.alpha>0);
         }
         public void Objective(string s) => objective.text=s;
         public void Hint(string s) => hint.text=s;
         public void Progress(string s) => progress.text=s;
         public void Subtitle(string s) => subtitle.text=s;
-        public void Toast(string s) { toast.text=s; toastUntil=Time.unscaledTime+4; }
+        public void Toast(string s) { toast.text=s; toastUntil=Time.unscaledTime+3; }
+        RTLTextMeshPro delta,keys; RectTransform subPanel,objectivePanel; float shownCash=-1,deltaUntil; int lastCash=-1;
+        static Sprite circle;
+        public static Sprite CircleSprite()
+        {
+            if(circle)return circle;
+            const int n=96;var tex=new Texture2D(n,n,TextureFormat.RGBA32,false);var px=new Color32[n*n];
+            for(int y=0;y<n;y++)for(int x=0;x<n;x++){float d=Vector2.Distance(new Vector2(x,y),new Vector2(n/2f-.5f,n/2f-.5f))/(n/2f);px[y*n+x]=new Color32(255,255,255,(byte)(Mathf.Clamp01((1-d)*14)*255));}
+            tex.SetPixels32(px);tex.Apply();return circle=Sprite.Create(tex,new Rect(0,0,n,n),new Vector2(.5f,.5f));
+        }
         public void Actions(params Choice[] choices)
         {
             Clear(actions);
@@ -129,7 +155,20 @@ namespace Capital
             float w=(740-12*(choices.Length-1))/Mathf.Max(1,choices.Length);
             for(int i=0;i<choices.Length;i++){var c=choices[i];Button(modal,c.Text,(40+i*(w+12),440,w,90),c.Action);}
         }
-        public void CloseModal() { modal.gameObject.SetActive(false); }
+        public void CloseModal() { modal.gameObject.SetActive(false); talk.gameObject.SetActive(false); }
+        // Face-to-face conversation: who is talking, one short line, and short replies. Replaces menus for NPCs.
+        RectTransform talk;
+        public void Talk(string speaker,string line,params Choice[] choices)
+        {
+            Clear(talk);talk.gameObject.SetActive(true);modal.gameObject.SetActive(false);
+            var tag=Panel(talk,"Name",(1090,-30,290,54),new Color(.16f,.25f,.22f));Frame(tag,new Color(Gold.r,Gold.g,Gold.b,.8f));
+            Text(tag,speaker,(10,2,270,50),28,Gold).alignment=TextAlignmentOptions.Center;
+            Text(talk,line,(40,26,1320,70),32,Ink);
+            float w=Mathf.Min(420,(1320-14*(choices.Length-1))/Mathf.Max(1,choices.Length));
+            float start=1360-choices.Length*w-(choices.Length-1)*14;
+            for(int i=0;i<choices.Length;i++){var c=choices[i];Button(talk,c.Text,(start+i*(w+14),108,w,72),c.Action);}
+        }
+        public bool TalkVisible=>talk&&talk.gameObject.activeSelf;
         public IEnumerator Fade(bool dark,float seconds=.4f)
         {
             float t=0; while(t<seconds){t+=Time.unscaledDeltaTime;SetFade(dark?t/seconds:1-t/seconds);yield return null;}
@@ -214,7 +253,7 @@ namespace Capital
     {
         float target=1,current=1;Outline outline;
         void Awake(){outline=GetComponent<Outline>();}
-        public void OnPointerEnter(PointerEventData e){target=1.05f;if(outline)outline.effectDistance=new Vector2(3,-3);AudioManager.I?.Play(Sfx.Chime,2.2f,.15f);}
+        public void OnPointerEnter(PointerEventData e){target=1.05f;if(outline)outline.effectDistance=new Vector2(3,-3);}
         public void OnPointerExit(PointerEventData e){target=1;if(outline)outline.effectDistance=new Vector2(2,-2);}
         public void OnPointerDown(PointerEventData e){current=.95f;}
         public void OnPointerUp(PointerEventData e){}

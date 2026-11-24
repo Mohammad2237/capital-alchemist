@@ -46,6 +46,7 @@ namespace Capital
             if(station!=lastStation)
             {
                 lastStation=station;
+                if(held)Release(false);
                 bool hasView=station!=Station.None && station!=Station.Welcome;
                 if(hasView)FocusOn(station,renderedPos,renderedRot);else if(focused)Unfocus(renderedPos,renderedRot);
             }

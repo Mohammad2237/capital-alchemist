@@ -45,7 +45,7 @@ namespace Capital
                 var d=GameDirector.I; if(!d)return Station.None;
                 switch(d.Phase)
                 {
-                    case Phase.Purchase: return Station.Welcome;
+                    case Phase.Purchase: return CustomerController.Get("Trader")?Station.Counter:Station.Welcome;
                     case Phase.Brew: case Phase.BatchBrew: return BrewStep(d.Brewing);
                     case Phase.Wilt: return Station.Ingredients;
                     case Phase.Price: case Phase.Handoff: case Phase.RevenueQuiz: case Phase.Offer:

@@ -22,7 +22,7 @@ namespace Capital
             if(!UIManager.I) gameObject.AddComponent<UIManager>();
             gameObject.AddComponent<AudioManager>();gameObject.AddComponent<GlossaryManager>();gameObject.AddComponent<SceneFlowManager>();gameObject.AddComponent<DialogueManager>();
             Brewing=gameObject.AddComponent<BrewingController>();
-            gameObject.AddComponent<DemoManager>();gameObject.AddComponent<ShopFx>();gameObject.AddComponent<TouchControls>();
+            gameObject.AddComponent<DemoManager>();gameObject.AddComponent<ShopFx>();gameObject.AddComponent<TouchControls>();gameObject.AddComponent<BrewMap>();
             yield return null;
             int chapter=SceneManager.GetActiveScene().buildIndex;
             // Guard direct editor scene entry. No synthetic sale or free batch.
@@ -53,56 +53,60 @@ namespace Capital
         {
             if(!UIManager.I || GameManager.I.InteractionPaused) return;
             var ui=UIManager.I;ui.Actions();ui.CloseModal();
+            if(Phase!=Phase.Brew && Phase!=Phase.BatchBrew)ui.Progress("");
+            var trader=CustomerController.Get("Trader");
+            // One short step at a time; NPCs are talked to face to face (no shop menus).
             switch(Phase)
             {
                 case Phase.Intro:
-                    if(!doorOpened){ui.Objective("الإرث\nورثت متجر الجرعات. افتح بابه");ui.Actions(new Choice("افتح الباب",OpenShopDoor));}
-                    else{ui.Objective("الإرث\nادخل متجرك");ui.Actions(new Choice("ادخل المتجر",EnterShop));}
+                    if(!doorOpened){ui.Objective("افتح باب متجرك");ui.Actions(new Choice("افتح الباب",OpenShopDoor));}
+                    else{ui.Objective("ادخل المتجر");ui.Actions(new Choice("ادخل",EnterShop));}
                     break;
                 case Phase.Purchase:
-                    ui.Objective("الإرث\nاشترِ المواد اللازمة لجرعتك الأولى");
-                    string[] names={"العشبة 10","البلورة 8","الماء 5","القارورة 2"};
+                    ui.Objective("اشترِ المكونات من التاجر");
+                    if(trader && !trader.Arrived){trader.Arrive(()=>{DialogueManager.I.Say("T1_HELLO");Refresh();});break;}
+                    string[] names={"عشبة حمراء • 10","بلورة زرقاء • 8","ماء سحري • 5","قارورة • 2"};
                     var choices=Enumerable.Range(0,4).Where(i=>!S.Has("ingredient-"+i)).Select(i=>new Choice(names[i],()=>Purchase(i))).ToArray();
-                    ui.Modal("رأس المال: 100 عملة","الوصفة: جرعة النشاط\nالمشتريات تُصبح مخزونًا، وليست خسارة فورية.\nاختر كل مادة لشرائها.",choices);break;
+                    ui.Talk("التاجر المتجول","ماذا تحتاج لجرعة النشاط؟",choices);break;
                 case Phase.Brew:case Phase.BatchBrew:Brewing.UpdateObjective();break;
                 case Phase.Ready:
-                    ui.Objective("صنعت جرعة النشاط\nتكلفة الإنتاج: 25 عملة");
+                    ui.Objective("جرعتك جاهزة! • التكلفة 25");
                     ui.Actions(new Choice("افتح الباب للزبون",()=>GetComponent<SceneFlowManager>().Next()));break;
                 case Phase.Price:
-                    ui.Objective("أول زبون\nاختر سعر البيع");
-                    ui.Modal("بكم تبيع جرعتك؟","تكلفة إنتاجها: 25 عملة\nسعر السوق المجاور: نحو 40 عملة\nاختر استراتيجيتك. لكل سعر أثر مختلف.",
+                    ui.Objective("اختر سعرك");
+                    ui.Talk("الزبون","بكم جرعة النشاط؟ الجيران يبيعونها بنحو 40.",
                         new Choice("30 عملة",()=>ChoosePrice(30)),new Choice("50 عملة",()=>ChoosePrice(50)));break;
                 case Phase.Handoff:
-                    ui.Objective("سلّم الجرعة للزبون\nأمسك القارورة وضعها على صينية الاستلام");break;
+                    ui.Objective("ضع الجرعة على الصينية");break;
                 case Phase.RevenueQuiz:
-                    ui.Objective("أول زبون\nإيراد أم ربح؟");
-                    ui.Modal("المبلغ الذي استلمته: إيراد أم ربح؟",FirstLedger(),
+                    ui.Objective("إيراد أم ربح؟");
+                    ui.Talk("فراس","الإيراد "+S.Revenue+" • التكلفة "+S.COGS+" — المال الذي استلمته: إيراد أم ربح؟",
                         new Choice("إيراد",()=>RevenueAnswer(true)),new Choice("ربح",()=>RevenueAnswer(false)));break;
                 case Phase.Offer:
-                    ui.Objective("طلبية كبيرة\nاقرأ عرض التاجر");
-                    ui.Modal("طلبية التاجر",FirstLedger()+"\n\n3 جرعات • "+S.MerchantPrice+" عملة للجرعة المقبولة",
-                        new Choice("قبول الطلبية",()=>GetComponent<SceneFlowManager>().Next()));break;
+                    ui.Objective("طلبية كبيرة");
+                    ui.Talk("التاجر","أريد 3 جرعات، وأدفع "+S.MerchantPrice+" لكل جرعة سليمة.",
+                        new Choice("اتفقنا",()=>GetComponent<SceneFlowManager>().Next()));break;
                 case Phase.Supplier:
-                    ui.Objective("الطلبية الكبرى\nاختر المورد");
-                    ui.Modal("الطلبية الكبرى","3 جرعات • "+S.MerchantPrice+" عملة لكل جرعة مقبولة\nالسعر ليس العامل الوحيد: فكّر في الجودة والمخاطرة.",
-                        new Choice("مورد اقتصادي: 45",()=>BuyBatch(Supplier.Cheap)),new Choice("مورد ممتاز: 60",()=>BuyBatch(Supplier.Premium)));break;
+                    ui.Objective("اختر المورد");
+                    if(trader && !trader.Arrived){trader.Arrive(()=>{DialogueManager.I.Say("T3_HELLO");Refresh();});break;}
+                    ui.Talk("التاجر المتجول","3 جرعات: اقتصادي رخيص، أو ممتاز بجودة ثابتة.",
+                        new Choice("اقتصادي • 45",()=>BuyBatch(Supplier.Cheap)),new Choice("ممتاز • 60",()=>BuyBatch(Supplier.Premium)));break;
                 case Phase.Wilt:
-                    ui.Objective("عشبة ذابلة\nقرّر: استبدال أم استخدام؟");
-                    ui.Modal("عشبة ذابلة!","انظر إلى العشبة البنية على المنضدة.\nاستبدالها يزيد التكلفة. استخدامها يعرّض الجرعة للتلف.",
-                        new Choice("استبدال: +5 عملات",()=>DecideHerb(HerbDecision.Replace)),new Choice("استخدم العشبة الذابلة",()=>DecideHerb(HerbDecision.UseWilted)));break;
+                    ui.Objective("عشبة ذابلة!");
+                    ui.Talk("فراس","إحدى الأعشاب ذابلة. ماذا تفعل؟",
+                        new Choice("استبدلها • +5",()=>DecideHerb(HerbDecision.Replace)),new Choice("استخدمها",()=>DecideHerb(HerbDecision.UseWilted)));break;
                 case Phase.BatchHandoff:
-                    ui.Objective("سلّم القوارير الثلاث\nالتاجر يدفع مقابل الجرعات المقبولة فقط");break;
+                    ui.Objective("سلّم القوارير للتاجر");break;
                 case Phase.Expenses:
-                    ui.Objective("فاتورة المتجر\nادفع مصروفات التشغيل");
-                    ui.Modal("فاتورة المتجر","مصروفات التشغيل: 10 عملات\nإيجار، شموع، حطب\nهذه ليست من تكلفة مكونات الجرعة.",
-                        new Choice("دفع الفاتورة",PayExpenses));break;
+                    ui.Objective("فاتورة اليوم");
+                    ui.Talk("فراس","فاتورة المتجر: إيجار وشموع وحطب.",new Choice("ادفع 10",PayExpenses));break;
                 case Phase.FinalQuiz:
-                    ui.Objective("السؤال الأخير\nاحسب صافي الربح");
-                    ui.Modal("كم بلغ صافي ربح متجرك اليوم؟",ShortLedger(),
+                    ui.Objective("السؤال الأخير");
+                    ui.Talk("فراس","كم صافي ربحك اليوم؟",
                         new Choice((correctLeft?S.NetProfit:S.GrossProfit)+" عملة",()=>FinalAnswer(correctLeft)),
                         new Choice((correctLeft?S.GrossProfit:S.NetProfit)+" عملة",()=>FinalAnswer(!correctLeft)));break;
                 case Phase.Report:
-                    ui.Objective("تقرير المتجر\nانتهى يومك الأول");ui.Progress("");
+                    ui.Objective("تقرير المتجر");ui.Progress("");
                     ui.Modal("تقرير المتجر",FinalLedger(),
                         new Choice("إعادة التجربة",()=>GameManager.I.ResetRun()),new Choice("الموسوعة المالية",()=>GetComponent<GlossaryManager>().Toggle()));break;
             }
@@ -133,8 +137,10 @@ namespace Capital
             if(Phase!=Phase.Purchase || !F.PurchaseFirst(index))return;
             AudioManager.I.Play(Sfx.Coins,.8f,.5f);
             if(S.terms.Contains(1)==false){GameManager.I.Unlock(1);DialogueManager.I.Say("S1_F04");}
+            CustomerController.Get("Trader")?.Receive();
             if(Enumerable.Range(0,4).All(i=>S.Has("ingredient-"+i)))
-            {Phase=Phase.Brew;Brewing.Begin(false);DialogueManager.I.Say("S1_F05");}
+            {Phase=Phase.Brew;Brewing.Begin(false);DialogueManager.I.Say("T1_BYE","S1_F05");CustomerController.Get("Trader")?.Leave();}
+            else DialogueManager.I.Say("T1_DEAL");
             GameManager.I.Notify();Refresh();
         }
         public void BottleFinished()
@@ -148,13 +154,13 @@ namespace Capital
         {
             if(Phase!=Phase.Price || !F.ChoosePrice(price))return;
             Phase=Phase.Handoff;DialogueManager.I.Say(price==30?"S2_CA":"S2_CB");
-            FindFirstObjectByType<CustomerController>()?.React(price==30);GameManager.I.Notify();Refresh();
+            CustomerController.Get("Customer")?.React(price==30);GameManager.I.Notify();Refresh();
         }
         public bool Deliver(int index)
         {
             if(Phase==Phase.Handoff && F.SellFirst())
             {
-                FindFirstObjectByType<CustomerController>()?.Receive();
+                CustomerController.Get("Customer")?.Receive();
                 Phase=Phase.RevenueQuiz;QuizAttempts=0;ShopFx.I?.Coins(S.firstPrice,Brewing.HandoffPosition+Vector3.up*.1f);
                 foreach(int t in new[]{4,5,6}) GameManager.I.Unlock(t);
                 DialogueManager.I.Say(S.firstPrice==30?"S2_FA":"S2_FB");
@@ -162,7 +168,7 @@ namespace Capital
             else if(Phase==Phase.BatchHandoff && F.DeliverBatchBottle(index))
             {
                 bool reject=index==2 && S.herb==HerbDecision.UseWilted;
-                FindFirstObjectByType<CustomerController>()?.React(!reject);
+                CustomerController.Get("Merchant")?.React(!reject);
                 if(reject) AudioManager.I.Play(Sfx.Reject); else ShopFx.I?.Coins(S.MerchantPrice,Brewing.HandoffPosition+Vector3.up*.1f);
                 if(reject) DialogueManager.I.Say("S3_M_REJECT","S3_FA_SKIP","S3_SPOIL");
                 if(S.InventoryValue==0)
@@ -187,6 +193,7 @@ namespace Capital
         {
             if(Phase!=Phase.Supplier || !F.PurchaseBatch(supplier))return;
             AudioManager.I.Play(Sfx.Coins,.8f,.7f);
+            DialogueManager.I.Say(supplier==Supplier.Cheap?"T3_CHEAP":"T3_PREMIUM");CustomerController.Get("Trader")?.Leave();
             if(supplier==Supplier.Cheap){Phase=Phase.Wilt;Brewing.ShowWilted();DialogueManager.I.Say("S3_FA_RISK");}
             else {Phase=Phase.BatchBrew;Brewing.Begin(true);}
             GameManager.I.Notify();Refresh();

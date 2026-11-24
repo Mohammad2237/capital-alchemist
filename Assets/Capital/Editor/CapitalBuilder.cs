@@ -77,6 +77,12 @@ public static class CapitalBuilder
             new GameObject("Chapter Director",typeof(GameDirector));
             var firas=ShopDressing.Character("Mage",ShopLayout.FirasHeight,ShopLayout.FirasSpot,160,"Firas",true);
             if(firas)firas.AddComponent<FirasController>();
+            if(i==0||i==2)
+            {
+                // The wandering trader: walks in to sell ingredients (scene 1) or offer suppliers (scene 3).
+                var trader=ShopDressing.Character("Barbarian",1.78f,ShopLayout.CustomerPath[0],0,"Trader");
+                if(trader)trader.AddComponent<CustomerController>();
+            }
             if(i>0)
             {
                 // Scene 2: the first customer; scene 3: the wealthy merchant. Both walk in through the door.

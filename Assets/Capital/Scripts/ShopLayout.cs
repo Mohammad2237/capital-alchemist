@@ -41,6 +41,7 @@ namespace Capital
         public static readonly Vector3 SaleBottle = new Vector3(1.9f, 1.04f, 2.15f);
         public static readonly Vector3 CoinPile = new Vector3(3.25f, 1.04f, 2.15f);
         public static readonly Vector3 CustomerSpot = new Vector3(2.55f, 0, 1.25f);
+        public static readonly Vector3 TraderSpot = new Vector3(1.6f, 0, 1.3f);
         public static Vector3 Display(int i) => new Vector3(3.9f, 1.62f, 3.2f + i * .3f);
         public static readonly Vector3 DiscardBin = new Vector3(3.6f, .35f, .95f);
 

@@ -109,10 +109,24 @@ namespace Capital
         // ---------- steam ----------
         IEnumerator Steam(Vector3 from)
         {
-            var puff=ShopArt.Primitive("Steam",PrimitiveType.Sphere,null,from+new Vector3(Random.Range(-.3f,.3f),.05f,Random.Range(-.3f,.3f)),Vector3.one*.08f,Color.white,false);
+            // Swirling, fading puffs tinted by what is in the brew (gold + sparks when the alchemy map is in the zone).
+            Color tint=BrewMap.I?BrewMap.I.BrewTint:new Color(.85f,.88f,.86f);
+            bool golden=BrewMap.I&&BrewMap.I.InZone;
+            var puff=ShopArt.Primitive("Steam",PrimitiveType.Sphere,null,from+new Vector3(Random.Range(-.25f,.25f),.05f,Random.Range(-.25f,.25f)),Vector3.one*.08f,Color.white,false);
             var r=puff.GetComponent<Renderer>();r.sharedMaterial=steamMat;r.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
-            Vector3 drift=new Vector3(Random.Range(-.08f,.08f),.42f,Random.Range(-.08f,.08f));
-            for(float t=0;t<1;t+=Time.deltaTime/2.6f){puff.transform.position+=drift*Time.deltaTime;puff.transform.localScale=Vector3.one*Mathf.Lerp(.08f,.34f,t);yield return null;}
+            var block=new MaterialPropertyBlock();
+            float spin=Random.Range(0,Mathf.PI*2),life=golden?3.2f:2.8f;Vector3 basePos=puff.transform.position;
+            for(float t=0;t<1;t+=Time.deltaTime/life)
+            {
+                float radius=.08f+t*.35f;
+                puff.transform.position=basePos+new Vector3(Mathf.Cos(spin+t*5)*radius,t*1.5f,Mathf.Sin(spin+t*5)*radius);
+                puff.transform.localScale=Vector3.one*Mathf.Lerp(.1f,.55f,t);
+                block.SetColor("_BaseColor",new Color(tint.r,tint.g,tint.b,.16f*(1-t)*(t<.15f?t/.15f:1)));
+                block.SetColor("_EmissionColor",tint*(golden?.6f:.18f)*(1-t));
+                r.SetPropertyBlock(block);
+                if(golden&&Random.value<.02f)Sparkle(puff.transform.position,1);
+                yield return null;
+            }
             Destroy(puff);
         }
 
@@ -143,7 +157,7 @@ namespace Capital
             if(d && d.Speaking)
             {
                 if(d.Speaker=="فراس" && FirasController.I && FirasController.I.Shown){head=FirasController.I.HeadPosition;firas=true;}
-                else if(CustomerController.Current && CustomerController.Current.SpeakerName==d.Speaker)head=CustomerController.Current.Head;
+                else{var npc=CustomerController.Speaking(d.Speaker);if(npc)head=npc.Head;}
             }
             speakerMark.gameObject.SetActive(head.HasValue);
             if(head.HasValue)
@@ -181,7 +195,7 @@ namespace Capital
                 bubbles.Add(b.transform);bubbleAge.Add(0);
             }
             steamTimer-=Time.deltaTime;
-            if(liquid && steamTimer<=0){steamTimer=.35f-activity*.2f;StartCoroutine(Steam(liquid.position));}
+            if(liquid && steamTimer<=0){steamTimer=(BrewMap.I&&BrewMap.I.InZone?.12f:.28f)-activity*.12f;StartCoroutine(Steam(liquid.position));}
             for(int i=bubbles.Count-1;i>=0;i--)
             {
                 bubbleAge[i]+=Time.deltaTime;var b=bubbles[i];
