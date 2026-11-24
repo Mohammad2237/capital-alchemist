@@ -1,5 +1,8 @@
 # رأس المال: إرث الكيميائي — CAPITAL: The Alchemist's Legacy
 
+**Play in the browser (desktop, phone, or VR headset browser):** https://mohammad2237.github.io/capital-alchemist/  
+In a headset (e.g. Meta Quest Browser) press «ادخل الواقع الافتراضي». Rebuild the web version with `Tools/build-web.ps1` (copies to `docs/`), then commit and push.
+
 A three-scene, first-person medieval alchemy shop where the player crafts a potion by hand, sells it,
 then faces a supplier decision whose consequences land in a real ledger.
 

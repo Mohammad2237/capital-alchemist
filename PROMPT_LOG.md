@@ -144,3 +144,21 @@ game (comfort rule in the brief), so VR players get floor rings and a blink tele
 cauldron. Firas (the "guy") now flies between stations as a guide; customers walk in and gesture while talking.
 Found and fixed from screenshots: invisible pour stream (same-frame disable), double bottle snap warning, Firas
 blocking the stir/pour views. Final: tests 123/123, build OK, smoke 157/157.
+
+### Session 2, continued — 24 November 2026, evening: web + VR browser, team feedback
+
+Prompts (team member, paraphrased): the teacher wants it playable from a URL (GitHub); a VR headset is now
+available; feedback: too much text for VR, audio issue, items snapping when the camera moves, cauldron accepts
+anything, buying should be face-to-face with NPCs who talk back, creative non-repetitive brewing like
+potion-map games, better cauldron/smoke/ingredients/exterior, Firas too glassy, stray text boxes.
+
+What the AI did: kept Unity (a three.js rewrite would have discarded working systems two days before the
+deadline) and added a WebGL + WebXR build (De-Panther WebXR Export 0.25, CC/Apache per its licence), patched
+the package for Unity 6.6's Emscripten 4 (`Browser` -> `MainLoop`), touch controls, published to GitHub Pages.
+Then: wandering trader NPC + dialogue box replacing menus, alchemy-map brewing with craft quality (costs and the
+six financial outcomes unchanged), content-tinted swirling smoke, ink-outlined Blender ingredients and an ornate
+cauldron (original art, inspired by but not copied from Potion Craft), village lane from KayKit Medieval
+Hexagon (CC0), compact HUD with coin purse, cauldron rejection, held items released on camera glides.
+Failed attempts kept: first web build crashed (`Browser is not defined`); a shell in the wrong folder made one
+pipeline run do nothing; a smoke-effect edit deleted neighbouring code (caught by the compile check).
+Verified: tests 123/123, Windows build, smoke 157/157, web build loads and plays from the public link.
