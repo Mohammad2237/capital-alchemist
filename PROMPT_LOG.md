@@ -162,3 +162,15 @@ Hexagon (CC0), compact HUD with coin purse, cauldron rejection, held items relea
 Failed attempts kept: first web build crashed (`Browser is not defined`); a shell in the wrong folder made one
 pipeline run do nothing; a smoke-effect edit deleted neighbouring code (caught by the compile check).
 Verified: tests 123/123, Windows build, smoke 157/157, web build loads and plays from the public link.
+
+### Session 2, continued — 24 November 2026, night: three.js rewrite
+
+Prompt (team member): another agent had replaced the live site with a small standalone page and left broken
+edits; "refix everything … with a working VR button"; then "remove Unity itself, it cannot handle VR".
+What the AI did: restored the real game from Git history (the other agent's local edits backed up, two good
+ideas kept), found the actual VR-button bug (WebXR settings + loader assets were never created by the code-only
+setup) and fixed it in the Unity build as a fallback. Then rebuilt the game on three.js + WebXR: same models
+(KayKit glTF + project GLBs from Blender), same floor plan (Unity left-handed coordinates mirrored to glTF),
+finance engine ported line for line and re-tested (six outcomes exact), dialogue, trader, alchemy map, station
+camera, desktop/touch/VR controls. Verified with an in-browser automated route: all six branches pass
+(156/124/146/155/130/145). The Unity project is archived on branch `unity-version`.

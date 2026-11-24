@@ -1,2 +1,0 @@
-PASS shaped corpus coverage. Missing: 
-Font: Amiri OFL. Western digits preserved. Visual bidi review separate.
