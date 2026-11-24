@@ -1,0 +1,26 @@
+# Unity generated / local
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+*.csproj
+*.sln
+*.suo
+*.user
+*.pidb
+*.booproj
+.vs/
+.idea/
+.vscode/
+# Builds: only the web build is published (copied to /docs for GitHub Pages)
+/[Bb]uilds/
+/[Bb]uild/
+# Bulky or machine-specific evidence
+/Evidence/*.log
+/Evidence/smoke/*.png
+.mcp.json
+*.slnx
+/Data/

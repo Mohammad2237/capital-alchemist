@@ -1,0 +1,158 @@
+PASS clean reset 0
+PASS premature scene blocked
+PASS starts outside the shop
+PASS entered shop, Firas appears
+PASS purchase inventory
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS first bottle ready
+PASS scene 2 state preserved
+PASS physical first handoff
+PASS duplicate handoff blocked
+PASS first quiz retry
+PASS scene 3 reached
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS bottle snapped
+PASS bottle snapped
+PASS three filled bottles
+PASS all accepted or discarded
+PASS branch 0 final values 156
+PASS quiz uniqueness
+PASS report and ten terms
+PASS book pauses interactions
+PASS book resumes
+PASS clean reset 1
+PASS premature scene blocked
+PASS starts outside the shop
+PASS entered shop, Firas appears
+PASS purchase inventory
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS first bottle ready
+PASS scene 2 state preserved
+PASS physical first handoff
+PASS duplicate handoff blocked
+PASS first quiz retry
+PASS scene 3 reached
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS bottle snapped
+PASS bottle snapped
+PASS three filled bottles
+PASS all accepted or discarded
+PASS branch 1 final values 124
+PASS quiz uniqueness
+PASS report and ten terms
+PASS book pauses interactions
+PASS book resumes
+PASS clean reset 2
+PASS premature scene blocked
+PASS starts outside the shop
+PASS entered shop, Firas appears
+PASS purchase inventory
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS first bottle ready
+PASS scene 2 state preserved
+PASS physical first handoff
+PASS duplicate handoff blocked
+PASS first quiz retry
+PASS scene 3 reached
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS bottle snapped
+PASS bottle snapped
+PASS three filled bottles
+PASS all accepted or discarded
+PASS branch 2 final values 146
+PASS quiz uniqueness
+PASS report and ten terms
+PASS book pauses interactions
+PASS book resumes
+PASS clean reset 3
+PASS premature scene blocked
+PASS starts outside the shop
+PASS entered shop, Firas appears
+PASS purchase inventory
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS first bottle ready
+PASS scene 2 state preserved
+PASS physical first handoff
+PASS duplicate handoff blocked
+PASS first quiz retry
+PASS scene 3 reached
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS bottle snapped
+PASS bottle snapped
+PASS three filled bottles
+PASS all accepted or discarded
+PASS branch 3 final values 155
+PASS quiz uniqueness
+PASS report and ten terms
+PASS book pauses interactions
+PASS book resumes
+PASS clean reset 4
+PASS premature scene blocked
+PASS starts outside the shop
+PASS entered shop, Firas appears
+PASS purchase inventory
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS first bottle ready
+PASS scene 2 state preserved
+PASS physical first handoff
+PASS duplicate handoff blocked
+PASS first quiz retry
+PASS scene 3 reached
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS bottle snapped
+PASS bottle snapped
+PASS three filled bottles
+PASS all accepted or discarded
+PASS branch 4 final values 130
+PASS quiz uniqueness
+PASS report and ten terms
+PASS book pauses interactions
+PASS book resumes
+PASS clean reset 5
+PASS premature scene blocked
+PASS starts outside the shop
+PASS entered shop, Firas appears
+PASS purchase inventory
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS first bottle ready
+PASS scene 2 state preserved
+PASS physical first handoff
+PASS duplicate handoff blocked
+PASS first quiz retry
+PASS scene 3 reached
+PASS valid ingredient intake
+PASS circular stirring
+PASS bottle snapped
+PASS bottle snapped
+PASS bottle snapped
+PASS three filled bottles
+PASS all accepted or discarded
+PASS branch 5 final values 145
+PASS quiz uniqueness
+PASS report and ten terms
+PASS book pauses interactions
+PASS book resumes
+PASS: six executable scene-controller routes.
+Automated route does not prove manual mouse usability or VR performance.

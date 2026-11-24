@@ -1,0 +1,828 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="123" result="Passed" total="123" passed="123" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.1010036">
+  <test-suite type="TestSuite" id="1000" name="Capital - The Alchemist's Legacy" fullname="Capital - The Alchemist's Legacy" runstate="Runnable" testcasecount="123" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.101004" total="123" passed="123" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1027" name="Capital.Tests.dll" fullname="C:/Users/moham/Desktop/VR project/Library/ScriptAssemblies/Capital.Tests.dll" runstate="Runnable" testcasecount="22" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.054826" total="22" passed="22" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="5252" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1028" name="Capital" fullname="Capital" runstate="Runnable" testcasecount="22" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.054380" total="22" passed="22" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1029" name="Tests" fullname="Capital.Tests" runstate="Runnable" testcasecount="22" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.054118" total="22" passed="22" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1001" name="FinancialTests" fullname="Capital.Tests.FinancialTests" classname="Capital.Tests.FinancialTests" runstate="Runnable" testcasecount="22" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.053360" total="22" passed="22" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="ParameterizedMethod" id="1023" name="FinalQuizChoicesAreDistinct" fullname="Capital.Tests.FinancialTests.FinalQuizChoicesAreDistinct" classname="Capital.Tests.FinancialTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.028826" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1017" name="FinalQuizChoicesAreDistinct(30,Cheap,Replace)" fullname="Capital.Tests.FinancialTests.FinalQuizChoicesAreDistinct(30,Cheap,Replace)" methodname="FinalQuizChoicesAreDistinct" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="44486066" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.019836" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1018" name="FinalQuizChoicesAreDistinct(30,Cheap,UseWilted)" fullname="Capital.Tests.FinancialTests.FinalQuizChoicesAreDistinct(30,Cheap,UseWilted)" methodname="FinalQuizChoicesAreDistinct" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="950655994" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000277" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1019" name="FinalQuizChoicesAreDistinct(30,Premium,None)" fullname="Capital.Tests.FinancialTests.FinalQuizChoicesAreDistinct(30,Premium,None)" methodname="FinalQuizChoicesAreDistinct" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1382374548" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000192" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1020" name="FinalQuizChoicesAreDistinct(50,Cheap,Replace)" fullname="Capital.Tests.FinancialTests.FinalQuizChoicesAreDistinct(50,Cheap,Replace)" methodname="FinalQuizChoicesAreDistinct" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1032433563" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000153" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1021" name="FinalQuizChoicesAreDistinct(50,Cheap,UseWilted)" fullname="Capital.Tests.FinancialTests.FinalQuizChoicesAreDistinct(50,Cheap,UseWilted)" methodname="FinalQuizChoicesAreDistinct" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1550948999" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000145" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1022" name="FinalQuizChoicesAreDistinct(50,Premium,None)" fullname="Capital.Tests.FinancialTests.FinalQuizChoicesAreDistinct(50,Premium,None)" methodname="FinalQuizChoicesAreDistinct" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1135657136" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000135" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1012" name="FirstSaleRecognisesRevenueAndCogsOnce" fullname="Capital.Tests.FinancialTests.FirstSaleRecognisesRevenueAndCogsOnce" methodname="FirstSaleRecognisesRevenueAndCogsOnce" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1476260784" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000512" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1025" name="InvalidChoicesAreRefused" fullname="Capital.Tests.FinancialTests.InvalidChoicesAreRefused" methodname="InvalidChoicesAreRefused" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1808959292" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000488" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1011" name="PurchaseIsPostedOnce" fullname="Capital.Tests.FinancialTests.PurchaseIsPostedOnce" methodname="PurchaseIsPostedOnce" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1870513434" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000270" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1016" name="ReplacingHerbCostsFiveAndAllAccepted" fullname="Capital.Tests.FinancialTests.ReplacingHerbCostsFiveAndAllAccepted" methodname="ReplacingHerbCostsFiveAndAllAccepted" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="424979808" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000994" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1026" name="ResetStateIsClean" fullname="Capital.Tests.FinancialTests.ResetStateIsClean" methodname="ResetStateIsClean" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1794097886" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.001309" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1009" name="SequenceGuards" fullname="Capital.Tests.FinancialTests.SequenceGuards" methodname="SequenceGuards" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="986343276" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000146" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1008" name="SixOutcomes" fullname="Capital.Tests.FinancialTests.SixOutcomes" classname="Capital.Tests.FinancialTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.003445" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1002" name="SixOutcomes(30,Cheap,Replace,141,75,66,0,56,156,1)" fullname="Capital.Tests.FinancialTests.SixOutcomes(30,Cheap,Replace,141,75,66,0,56,156,1)" methodname="SixOutcomes" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1381860795" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000590" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1003" name="SixOutcomes(30,Cheap,UseWilted,104,55,49,15,24,124,0)" fullname="Capital.Tests.FinancialTests.SixOutcomes(30,Cheap,UseWilted,104,55,49,15,24,124,0)" methodname="SixOutcomes" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="981657602" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000226" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1004" name="SixOutcomes(30,Premium,None,141,85,56,0,46,146,2)" fullname="Capital.Tests.FinancialTests.SixOutcomes(30,Premium,None,141,85,56,0,46,146,2)" methodname="SixOutcomes" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="904118694" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000229" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1005" name="SixOutcomes(50,Cheap,Replace,140,75,65,0,55,155,0)" fullname="Capital.Tests.FinancialTests.SixOutcomes(50,Cheap,Replace,140,75,65,0,55,155,0)" methodname="SixOutcomes" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1808662085" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000234" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1006" name="SixOutcomes(50,Cheap,UseWilted,110,55,55,15,30,130,-1)" fullname="Capital.Tests.FinancialTests.SixOutcomes(50,Cheap,UseWilted,110,55,55,15,30,130,-1)" methodname="SixOutcomes" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1817032612" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000229" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1007" name="SixOutcomes(50,Premium,None,140,85,55,0,45,145,1)" fullname="Capital.Tests.FinancialTests.SixOutcomes(50,Premium,None,140,85,55,0,45,145,1)" methodname="SixOutcomes" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="1544158502" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000267" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1024" name="StateSurvivesSerialisation" fullname="Capital.Tests.FinancialTests.StateSurvivesSerialisation" methodname="StateSurvivesSerialisation" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="2048570038" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.005399" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1015" name="WiltedHerbRejectsOneAndPaysForTwo" fullname="Capital.Tests.FinancialTests.WiltedHerbRejectsOneAndPaysForTwo" classname="Capital.Tests.FinancialTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.001501" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1013" name="WiltedHerbRejectsOneAndPaysForTwo(30)" fullname="Capital.Tests.FinancialTests.WiltedHerbRejectsOneAndPaysForTwo(30)" methodname="WiltedHerbRejectsOneAndPaysForTwo" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="288728768" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000854" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1014" name="WiltedHerbRejectsOneAndPaysForTwo(50)" fullname="Capital.Tests.FinancialTests.WiltedHerbRejectsOneAndPaysForTwo(50)" methodname="WiltedHerbRejectsOneAndPaysForTwo" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="2055451746" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000123" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1010" name="WrongIngredientsCannotBrew" fullname="Capital.Tests.FinancialTests.WrongIngredientsCannotBrew" methodname="WrongIngredientsCannotBrew" classname="Capital.Tests.FinancialTests" runstate="Runnable" seed="800432237" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000463" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1144" name="RTLTMPro-Tests.dll" fullname="C:/Users/moham/Desktop/VR project/Library/ScriptAssemblies/RTLTMPro-Tests.dll" runstate="Runnable" testcasecount="101" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.034052" total="101" passed="101" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="5252" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1146" name="RTLTMPro" fullname="RTLTMPro" runstate="Runnable" testcasecount="77" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.024537" total="77" passed="77" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1147" name="Tests" fullname="RTLTMPro.Tests" runstate="Runnable" testcasecount="77" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.023870" total="77" passed="77" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1057" name="FastFastStringBuilderTests" fullname="RTLTMPro.Tests.FastFastStringBuilderTests" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" testcasecount="52" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.015450" total="52" passed="52" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1062" name="Append_AddsACharacter" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Append_AddsACharacter" methodname="Append_AddsACharacter" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="72305249" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000729" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1111" name="Append_WhenCapacityThresholdIsHit" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Append_WhenCapacityThresholdIsHit" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.001072" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1108" name="Append_WhenCapacityThresholdIsHit(&quot;test&quot;,'1',&quot;test1&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Append_WhenCapacityThresholdIsHit(&quot;test&quot;,'1',&quot;test1&quot;)" methodname="Append_WhenCapacityThresholdIsHit" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1123084689" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000556" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1109" name="Append_WhenCapacityThresholdIsHit(&quot;0123456789ABCDE&quot;,'F',&quot;0123456789ABCDEF&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Append_WhenCapacityThresholdIsHit(&quot;0123456789ABCDE&quot;,'F',&quot;0123456789ABCDEF&quot;)" methodname="Append_WhenCapacityThresholdIsHit" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1380228945" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000055" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1110" name="Append_WhenCapacityThresholdIsHit(&quot;0123456789ABCDEF&quot;,'0',&quot;0123456789ABCDEF0&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Append_WhenCapacityThresholdIsHit(&quot;0123456789ABCDEF&quot;,'0',&quot;0123456789ABCDEF0&quot;)" methodname="Append_WhenCapacityThresholdIsHit" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1761783062" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000036" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="ParameterizedMethod" id="1101" name="Insert_CanInsertAnotherFastStringBuilder" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_CanInsertAnotherFastStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000819" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1098" name="Insert_CanInsertAnotherFastStringBuilder(0,&quot;secondfirst&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_CanInsertAnotherFastStringBuilder(0,&quot;secondfirst&quot;)" methodname="Insert_CanInsertAnotherFastStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1547806427" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000330" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1099" name="Insert_CanInsertAnotherFastStringBuilder(5,&quot;firstsecond&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_CanInsertAnotherFastStringBuilder(5,&quot;firstsecond&quot;)" methodname="Insert_CanInsertAnotherFastStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="2033013536" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000052" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1100" name="Insert_CanInsertAnotherFastStringBuilder(2,&quot;fisecondrst&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_CanInsertAnotherFastStringBuilder(2,&quot;fisecondrst&quot;)" methodname="Insert_CanInsertAnotherFastStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1273823843" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000036" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="ParameterizedMethod" id="1105" name="Insert_CanInsertPartOfAnotherFastStringBuilder" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_CanInsertPartOfAnotherFastStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000685" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1102" name="Insert_CanInsertPartOfAnotherFastStringBuilder(0,1,3,&quot;ecofirst&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_CanInsertPartOfAnotherFastStringBuilder(0,1,3,&quot;ecofirst&quot;)" methodname="Insert_CanInsertPartOfAnotherFastStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1568119961" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000216" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1103" name="Insert_CanInsertPartOfAnotherFastStringBuilder(5,1,4,&quot;firstecon&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_CanInsertPartOfAnotherFastStringBuilder(5,1,4,&quot;firstecon&quot;)" methodname="Insert_CanInsertPartOfAnotherFastStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="956323176" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000045" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1104" name="Insert_CanInsertPartOfAnotherFastStringBuilder(2,1,4,&quot;fieconrst&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_CanInsertPartOfAnotherFastStringBuilder(2,1,4,&quot;fieconrst&quot;)" methodname="Insert_CanInsertPartOfAnotherFastStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1331678152" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000034" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1107" name="Insert_DoesNotThrowsException_IfTwoFastStringBuildersContainsSameThing" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_DoesNotThrowsException_IfTwoFastStringBuildersContainsSameThing" methodname="Insert_DoesNotThrowsException_IfTwoFastStringBuildersContainsSameThing" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1279886818" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000770" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1106" name="Insert_ThrowsException_IfYouPassSameFastStringBuilder" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Insert_ThrowsException_IfYouPassSameFastStringBuilder" methodname="Insert_ThrowsException_IfYouPassSameFastStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1859083860" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.002023" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1116" name="Length_Set" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Length_Set" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000747" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1112" name="Length_Set(&quot;test&quot;,5,&quot;test&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Length_Set(&quot;test&quot;,5,&quot;test&quot;)" methodname="Length_Set" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="322301482" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000216" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1113" name="Length_Set(&quot;test&quot;,4,&quot;test&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Length_Set(&quot;test&quot;,4,&quot;test&quot;)" methodname="Length_Set" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1653424660" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000047" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1114" name="Length_Set(&quot;test&quot;,2,&quot;te&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Length_Set(&quot;test&quot;,2,&quot;te&quot;)" methodname="Length_Set" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="642274366" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000031" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1115" name="Length_Set(&quot;test&quot;,0,&quot;&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Length_Set(&quot;test&quot;,0,&quot;&quot;)" methodname="Length_Set" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1754066885" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000030" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1063" name="Remove_RemovesAllOccurrencesOfCharacter" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Remove_RemovesAllOccurrencesOfCharacter" methodname="Remove_RemovesAllOccurrencesOfCharacter" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="2039178680" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000206" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-suite type="ParameterizedMethod" id="1079" name="Replace_CanReplaceStrings" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" testcasecount="13" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.002631" total="13" passed="13" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1066" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;&quot;,&quot;&quot;,&quot;abcdefg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;&quot;,&quot;&quot;,&quot;abcdefg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="16699371" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000473" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1067" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;a&quot;,&quot;b&quot;,&quot;bbcdefg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;a&quot;,&quot;b&quot;,&quot;bbcdefg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1467771263" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000057" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1068" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;cde&quot;,&quot;fcdef&quot;,&quot;abfcdeffg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;cde&quot;,&quot;fcdef&quot;,&quot;abfcdeffg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="2120801215" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000049" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1069" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;ce&quot;,&quot;nn&quot;,&quot;abcdefg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;ce&quot;,&quot;nn&quot;,&quot;abcdefg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1318973967" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000042" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1070" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;cde&quot;,&quot;klm&quot;,&quot;abklmfg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;cde&quot;,&quot;klm&quot;,&quot;abklmfg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1545160442" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000052" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1071" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;cde&quot;,&quot;kl&quot;,&quot;abklfg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;cde&quot;,&quot;kl&quot;,&quot;abklfg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="322833302" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000043" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1072" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;cde&quot;,&quot;klmn&quot;,&quot;abklmnfg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;cde&quot;,&quot;klmn&quot;,&quot;abklmnfg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1941159249" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000049" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1073" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;abc&quot;,&quot;klm&quot;,&quot;klmdefg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;abc&quot;,&quot;klm&quot;,&quot;klmdefg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1051452025" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000085" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1074" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;abc&quot;,&quot;kl&quot;,&quot;kldefg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;abc&quot;,&quot;kl&quot;,&quot;kldefg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1051893285" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000089" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1075" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;abc&quot;,&quot;klmn&quot;,&quot;klmndefg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;abc&quot;,&quot;klmn&quot;,&quot;klmndefg&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1493766229" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000072" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1076" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;efg&quot;,&quot;klm&quot;,&quot;abcdklm&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;efg&quot;,&quot;klm&quot;,&quot;abcdklm&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="886251212" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000103" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1077" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;efg&quot;,&quot;kl&quot;,&quot;abcdkl&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;efg&quot;,&quot;kl&quot;,&quot;abcdkl&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="271235502" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000070" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1078" name="Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;efg&quot;,&quot;klmn&quot;,&quot;abcdklmn&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Replace_CanReplaceStrings(&quot;abcdefg&quot;,&quot;efg&quot;,&quot;klmn&quot;,&quot;abcdklmn&quot;)" methodname="Replace_CanReplaceStrings" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1637899456" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000062" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="ParameterizedMethod" id="1088" name="Reverse_CanReversePartOfString_WhenLengthIsEven" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.001260" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1080" name="Reverse_CanReversePartOfString_WhenLengthIsEven(0,1,&quot;abcdef&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsEven(0,1,&quot;abcdef&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="696267343" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000285" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1081" name="Reverse_CanReversePartOfString_WhenLengthIsEven(0,2,&quot;bacdef&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsEven(0,2,&quot;bacdef&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="407923151" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000050" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1082" name="Reverse_CanReversePartOfString_WhenLengthIsEven(5,1,&quot;abcdef&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsEven(5,1,&quot;abcdef&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="967948456" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000037" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1083" name="Reverse_CanReversePartOfString_WhenLengthIsEven(4,2,&quot;abcdfe&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsEven(4,2,&quot;abcdfe&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="2010975558" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000035" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1084" name="Reverse_CanReversePartOfString_WhenLengthIsEven(1,3,&quot;adcbef&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsEven(1,3,&quot;adcbef&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1555298823" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000034" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1085" name="Reverse_CanReversePartOfString_WhenLengthIsEven(2,3,&quot;abedcf&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsEven(2,3,&quot;abedcf&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="2040503121" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000034" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1086" name="Reverse_CanReversePartOfString_WhenLengthIsEven(1,4,&quot;aedcbf&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsEven(1,4,&quot;aedcbf&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="264764739" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000032" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1087" name="Reverse_CanReversePartOfString_WhenLengthIsEven(2,4,&quot;abfedc&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsEven(2,4,&quot;abfedc&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1969711679" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000033" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="ParameterizedMethod" id="1097" name="Reverse_CanReversePartOfString_WhenLengthIsOdd" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" testcasecount="8" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.001122" total="8" passed="8" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1089" name="Reverse_CanReversePartOfString_WhenLengthIsOdd(0,1,&quot;abcdefg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsOdd(0,1,&quot;abcdefg&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1204491857" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000154" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1090" name="Reverse_CanReversePartOfString_WhenLengthIsOdd(0,2,&quot;bacdefg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsOdd(0,2,&quot;bacdefg&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1142172871" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000052" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1091" name="Reverse_CanReversePartOfString_WhenLengthIsOdd(6,1,&quot;abcdefg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsOdd(6,1,&quot;abcdefg&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="806888271" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000039" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1092" name="Reverse_CanReversePartOfString_WhenLengthIsOdd(5,2,&quot;abcdegf&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsOdd(5,2,&quot;abcdegf&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="406658497" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000035" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1093" name="Reverse_CanReversePartOfString_WhenLengthIsOdd(1,4,&quot;aedcbfg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsOdd(1,4,&quot;aedcbfg&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="945777182" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000035" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1094" name="Reverse_CanReversePartOfString_WhenLengthIsOdd(2,3,&quot;abedcfg&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsOdd(2,3,&quot;abedcfg&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1004504755" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000033" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1095" name="Reverse_CanReversePartOfString_WhenLengthIsOdd(1,6,&quot;agfedcb&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsOdd(1,6,&quot;agfedcb&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1096641443" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000033" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1096" name="Reverse_CanReversePartOfString_WhenLengthIsOdd(2,5,&quot;abgfedc&quot;)" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReversePartOfString_WhenLengthIsOdd(2,5,&quot;abgfedc&quot;)" methodname="Reverse_CanReversePartOfString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="978287526" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000035" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-case id="1064" name="Reverse_CanReverseTheWholeString_WhenLengthIsEven" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReverseTheWholeString_WhenLengthIsEven" methodname="Reverse_CanReverseTheWholeString_WhenLengthIsEven" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="717679432" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000119" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1065" name="Reverse_CanReverseTheWholeString_WhenLengthIsOdd" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.Reverse_CanReverseTheWholeString_WhenLengthIsOdd" methodname="Reverse_CanReverseTheWholeString_WhenLengthIsOdd" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1178427930" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000104" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1059" name="SetValue_CanCopyValueOfAnotherStringBuilder" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.SetValue_CanCopyValueOfAnotherStringBuilder" methodname="SetValue_CanCopyValueOfAnotherStringBuilder" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="1793421769" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000150" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1061" name="SetValue_IncreasesCapacity_AsNeeded" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.SetValue_IncreasesCapacity_AsNeeded" methodname="SetValue_IncreasesCapacity_AsNeeded" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="70586161" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000099" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1060" name="SetValue_MakesIndependentCopies" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.SetValue_MakesIndependentCopies" methodname="SetValue_MakesIndependentCopies" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="115847637" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000116" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1058" name="SetValue_SetsTheValueOfStringBuilderWithProvidedText" fullname="RTLTMPro.Tests.FastFastStringBuilderTests.SetValue_SetsTheValueOfStringBuilderWithProvidedText" methodname="SetValue_SetsTheValueOfStringBuilderWithProvidedText" classname="RTLTMPro.Tests.FastFastStringBuilderTests" runstate="Runnable" seed="251438795" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000085" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1117" name="GlyphFixerTests" fullname="RTLTMPro.Tests.GlyphFixerTests" classname="RTLTMPro.Tests.GlyphFixerTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.002730" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1118" name="ConvertNumbers_ConvertsEnglishNumbersToFarsi_WhenFarsiIsTrue" fullname="RTLTMPro.Tests.GlyphFixerTests.ConvertNumbers_ConvertsEnglishNumbersToFarsi_WhenFarsiIsTrue" methodname="ConvertNumbers_ConvertsEnglishNumbersToFarsi_WhenFarsiIsTrue" classname="RTLTMPro.Tests.GlyphFixerTests" runstate="Runnable" seed="328421257" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000851" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1119" name="ConvertNumbers_ConvertsEnglishNumbersToHindu_WhenFarsiIsFalse" fullname="RTLTMPro.Tests.GlyphFixerTests.ConvertNumbers_ConvertsEnglishNumbersToHindu_WhenFarsiIsFalse" methodname="ConvertNumbers_ConvertsEnglishNumbersToHindu_WhenFarsiIsFalse" classname="RTLTMPro.Tests.GlyphFixerTests" runstate="Runnable" seed="407493966" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000275" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1120" name="GlyphFixer_ConvertsNumbers_Farsi" fullname="RTLTMPro.Tests.GlyphFixerTests.GlyphFixer_ConvertsNumbers_Farsi" methodname="GlyphFixer_ConvertsNumbers_Farsi" classname="RTLTMPro.Tests.GlyphFixerTests" runstate="Runnable" seed="1088408334" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000375" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1121" name="GlyphFixer_ConvertsNumbers_Hindu" fullname="RTLTMPro.Tests.GlyphFixerTests.GlyphFixer_ConvertsNumbers_Hindu" methodname="GlyphFixer_ConvertsNumbers_Hindu" classname="RTLTMPro.Tests.GlyphFixerTests" runstate="Runnable" seed="2093452445" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000121" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1123" name="GlyphFixer_FixesYah_WhenFarsiIsRequired" fullname="RTLTMPro.Tests.GlyphFixerTests.GlyphFixer_FixesYah_WhenFarsiIsRequired" methodname="GlyphFixer_FixesYah_WhenFarsiIsRequired" classname="RTLTMPro.Tests.GlyphFixerTests" runstate="Runnable" seed="1506494077" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000120" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1122" name="GlyphFixer_PreservesNumbers_WhenPreserveNumberIsTrue" fullname="RTLTMPro.Tests.GlyphFixerTests.GlyphFixer_PreservesNumbers_WhenPreserveNumberIsTrue" methodname="GlyphFixer_PreservesNumbers_WhenPreserveNumberIsTrue" classname="RTLTMPro.Tests.GlyphFixerTests" runstate="Runnable" seed="1805826876" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000103" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1124" name="RichTextFixerTests" fullname="RTLTMPro.Tests.RichTextFixerTests" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" testcasecount="19" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.004570" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1132" name="FindTag_FindsClosingTag" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_FindsClosingTag" methodname="FindTag_FindsClosingTag" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1033529200" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000381" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1126" name="FindTag_FindsOpeningTagWithSpaceInside" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_FindsOpeningTagWithSpaceInside" methodname="FindTag_FindsOpeningTagWithSpaceInside" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1810835154" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000145" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1127" name="FindTag_FindsOpeningTagWithValue" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_FindsOpeningTagWithValue" methodname="FindTag_FindsOpeningTagWithValue" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1079352504" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000131" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1130" name="FindTag_FindsSelfContainedTagWithValue" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_FindsSelfContainedTagWithValue" methodname="FindTag_FindsSelfContainedTagWithValue" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="729770399" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000122" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1125" name="FindTag_FindsSimpleOpeningTag" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_FindsSimpleOpeningTag" methodname="FindTag_FindsSimpleOpeningTag" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="2125238288" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000128" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1129" name="FindTag_FindsSimpleSelfContainedTag" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_FindsSimpleSelfContainedTag" methodname="FindTag_FindsSimpleSelfContainedTag" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1410900758" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000131" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1138" name="FindTag_IgnoreTagStartingWithSpace" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_IgnoreTagStartingWithSpace" methodname="FindTag_IgnoreTagStartingWithSpace" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1292722101" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000121" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1137" name="FindTag_IgnoreTagWithoutClosingChar" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_IgnoreTagWithoutClosingChar" methodname="FindTag_IgnoreTagWithoutClosingChar" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="289424913" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000116" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1136" name="FindTag_OpeningTagWithAttributes" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_OpeningTagWithAttributes" methodname="FindTag_OpeningTagWithAttributes" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1307183679" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000126" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1128" name="FindTag_ProducesTheSameHash_ForOpeningTagsWithDifferentValues" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_ProducesTheSameHash_ForOpeningTagsWithDifferentValues" methodname="FindTag_ProducesTheSameHash_ForOpeningTagsWithDifferentValues" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="593405981" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000117" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1133" name="FindTag_ProducesTheSameHash_ForSameOpeningAndClosingTag" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_ProducesTheSameHash_ForSameOpeningAndClosingTag" methodname="FindTag_ProducesTheSameHash_ForSameOpeningAndClosingTag" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="121988287" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000111" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1131" name="FindTag_ProducesTheSameHash_ForSelfContainedTagsWithDifferentValues" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_ProducesTheSameHash_ForSelfContainedTagsWithDifferentValues" methodname="FindTag_ProducesTheSameHash_ForSelfContainedTagsWithDifferentValues" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1750157782" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000104" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1134" name="FindTag_ReturnsZero_WhenNoTagIsFound" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_ReturnsZero_WhenNoTagIsFound" methodname="FindTag_ReturnsZero_WhenNoTagIsFound" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1982267006" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000126" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1139" name="FindTag_SpriteWithIdTag" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_SpriteWithIdTag" methodname="FindTag_SpriteWithIdTag" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="205172148" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000121" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1135" name="FindTag_StartFromTheProvidedStartPosition" fullname="RTLTMPro.Tests.RichTextFixerTests.FindTag_StartFromTheProvidedStartPosition" methodname="FindTag_StartFromTheProvidedStartPosition" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="388642854" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000124" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1141" name="Fix_Reverses_OpenTag_ThatDoesntHaveClosingTag" fullname="RTLTMPro.Tests.RichTextFixerTests.Fix_Reverses_OpenTag_ThatDoesntHaveClosingTag" methodname="Fix_Reverses_OpenTag_ThatDoesntHaveClosingTag" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1277579505" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000197" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1140" name="Fix_Reverses_SelfContainedTags" fullname="RTLTMPro.Tests.RichTextFixerTests.Fix_Reverses_SelfContainedTags" methodname="Fix_Reverses_SelfContainedTags" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1930774235" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000110" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1142" name="Fix_Reverses_SimpleOpenAndClosingTag" fullname="RTLTMPro.Tests.RichTextFixerTests.Fix_Reverses_SimpleOpenAndClosingTag" methodname="Fix_Reverses_SimpleOpenAndClosingTag" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="2042360625" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000091" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1143" name="Fix_Reverses_SimpleOpenAndClosingTagWithValue" fullname="RTLTMPro.Tests.RichTextFixerTests.Fix_Reverses_SimpleOpenAndClosingTagWithValue" methodname="Fix_Reverses_SimpleOpenAndClosingTagWithValue" classname="RTLTMPro.Tests.RichTextFixerTests" runstate="Runnable" seed="1325290199" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000109" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestSuite" id="1145" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="24" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.008716" total="24" passed="24" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestFixture" id="1031" name="RTLSupportTests" fullname="Tests.RTLSupportTests" classname="Tests.RTLSupportTests" runstate="Runnable" testcasecount="24" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.008435" total="24" passed="24" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="ParameterizedMethod" id="1056" name="FixRTL" fullname="Tests.RTLSupportTests.FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" testcasecount="24" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.007890" total="24" passed="24" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1032" name="Arabic text is successfully converted" fullname="Tests.RTLSupportTests.Arabic text is successfully converted" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1148808180" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.003871" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1033" name="Farsi text is successfully converted" fullname="Tests.RTLSupportTests.Farsi text is successfully converted" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="935860552" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000100" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1034" name="Tashkeel is maintained in beginning of text" fullname="Tests.RTLSupportTests.Tashkeel is maintained in beginning of text" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1873153944" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000079" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1035" name="Tashkeel is maintained in middle of text" fullname="Tests.RTLSupportTests.Tashkeel is maintained in middle of text" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="292181732" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000071" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1036" name="Tashkeel is maintained at end of text" fullname="Tests.RTLSupportTests.Tashkeel is maintained at end of text" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="812644464" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000072" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1037" name="Arabic word conversion" fullname="Tests.RTLSupportTests.Arabic word conversion" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1876327512" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000087" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1038" name="Arabic presentation form word should not convert" fullname="Tests.RTLSupportTests.Arabic presentation form word should not convert" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1793301497" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000092" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1039" name="Special lam handling base case" fullname="Tests.RTLSupportTests.Special lam handling base case" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="475463786" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000085" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1040" name="Special lam handling AlefMaddaAbove case" fullname="Tests.RTLSupportTests.Special lam handling AlefMaddaAbove case" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="27501825" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000071" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1041" name="Special lam handling AlefHamzaAbove case" fullname="Tests.RTLSupportTests.Special lam handling AlefHamzaAbove case" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1312805885" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000068" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1042" name="Special lam handling AlefHamzaBelow case" fullname="Tests.RTLSupportTests.Special lam handling AlefHamzaBelow case" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="199479608" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000083" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1043" name="Rich text scene: yellow text" fullname="Tests.RTLSupportTests.Rich text scene: yellow text" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="531290593" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000084" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1044" name="Rich text scene: large text" fullname="Tests.RTLSupportTests.Rich text scene: large text" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1589986950" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000080" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1045" name="Rich text scene: sub and super text" fullname="Tests.RTLSupportTests.Rich text scene: sub and super text" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="834183072" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000082" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1046" name="Rich text scene: color, emoji, bold and italic text" fullname="Tests.RTLSupportTests.Rich text scene: color, emoji, bold and italic text" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="2046649106" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000093" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1047" name="Demo Persian scene: comma and colon" fullname="Tests.RTLSupportTests.Demo Persian scene: comma and colon" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="607591345" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000300" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1048" name="Demo Persian scene: mixed with english" fullname="Tests.RTLSupportTests.Demo Persian scene: mixed with english" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1354741605" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000102" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1049" name="Demo Persian scene: english numbers" fullname="Tests.RTLSupportTests.Demo Persian scene: english numbers" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="977653235" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000097" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1050" name="Demo Persian scene: parentheses, brackets" fullname="Tests.RTLSupportTests.Demo Persian scene: parentheses, brackets" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="124054507" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000088" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1051" name="Demo Persian scene: zero width non joiner" fullname="Tests.RTLSupportTests.Demo Persian scene: zero width non joiner" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1768623060" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000084" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1052" name="Demo Arabic scene: tashkeel" fullname="Tests.RTLSupportTests.Demo Arabic scene: tashkeel" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="68008526" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000083" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1053" name="Demo Arabic scene: mixed with english" fullname="Tests.RTLSupportTests.Demo Arabic scene: mixed with english" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="574071491" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000076" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1054" name="Demo Hebrew scene: base" fullname="Tests.RTLSupportTests.Demo Hebrew scene: base" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1000528892" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000072" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1055" name="Demo Hebrew scene: mixed with english" fullname="Tests.RTLSupportTests.Demo Hebrew scene: mixed with english" methodname="FixRTL" classname="Tests.RTLSupportTests" runstate="Runnable" seed="1268566472" result="Passed" start-time="2026-11-24 05:53:44Z" end-time="2026-11-24 05:53:44Z" duration="0.000073" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/moham/AppData/LocalLow/Capital Team/Capital - The Alchemist's Legacy\TestResults.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

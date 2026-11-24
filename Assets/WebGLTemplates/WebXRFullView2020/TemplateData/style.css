@@ -1,0 +1,24 @@
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #120c08; }
+#unity-container { position: fixed; inset: 0; }
+#unity-canvas { width: 100%; height: 100%; display: block; background: #120c08; touch-action: none; outline: none; }
+#loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(ellipse at center, #3b2412 0%, #120c08 70%); transition: opacity .7s ease; z-index: 5; }
+#loading.done { opacity: 0; pointer-events: none; }
+.card { text-align: center; color: #f1dcae; font-family: 'Amiri', 'Traditional Arabic', serif; padding: 32px 40px;
+  border: 2px solid #b98a3a; border-radius: 18px; background: rgba(40, 24, 12, .78); box-shadow: 0 0 60px rgba(255, 150, 40, .25); max-width: 86vw; }
+.crest { font-size: 56px; line-height: 1; filter: drop-shadow(0 0 12px #ffb347); }
+.card h1 { margin: 8px 0 0; font-size: 44px; color: #ffcf7a; }
+.card h2 { margin: 0 0 22px; font-size: 30px; font-weight: 400; }
+.bar { width: min(420px, 70vw); height: 14px; margin: 0 auto; border-radius: 8px; background: #2a1a0c; border: 1px solid #b98a3a; overflow: hidden; }
+#bar-fill { width: 0; height: 100%; background: linear-gradient(90deg, #2fb58f, #ffcf7a); transition: width .2s; }
+#loading-text { margin: 14px 0 0; font-size: 20px; }
+#hud { position: fixed; bottom: 14px; left: 14px; display: flex; gap: 10px; z-index: 4; direction: rtl; }
+#hud button { font-family: 'Amiri', serif; font-size: 22px; border-radius: 12px; border: 2px solid #b98a3a; color: #f1dcae;
+  background: rgba(30, 50, 44, .9); padding: 8px 16px; cursor: pointer; }
+#entervr { display: none; }
+#entervr.ready { display: block; background: linear-gradient(180deg, #2a8f72, #1d5f4d); box-shadow: 0 0 18px rgba(80, 255, 200, .45); animation: pulse 2.2s infinite; }
+#entervr:disabled { display: none; }
+@keyframes pulse { 50% { box-shadow: 0 0 30px rgba(80, 255, 200, .8); } }
+#hint { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); color: #f1dcae; font-family: 'Amiri', serif; font-size: 16px;
+  background: rgba(20, 12, 6, .7); padding: 4px 14px; border-radius: 10px; transition: opacity 1.5s; z-index: 3; white-space: nowrap; max-width: 96vw; overflow: hidden; text-overflow: ellipsis; }
+#hint.fade { opacity: 0; }

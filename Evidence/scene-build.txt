@@ -1,0 +1,1 @@
+PASS: three primary scenes, shared shop prefab, URP, font fixture, OpenXR configuration. 2026-11-24T05:48:06.2878680Z
