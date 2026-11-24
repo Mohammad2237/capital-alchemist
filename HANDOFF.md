@@ -172,6 +172,11 @@ Alchemy map (creative brewing):
 - Term cards wait until a character says the word (`TERM_WORDS`, `onLine`), fallback when talking stops.
 - No teleport buttons: no «ادخل», «افتح الباب», «ادخل البوابة», «انتقل إلى المحطة» (Q removed). Walk in, open the door, walk through the portal. Scene 2 starts when you open the door after the knock (`readyShut`).
 
+## 8f. Palestinian voices
+- All lines now use Sofelia-TTS-82M (Palestinian, one female voice); male characters are pitch-shifted: Firas -4, trader -6, customer -3, merchant -7 (slower), glass seller 0. Files: `docs/assets/voice/*.ogg` (MP3 kept as fallback).
+- Generator: `Tools/voices/make_voices_sofelia.py <model dir> [--all]`, needs a Python 3.12 venv (kokoro 0.9 doesn't support 3.13). Setup steps are in the script header.
+- New/changed lines: edit DIALOGUE.csv, delete that line's .ogg, rerun (only missing files are generated).
+
 ## 9. Next steps
 
 1. **The user tests VR on the headset** at the live URL, then reports what breaks. Fix those issues first.

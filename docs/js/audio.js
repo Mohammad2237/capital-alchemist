@@ -63,7 +63,9 @@ export class Audio {
 
   // ---------------------------------------------------------------- character voices (Levantine dialect)
   async preloadVoices(ids) {
-    await Promise.all(ids.map(async id => { try { const r = await fetch(`assets/voice/${id}.mp3`); if (r.ok) { this.voiceData[id] = await r.arrayBuffer(); if (this.ctx) this.decodeVoice(id); } } catch (e) {} }));
+    // Palestinian voices are Ogg Vorbis; older Safari can't decode Ogg, so it falls back to the MP3 set.
+    const ogg = !!document.createElement("audio").canPlayType('audio/ogg; codecs="vorbis"');
+    await Promise.all(ids.map(async id => { try { let r = await fetch(`assets/voice/${id}.${ogg ? "ogg" : "mp3"}`); if (!r.ok && ogg) r = await fetch(`assets/voice/${id}.mp3`); if (r.ok) { this.voiceData[id] = await r.arrayBuffer(); if (this.ctx) this.decodeVoice(id); } } catch (e) {} }));
   }
   decodeVoice(id) { const data = this.voiceData[id]; if (!data || this.voices[id]) return; this.voices[id] = this.ctx.decodeAudioData(data.slice(0)).catch(() => null); }
   // Plays a line; resolves its length in seconds (or null if no recording / audio not started).
