@@ -3,8 +3,8 @@
 **Play in the browser (desktop, phone, or a VR headset's browser):** https://mohammad2237.github.io/capital-alchemist/
 In a headset (e.g. Meta Quest Browser) press **«ادخل الواقع الافتراضي»**.
 
-A short Arabic VR financial-literacy game: you inherit a potion shop, pick the right ingredients for a customer's order at the
-village market stall (four decoys look close), crush, mix, stir (slow, steady stirring is more precise on the alchemy map) and
+A short Arabic VR financial-literacy game: you inherit a potion shop, step through a portal to the market square and pick the right
+ingredients for the customer's order from two sellers (four decoys look close), crush, mix, stir (slow, steady stirring is more precise on the alchemy map) and
 fill bottles with a squeeze dropper in a big central cauldron, sell it, take a bulk order, face a supplier
 risk, pay the shop's bills — and learn the difference between **revenue, gross profit, net profit and cash**
 by doing it. Six financial outcomes, all exact to the competition spec.

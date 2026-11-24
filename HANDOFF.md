@@ -156,6 +156,17 @@ Alchemy map (creative brewing):
 - Point at any character + trigger/E: question menu (`QUESTIONS`) with extra money ideas (هامش الربح، الميزانية، العرض والطلب، خصم الكمية...).
 - VR effects lighter (`fx.low`).
 
+## 8d. Third headset round (24 Nov night)
+- Market moved to its own square far away (Unity z ≈ -50..-64), reached through two stone-arch portals (`travel()`, `L.portalShop/portalMarket`). Stations are region-aware: if the next station is on the other side, the station becomes `portal`/`portalBack`.
+- Two sellers: التاجر المتجول (Barbarian, herbs/liquids, cheap offer) and تاجرة البلّور (Rogue, crystals/glass, premium offer; voice ar-JO-SanaNeural). Scene 1 goods split 4+4 (`MARKET[].stall`); each stall has a basket.
+- Scene 3 is a new potion (جرعة الشفاء: ورقة فضية، جمرة الشمس، ندى الفجر) via `RECIPES[1]` (tints, map zone, colours). Supplier choice = put that seller's crate in their basket (or ask them). Finance untouched.
+- Term cards (`ui.card3`): green for new terms and right answers, soft red for wrong answers, always with the why.
+- Scene timeline pills (DOM `#timeline` + VR panel), chapter cards say «المشهد ١ من ٣».
+- Characters reset per scene (`NPC.reset` with a generation token; Firas `resetTo`); merchant arrives for the offer in scene 2 and again at hand-off in scene 3.
+- Firas picks a collider-free spot in front of you when he talks (`frontSpot` in npc.js).
+- Walking never sticks: you can always walk out of something you are inside; VR collision uses the head position.
+- Steam is soft sprites now (the purple 'bubble' was the old sphere steam).
+
 ## 9. Next steps
 
 1. **The user tests VR on the headset** at the live URL, then reports what breaks. Fix those issues first.

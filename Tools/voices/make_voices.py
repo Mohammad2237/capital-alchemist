@@ -1,5 +1,5 @@
 """Generate the character voice lines (Levantine Arabic neural voices) from docs/assets/DIALOGUE.csv.
-Usage: python -m pip install edge-tts && python Tools/voices/make_voices.py
+Usage: python -m pip install edge-tts && python Tools/voices/make_voices.py [--all]  (default: only lines without an mp3)
 Writes docs/assets/voice/<id>.mp3 and rewrites the CSV duration column with the real length."""
 import asyncio, csv, io, os, edge_tts
 
@@ -11,6 +11,7 @@ VOICES = {  # speaker -> (voice, rate, pitch)
     "التاجر المتجول": ("ar-SY-LaithNeural", "+0%", "-6Hz"),
     "الزبون": ("ar-LB-RamiNeural", "+2%", "+0Hz"),
     "التاجر": ("ar-SY-LaithNeural", "-6%", "-22Hz"),
+    "تاجرة البلّور": ("ar-JO-SanaNeural", "+2%", "+0Hz"),
 }
 
 async def one(row):
@@ -26,7 +27,10 @@ async def one(row):
 async def main():
     os.makedirs(OUT, exist_ok=True)
     rows = list(csv.DictReader(io.open(CSV, encoding="utf-8")))
-    for r in rows: await one(r); print(r["id"], r["estimated_duration"])
+    import sys
+    for r in rows:
+        if "--all" not in sys.argv and os.path.exists(os.path.join(OUT, r["id"] + ".mp3")): continue  # only new/changed lines
+        await one(r); print(r["id"], r["estimated_duration"])
     with io.open(CSV, "w", encoding="utf-8", newline="") as f:
         w = csv.DictWriter(f, fieldnames=rows[0].keys(), lineterminator="\n"); w.writeheader(); w.writerows(rows)
 

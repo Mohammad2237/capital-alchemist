@@ -1,6 +1,6 @@
 // Animated characters (KayKit rigs + clips) and Firas the hologram guide.
 import * as THREE from "three";
-import { character } from "./assets.js";
+import { character, colliders } from "./assets.js";
 import { L } from "./layout.js";
 
 class Animated {
@@ -26,20 +26,21 @@ export class NPC extends Animated {
   }
   // Stand at a fixed spot already 'arrived' (the market vendor).
   standAt(pos, yaw) { this.holder.position.copy(pos); this.holder.rotation.y = yaw; this.baseYaw = yaw; this.holder.visible = true; this.arrived = true; this.walking = false; this.path = null; this.play("Idle"); }
-  reset() { this.arrived = false; this.walking = false; this.path = null; this.holder.visible = false; this.holder.position.copy(L.customerPath[0]); }
+  reset() { this.gen = (this.gen || 0) + 1; this.onPath = this.onFace = null; this.faceDir = null; this.play("Idle"); this.arrived = false; this.walking = false; this.path = null; this.holder.visible = false; this.holder.position.copy(L.customerPath[0]); }
   get head() { return this.holder.position.clone().add(new THREE.Vector3(0, this.role === "Merchant" ? 1.95 : 1.85, 0)); }
   async arrive(game) {
-    if (this.arrived || this.walking) return; this.walking = true; this.holder.visible = true;
-    await sleep(game.fast ? 50 : 900); game.fx.swingDoor(); await sleep(game.fast ? 50 : 800);
-    this.game = game; await this.walk([...L.customerPath.slice(1), this.spot], game);
-    await this.face(new THREE.Vector3(0, 0, 1)); // toward the counter (+Z into the shop)
+    if (this.arrived || this.walking) return; this.walking = true; this.holder.visible = true; const gen = this.gen = (this.gen || 0) + 1;
+    this.holder.position.copy(L.customerPath[0]);
+    await sleep(game.fast ? 50 : 900); if (gen !== this.gen) return; game.fx.swingDoor(); await sleep(game.fast ? 50 : 800); if (gen !== this.gen) return;
+    this.game = game; await this.walk([...L.customerPath.slice(1), this.spot], game); if (gen !== this.gen) return;
+    await this.face(new THREE.Vector3(0, 0, 1)); if (gen !== this.gen) return; // toward the counter (+Z into the shop)
     this.play("Idle"); this.walking = false; this.arrived = true; this.baseYaw = 0;
   }
   async leave(game) {
-    if (!this.arrived) return; this.arrived = false; this.walking = true;
-    await sleep(1200); game.fx.swingDoor();
+    if (!this.arrived) return; this.arrived = false; this.walking = true; const gen = this.gen = (this.gen || 0) + 1;
+    await sleep(1200); if (gen !== this.gen) return; game.fx.swingDoor();
     await this.walk([L.customerPath[2], L.customerPath[1], L.customerPath[0].clone().add(new THREE.Vector3(0, 0, -0.4))], game);
-    this.holder.visible = false; this.walking = false;
+    if (gen !== this.gen) return; this.holder.visible = false; this.walking = false;
   }
   walk(points, game) {
     this.play("Walking_A");
@@ -80,6 +81,19 @@ function turnToward(obj, dir, rate) {
   return Math.abs(diff) < 0.02;
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Firas's body is about 0.6 m wide and 1.3 m tall; keep him out of anything solid.
+function freeSpot(p) {
+  return !colliders.some(b => p.x > b.min.x - 0.32 && p.x < b.max.x + 0.32 && p.z > b.min.z - 0.32 && p.z < b.max.z + 0.32 && b.max.y > p.y + 0.05 && b.min.y < p.y + 1.35);
+}
+function frontSpot(eye, f) {
+  const side = new THREE.Vector3(-f.z, 0, f.x);
+  for (const [d, s] of [[1.6, 0.55], [1.6, -0.55], [1.3, 0.8], [1.3, -0.8], [1.9, 0.9], [1.9, -0.9], [1.15, 0.35], [1.15, -0.35], [2.2, 0]]) {
+    const p = eye.clone().addScaledVector(f, d).addScaledVector(side, s); p.y = Math.max(0.15, eye.y - L.firasHeight - 0.05);
+    if (L.isInside(eye) && !L.isInside(p)) continue;
+    if (freeSpot(p)) return p;
+  }
+  const p = eye.clone().addScaledVector(f, 0.9).addScaledVector(side, 0.6); p.y = Math.max(0.15, eye.y - L.firasHeight - 0.05); return p;
+}
 
 export class Firas extends Animated {
   static async create(scene) {
@@ -99,6 +113,7 @@ export class Firas extends Animated {
     this.play("Idle");
   }
   get head() { return this.pos.clone().add(new THREE.Vector3(0, L.firasHeight + 0.12, 0)); }
+  resetTo(p) { this.pos.copy(p); this.holder.position.copy(p); this.talkGoal = null; }
   show(game) { if (this.shown) return; this.shown = true; game.audio.play("crystal"); game.fx.sparkle(this.home, 16); this.play("Spellcast_Raise", 0.2, true); }
   update(dt, t, game, target) {
     this.mixer.update(dt);
@@ -112,9 +127,8 @@ export class Firas extends Animated {
     if (this.appear >= 1 && talking0) {
       const eye = game.camera.getWorldPosition(new THREE.Vector3()), f = new THREE.Vector3(); game.camera.getWorldDirection(f); f.y = 0; f.normalize();
       const side = new THREE.Vector3(-f.z, 0, f.x);
-      const p = eye.clone().addScaledVector(f, 1.6).addScaledVector(side, 0.55); p.y = eye.y - L.firasHeight - 0.05;
-      if (L.isInside(eye)) { p.x = THREE.MathUtils.clamp(p.x, -4.0, 4.0); p.z = THREE.MathUtils.clamp(p.z, 1.2, 11.4); }
-      if (!this.talkGoal || this.talkGoal.distanceTo(p) > 0.9) this.talkGoal = p; goal = this.talkGoal;
+      if (!this.talkGoal || this.talkGoal.distanceTo(eye) > 2.6 || this.talkGoal.distanceTo(eye) < 0.7 || !freeSpot(this.talkGoal) || this.talkGoal.clone().sub(eye).setY(0).normalize().dot(f) < 0.35) this.talkGoal = frontSpot(eye, f);
+      goal = this.talkGoal;
     } else this.talkGoal = null;
     const k = 1 - Math.exp(-dt * 2.2); const before = this.pos.clone();
     this.pos.lerp(goal, k); const speed = before.distanceTo(this.pos) / Math.max(dt, 1e-4);

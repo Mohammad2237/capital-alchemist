@@ -21,9 +21,37 @@ export class UI {
     this.bcv = document.createElement("canvas"); this.bcv.width = 1024; this.bcv.height = 320; this.btex = new THREE.CanvasTexture(this.bcv); this.btex.colorSpace = THREE.SRGBColorSpace;
     this.bubble = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.344), new THREE.MeshBasicMaterial({ map: this.btex, transparent: true, depthTest: false }));
     this.bubble.renderOrder = 9; this.bubble.visible = false; scene.add(this.bubble); this.bubbleOn = false;
+    // Term / answer card: green for a new term or a right answer, soft red for a wrong one (always explains).
+    this.cards = []; this.cardOn = null; this.chapter = 0;
+    this.ccv = document.createElement("canvas"); this.ccv.width = 1024; this.ccv.height = 460; this.ctex = new THREE.CanvasTexture(this.ccv); this.ctex.colorSpace = THREE.SRGBColorSpace;
+    this.cardMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.427), new THREE.MeshBasicMaterial({ map: this.ctex, transparent: true, depthTest: false }));
+    this.cardMesh.renderOrder = 12; this.cardMesh.visible = false; scene.add(this.cardMesh);
   }
   // While someone is talking, decision boxes wait; they appear when the line is finished.
-  setHold(b) { if (this.hold !== b) { this.hold = b; this.dirty = true; this.renderDom("talk"); } }
+  setHold(b) { this.holdReq = b; const h = b || !!this.cardOn; if (this.hold !== h) { this.hold = h; this.dirty = true; this.renderDom("talk"); } }
+  card3(title, body, kind = "good") { this.cards.push({ title, body, kind }); }
+  setChapter(n) { this.chapter = n; this.dirty = true; [...$("timeline").children].forEach((s, i) => { s.className = i === n ? "now" : i < n ? "done" : ""; }); }
+  updateCards(dt, inVR) {
+    if (this.cardOn && performance.now() > this.cardOn.until) { this.cardOn = null; $("termcard").hidden = true; this.cardMesh.visible = false; this.setHold(this.holdReq); }
+    if (!this.cardOn && this.cards.length) {
+      const c = this.cardOn = this.cards.shift(); c.until = performance.now() + Math.max(4500, 1800 + c.body.length * 55);
+      const el = $("termcard"); el.className = c.kind; el.querySelector("b").textContent = c.title; el.querySelector("p").textContent = c.body; el.hidden = false; el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
+      const x = this.ccv.getContext("2d"); x.clearRect(0, 0, 1024, 460); const good = c.kind === "good";
+      const g = x.createLinearGradient(0, 0, 0, 460); g.addColorStop(0, good ? "#2f9a63" : "#c0563f"); g.addColorStop(1, good ? "#1d6b45" : "#8f3a2a");
+      x.fillStyle = g; x.strokeStyle = "#ffe08a"; x.lineWidth = 8; x.beginPath(); x.roundRect(6, 6, 1012, 448, 28); x.fill(); x.stroke();
+      x.direction = "rtl"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = "#ffffff"; x.font = "bold 54px Amiri"; x.fillText(c.title, 512, 70);
+      x.font = "bold 40px Amiri"; wrap(x, c.body, 940).slice(0, 5).forEach((l, i) => x.fillText(l, 512, 160 + i * 58)); this.ctex.needsUpdate = true;
+      this.placeCard = true; this.setHold(this.holdReq);
+    }
+    this.cardMesh.visible = !!this.cardOn && inVR;
+    if (this.cardMesh.visible) {
+      const head = new THREE.Vector3(), fwd = new THREE.Vector3(); this.camera.getWorldPosition(head); this.camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
+      const target = head.clone().addScaledVector(fwd, 1.1); target.y = head.y + 0.12;
+      const to = this.cardMesh.position.clone().sub(head).setY(0);
+      if (this.placeCard || to.angleTo(fwd) > 0.6) { this.cardMesh.position.lerp(target, this.placeCard ? 1 : Math.min(1, dt * 4)); this.placeCard = false; }
+      this.cardMesh.lookAt(head);
+    }
+  }
   setBubble(speaker, text, head) {
     const on = !!(text && head); if (on !== this.bubbleOn) { this.bubbleOn = on; this.dirty = true; } this.bubble.visible = on; if (!on) { this.bubbleText = null; return; }
     if (this.bubbleText !== text) {
@@ -86,6 +114,7 @@ export class UI {
       $("cash").textContent = this.shownCash; this.st.cash = this.shownCash; this.dirty = true;
     }
     if (this.st.toast && performance.now() > this.toastUntil) this.toast("");
+    this.updateCards(dt, inVR);
     if (inVR) this.updatePanel(dt);
     this.panel.visible = inVR; if (!inVR) this.bubble.visible = false;
   }
@@ -112,11 +141,14 @@ export class UI {
     // top: the one current step (big) + purse
     if (s.objective) { panel(150, 6, 868, 92, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffe7b0"; c.font = "bold 50px Amiri"; c.fillText(fit(c, s.objective, 840), 584, 54); }
     panel(6, 6, 136, 92, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffcf7a"; c.font = "bold 48px Amiri"; c.fillText(String(s.cash), 74, 54);
-    if (s.toast) { c.fillStyle = "#ffcf7a"; c.font = "bold 40px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(fit(c, s.toast, 980), 512, 126); c.fillText(fit(c, s.toast, 980), 512, 132); }
-    if (s.progress) { c.fillStyle = "#7dffc0"; c.font = "bold 42px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(s.progress, 512, 174); c.fillText(s.progress, 512, 174); }
+    ["١ الإرث", "٢ أول زبون", "٣ الطلبية الكبرى"].forEach((n, i) => { const x = 820 - i * 300, now = i === this.chapter;
+      c.fillStyle = now ? "#1f5a44" : "rgba(20,27,23,.8)"; c.strokeStyle = now ? "#ffcf7a" : "#5c4320"; c.lineWidth = 3; c.beginPath(); c.roundRect(x - 125, 104, 250, 40, 20); c.fill(); c.stroke();
+      c.fillStyle = now ? "#ffe7b0" : i < this.chapter ? "#7dffc0" : "#b9a988"; c.font = (now ? "bold " : "") + "28px Amiri"; c.fillText(n, x, 125); });
+    if (s.toast) { c.fillStyle = "#ffcf7a"; c.font = "bold 40px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(fit(c, s.toast, 980), 512, 172); c.fillText(fit(c, s.toast, 980), 512, 172); }
+    if (s.progress) { c.fillStyle = "#7dffc0"; c.font = "bold 42px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(s.progress, 512, 214); c.fillText(s.progress, 512, 214); }
     const talk = s.talk && !this.hold ? s.talk : null, box = talk || s.modal;
     if (box) {
-      const y0 = 228, h = 484, btnY = y0 + h - 118;
+      const y0 = 262, h = 452, btnY = y0 + h - 114;
       panel(16, y0, 992, h, "#ecd9ab", "#73501c");
       if (talk) { panel(352, y0 - 26, 320, 58, "#1f3a30", "#c2873a"); c.font = "bold 36px Amiri"; c.fillStyle = "#ffcf7a"; c.fillText(talk.speaker, 512, y0 + 3); }
       else { c.font = "bold 44px Amiri"; c.fillStyle = "#301e13"; c.fillText(s.modal.title, 512, y0 + 46); }

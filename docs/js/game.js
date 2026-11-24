@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { GameState, Finance, RecipeProgress, Supplier, Herb } from "./finance.js";
 import { L, Stations, U } from "./layout.js";
-import { place, load, colliders, box3 } from "./assets.js";
+import { place, load, colliders, box3, blocker } from "./assets.js";
 import { refs } from "./shop.js";
 import { UI, wait } from "./ui.js";
 import { Audio } from "./audio.js";
@@ -17,27 +17,40 @@ const TERMS = [["رأس المال", "الأموال أو الموارد الت�
   ["الإيرادات", "الأموال الناتجة عن بيع المنتجات قبل طرح التكاليف."], ["تكلفة البضاعة المباعة", "التكلفة المباشرة للمنتجات التي تم بيعها."],
   ["إجمالي الربح", "الإيرادات ناقص تكلفة البضاعة المباعة."], ["المخاطرة", "احتمال حدوث خسارة أو نتيجة غير متوقعة."],
   ["المصروفات التشغيلية", "تكاليف تشغيل المتجر غير الداخلة في تكلفة الجرعات مباشرة."], ["صافي الربح", "إجمالي الربح بعد طرح خسائر التلف والمصروفات التشغيلية في هذه المحاكاة."]];
-const CARDS = [["إرث الكيميائي", "المشهد الأول: الإرث"], ["المشهد الثاني", "أول زبون"], ["المشهد الثالث", "الطلبية الكبرى"]];
+const CARDS = [["المشهد ١ من ٣", "الإرث"], ["المشهد ٢ من ٣", "أول زبون"], ["المشهد ٣ من ٣", "الطلبية الكبرى"]];
 const MODELS = { herb: "herb_red", crystal: "crystal_blue", water: "water_flask", bottle: "potion_bottle", potion: "potion_bottle", pestle: "pestle", spoon: "stir_paddle" };
 const GRIP = { spoon: 0.95, pestle: 0.2, pipette: 0.24 };
-// Village market (scene 1): four ingredients the order needs (buy = ingredient index) and four that look close but are wrong.
+// Market square (through the portal). Scene 1: the order needs 4 things (buy = ingredient index); 4 lookalikes are wrong.
 const MARKET = [
-  { key: "m_herb", name: "عشبة حمراء", price: 10, tag: "للطاقة", buy: 0, model: "herb_red", scale: 1.3 },
-  { key: "m_mush", name: "فطر أحمر", price: 6, tag: "للنوم", line: "T1_NO_MUSH" },
-  { key: "m_crystal", name: "بلورة زرقاء", price: 8, tag: "لصفاء الذهن", buy: 1, model: "crystal_blue", scale: 1.3 },
-  { key: "m_feather", name: "ريشة زرقاء", price: 9, tag: "للخفّة", line: "T1_NO_FEATHER" },
-  { key: "m_water", name: "ماء سحري", price: 5, tag: "للمزج", buy: 2, model: "water_flask", scale: 1.1 },
-  { key: "m_honey", name: "عسل القمر", price: 7, tag: "للحلاوة", line: "T1_NO_HONEY" },
-  { key: "m_bottle", name: "قارورة", price: 2, tag: "للتعبئة", buy: 3, model: "potion_bottle", scale: 1 },
-  { key: "m_salt", name: "ملح أسود", price: 4, tag: "للحفظ", line: "T1_NO_SALT" },
+  { key: "m_herb", stall: 0, name: "عشبة حمراء", price: 10, tag: "للطاقة", buy: 0, model: "herb_red", scale: 1.3 },
+  { key: "m_mush", stall: 0, name: "فطر أحمر", price: 6, tag: "للنوم", line: "T1_NO_MUSH" },
+  { key: "m_water", stall: 0, name: "ماء سحري", price: 5, tag: "للمزج", buy: 2, model: "water_flask", scale: 1.1 },
+  { key: "m_honey", stall: 0, name: "عسل القمر", price: 7, tag: "للحلاوة", line: "T1_NO_HONEY" },
+  { key: "m_crystal", stall: 1, name: "بلورة زرقاء", price: 8, tag: "لصفاء الذهن", buy: 1, model: "crystal_blue", scale: 1.3 },
+  { key: "m_purple", stall: 1, name: "بلورة بنفسجية", price: 9, tag: "للأحلام", line: "B_NO_PURPLE", model: "crystal_blue", scale: 1.15, tint: 0xa05cff },
+  { key: "m_bottle", stall: 1, name: "قارورة", price: 2, tag: "للتعبئة", buy: 3, model: "potion_bottle", scale: 1 },
+  { key: "m_salt", stall: 1, name: "ملح أسود", price: 4, tag: "للحفظ", line: "B_NO_SALT" },
+];
+const STALL_INFO = [
+  { sign: "التاجر المتجول\nأعشاب • سوائل", hello: "T1_HELLO", deal: "T1_DEAL", offer: "T3_OFFER" },
+  { sign: "تاجرة البلّور\nبلّور • قناني", hello: "B_HELLO", deal: "B_DEAL", offer: "B3_OFFER" },
 ];
 const ORDER_TEXT = "طلب الزبون: جرعة نشاط\nإشي أحمر للطاقة • إشي أزرق لصفاء الذهن\nماء سحري للمزج • قارورة";
+const ORDER3_TEXT = "طلب التاجر: 3 جرعات شفاء\nورقة فضية • جمرة الشمس • ندى الفجر\nاختار مورّد: اقتصادي ولا ممتاز؟";
+// Scene 1 and scene 3 brew different potions: new ingredients, colours and a different target on the alchemy map.
+const RECIPES = [
+  { name: "جرعة النشاط", labels: { herb: "العشبة الحمراء", crystal: "البلورة الزرقاء", water: "الماء السحري" }, tint: {}, crushed: 0x8a2b10,
+    zone: [0.42, 0.62], push: { crushed: [-0.05, 0.36], crystal: [0.3, 0.08], water: [-0.08, 0.1] }, potion: [0x1ab866, 0x29d98f], steam: [0xc2cec6, 0x8dffc0], board: "جرعة النشاط\nعشبة 10 • بلورة 8\nماء 5 • قارورة 2" },
+  { name: "جرعة الشفاء", labels: { herb: "الورقة الفضية", crystal: "جمرة الشمس", water: "ندى الفجر" }, tint: { herb: 0xc4e8de, crystal: 0xff7a1a, water: 0xff8fc4 }, crushed: 0x9fc8c0,
+    zone: [-0.45, 0.58], push: { crushed: [0.06, 0.34], crystal: [-0.32, 0.1], water: [0.06, 0.1] }, potion: [0xf0b030, 0xffd24a], steam: [0xd2c8b8, 0xffcf80], board: "جرعة الشفاء\nورقة فضية • جمرة الشمس\nندى الفجر • قارورة" },
+];
 // Questions you can ask each character (point at them and press trigger / E).
 const QUESTIONS = {
   "فراس": [["شو يعني هامش الربح؟", "A_MARGIN"], ["المصاري اللي معي كلها ربح؟", "A_CASH"], ["ليش الجودة مهمة؟", "A_QUALITY"], ["شو يعني ميزانية؟", "A_BUDGET"]],
   "التاجر المتجول": [["ليش الأسعار مختلفة؟", "A_T_PRICE"], ["في خصم إذا اشتريت كتير؟", "A_T_BULK"]],
   "الزبون": [["شو بهمّك بالجرعة؟", "A_C_WHY"], ["قدّيش سعرها عادة؟", "A_C_PRICE"]],
   "التاجر": [["ليش بدك كمية كبيرة؟", "A_M_ORDER"], ["شو بتفحص بالجرعة؟", "A_M_CHECK"]],
+  "تاجرة البلّور": [["ليش القارورة المنيحة أغلى؟", "A_B_GLASS"], ["شو يعني سمعة المحل؟", "A_B_TRUST"]],
 };
 // Canvas sign in the world (Arabic shaped by the browser). yawUnity uses the Unity heading convention.
 function sign(scene, text, pos, w, h, yawUnity, size = 64, bg = "#e8d4a6", ink = "#301e13") {
@@ -63,6 +76,10 @@ function buildDecoy(it) {
   if (k === "m_mush") { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.016, 0.06, 10), MAT(0xf2e8d0)); st.position.y = 0.03; g.add(st);
     const cap = new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), MAT(0xc0281c)); cap.position.y = 0.055; cap.scale.y = 0.7; g.add(cap);
     for (let i = 0; i < 5; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.007, 6, 4), MAT(0xffffff)); const a = i * 1.3; d.position.set(Math.cos(a) * 0.025, 0.08 - (i % 2) * 0.008, Math.sin(a) * 0.025); g.add(d); } }
+  else if (k === "bundle") { const crate = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.14, 0.24), MAT(0x8a5a2b)); crate.position.y = 0.07; g.add(crate);
+    const cols = [0xc4e8de, 0xff7a1a, 0xff8fc4];
+    for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), MAT(cols[i % 3], { emissive: cols[i % 3], emissiveIntensity: i % 3 === 1 ? 0.5 : 0.1 })); m.position.set(-0.11 + (i % 3) * 0.11, 0.15, -0.07 + Math.floor(i / 3) * 0.07); g.add(m); }
+    if (it.market.bundle === 2) { const band = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.03, 0.25), MAT(0xd4a640, { metalness: 0.7, roughness: 0.3 })); band.position.y = 0.11; g.add(band); } }
   else if (k === "m_feather") { const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.2, 6), MAT(0xf0e6d0)); sh.position.y = 0.1; sh.rotation.z = 0.35; g.add(sh);
     const v = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), MAT(0x2f6fe0, { emissive: 0x0a2a70, emissiveIntensity: 0.4 })); v.scale.set(0.028, 0.085, 0.006); v.position.set(-0.03, 0.12, 0); v.rotation.z = 0.35; g.add(v); }
   else if (k === "m_honey") { const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.036, 0.09, 16), MAT(0xffe9b0, { transparent: true, opacity: 0.5, roughness: 0.1 })); jar.position.y = 0.045; g.add(jar);
@@ -72,6 +89,7 @@ function buildDecoy(it) {
     const tie = new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.005, 6, 12), MAT(0xc2873a)); tie.rotation.x = Math.PI / 2; tie.position.y = 0.1; g.add(tie); }
 }
 const C = (text, action) => ({ text, action });
+function tintAll(g, color, re) { g.traverse(o => { if (o.isMesh && re.test(o.name || "") ) { o.material = o.material.clone(); o.material.color.set(color); if (o.material.emissive && /Glow|Core/i.test(o.name)) o.material.emissive.set(color); } }); }
 
 // ------------------------------------------------------------------ dialogue
 class Dialogue {
@@ -99,12 +117,13 @@ class Item {
     const g = this.obj; g.position.copy(pos); this.g.scene.add(g);
     if (this.kind === "crushed") {
       const bowl = await place(g, "assets/kaykit/Restaurant/bowl_small.gltf", new THREE.Vector3(), { width: 0.16 });
-      for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), new THREE.MeshStandardMaterial({ color: 0x8a2b10 })); m.position.set(Math.sin(i * 3) * 0.035, 0.045, Math.cos(i * 3) * 0.035); g.add(m); }
+      for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), new THREE.MeshStandardMaterial({ color: this.g.recipe.crushed })); m.position.set(Math.sin(i * 3) * 0.035, 0.045, Math.cos(i * 3) * 0.035); g.add(m); }
     } else if (this.kind === "pipette") buildPipette(this);
     else if (this.market && !this.market.model) buildDecoy(this);
-    else if (this.market) await place(g, `assets/custom/${this.market.model}.glb`, new THREE.Vector3(), { scale: this.market.scale });
+    else if (this.market) { await place(g, `assets/custom/${this.market.model}.glb`, new THREE.Vector3(), { scale: this.market.scale }); if (this.market.tint) tintAll(g, this.market.tint, /./); }
     else {
       const m = await place(g, `assets/custom/${MODELS[this.kind]}.glb`, new THREE.Vector3(), { scale: this.kind === "water" ? 1.3 : (this.kind === "herb" || this.kind === "crystal") ? 1.55 : 1 });
+      const tint = this.g.recipe.tint[this.kind]; if (tint) tintAll(g, tint, this.kind === "water" ? /Water|Bubble/i : this.kind === "crystal" ? /Shard|Core/i : /./);
     }
     if (this.kind === "potion") this.fill(1, new THREE.Color(0x1ab866));
     g.traverse(o => { if (o.isMesh && o.name !== "Liquid") { o.material = o.material.clone(); this.glow.push(o.material); } });
@@ -123,13 +142,12 @@ class Item {
 
 // ------------------------------------------------------------------ alchemy map (creative brewing)
 class BrewMap {
-  constructor() { this.reset(); }
-  reset() { this.pos = new THREE.Vector2(); this.heading = 90; this.best = 9; this.any = false; this.trail = []; }
-  static zone = new THREE.Vector2(0.42, 0.62);
+  constructor() { this.reset(RECIPES[0]); }
+  reset(r = this.recipe) { this.recipe = r; this.zone = new THREE.Vector2(...r.zone); this.pos = new THREE.Vector2(); this.heading = 90; this.best = 9; this.any = false; this.trail = []; this.wobble = 0; }
   get quality() { return this.best < 0.09 ? 3 : this.best < 0.18 ? 2 : 1; }
-  get inZone() { return this.pos.distanceTo(BrewMap.zone) < 0.13 * 0.7; }
+  get inZone() { return this.pos.distanceTo(this.zone) < 0.13 * 0.7; }
   add(kind) {
-    const push = kind === "crushed" ? [-0.05, 0.36] : kind === "crystal" ? [0.3, 0.08] : kind === "water" ? [-0.08, 0.1] : null; if (!push) return;
+    const push = this.recipe.push[kind]; if (!push) return;
     for (let i = 1; i <= 5; i++) { this.pos.x += push[0] / 5; this.pos.y += push[1] / 5; this.trail.push(this.pos.clone()); }
     this.heading = Math.atan2(push[1], push[0]) * 180 / Math.PI; this.any = true; this.track();
   }
@@ -141,15 +159,15 @@ class BrewMap {
     this.pos.add(new THREE.Vector2(Math.cos(r), Math.sin(r)).multiplyScalar(0.34 * turns * (1 + 0.8 * this.wobble))); if (this.pos.length() > 0.95) this.pos.setLength(0.95);
     if (Math.random() < 0.5) this.trail.push(this.pos.clone()); this.track(); return !wasIn && this.inZone;
   }
-  track() { this.best = Math.min(this.best, this.pos.distanceTo(BrewMap.zone)); }
+  track() { this.best = Math.min(this.best, this.pos.distanceTo(this.zone)); }
   get qualityText() { return "الجودة " + this.quality + " / 3" + (this.quality === 3 ? " — ممتازة!" : ""); }
-  get tint() { if (!this.any) return new THREE.Color(0xd9e0dc); if (this.inZone) return new THREE.Color(0xffd973); return new THREE.Color(0xd95a4d).lerp(new THREE.Color(0x598cff), THREE.MathUtils.clamp(this.pos.x * 2 + 0.5, 0, 1)); }
+  get tint() { if (!this.any) return new THREE.Color(0xd9e0dc); if (this.inZone) return new THREE.Color(0xffd973); const near = 1 - Math.min(1, this.pos.distanceTo(this.zone) / 0.8); return new THREE.Color(this.recipe.steam[0]).lerp(new THREE.Color(this.recipe.steam[1]), near); }
   get speedText() { return this.wobble > 0.5 ? "التحريك سريع: العلامة بتفلت" : "التحريك هادئ: تحكّم دقيق"; }
   draw(c, size) {
     const s = size / 2, P2 = v => [s + v.x * s, s - v.y * s];
     c.clearRect(0, 0, size, size); c.fillStyle = "#eedbb0"; c.beginPath(); c.arc(s, s, s - 2, 0, Math.PI * 2); c.fill();
     c.strokeStyle = "rgba(120,80,30,.25)"; for (let r = 1; r <= 3; r++) { c.beginPath(); c.arc(s, s, r * s / 3.4, 0, Math.PI * 2); c.stroke(); }
-    const [zx, zy] = P2(BrewMap.zone); c.fillStyle = "rgba(40,170,110,.75)"; c.beginPath(); c.arc(zx, zy, 0.13 * s, 0, Math.PI * 2); c.fill();
+    const [zx, zy] = P2(this.zone); c.fillStyle = "rgba(40,170,110,.75)"; c.beginPath(); c.arc(zx, zy, 0.13 * s, 0, Math.PI * 2); c.fill();
     c.fillStyle = "rgba(110,70,25,.75)"; for (const p of this.trail.slice(-60)) { const [x, y] = P2(p); c.beginPath(); c.arc(x, y, 3, 0, Math.PI * 2); c.fill(); }
     const [mx, my] = P2(this.pos); c.fillStyle = "#c2873a"; c.strokeStyle = "#4a2d0e"; c.lineWidth = 3; c.beginPath(); c.arc(mx, my, 11, 0, Math.PI * 2); c.fill(); c.stroke();
   }
@@ -172,7 +190,8 @@ export class Game {
     this.trader = await NPC.create(this.scene, "assets/kaykit/Characters/Barbarian.glb", 1.78, "Trader", "التاجر المتجول", L.customerSpot);
     this.customer = await NPC.create(this.scene, "assets/kaykit/Characters/Rogue_Hooded.glb", 1.72, "Customer", "الزبون", L.customerSpot);
     this.merchant = await NPC.create(this.scene, "assets/kaykit/Characters/Knight.glb", 1.8, "Merchant", "التاجر", L.customerSpot);
-    this.npcs = [this.trader, this.customer, this.merchant].filter(Boolean);
+    this.seller = await NPC.create(this.scene, "assets/kaykit/Characters/Rogue.glb", 1.7, "Seller", "تاجرة البلّور", L.customerSpot);
+    this.npcs = [this.trader, this.customer, this.merchant, this.seller].filter(Boolean); this.vendors = [this.trader, this.seller];
     for (const name of ["herb_red", "crystal_blue", "water_flask", "potion_bottle", "pestle", "stir_paddle"]) await load(`assets/custom/${name}.glb`);
     this.labels(); await this.setupMarket(); this.setupWorldMap();
     this.ui.onBook = () => this.glossary(0); this.ui.onStation = () => this.goToStation(); this.ui.onClick = () => this.audio.play("paper", 1.1, 0.8);
@@ -180,6 +199,8 @@ export class Game {
     this.ui.card(...CARDS[0], this.fast ? 0 : 1600);
     this.refresh();
   }
+  get recipe() { return RECIPES[this.chapter >= 2 ? 1 : 0]; }
+  region() { const p = this.inVR ? this.camera.getWorldPosition(new THREE.Vector3()) : this.rig.position; return L.inMarket(p) ? "market" : "village"; }
   // ---------------------------------------------------------------- world labels (sign, recipe, market)
   labels() {
     const label = (text, pos, w, h, yawUnity, size = 64) => {
@@ -192,33 +213,83 @@ export class Game {
     };
     document.fonts.ready.then(() => {
       label("إرث الكيميائي\nمتجر الجرعات", U(0, 2.93, -0.545), 1.1, 0.5, 180, 90);
-      label("جرعة النشاط\nعشبة 10 • بلورة 8\nماء 5 • قارورة 2", U(-4.03, 1.36, 6.2), 1.05, 0.7, 90, 70);
-      sign(this.scene, ORDER_TEXT, L.stall.clone().setY(2.24), 1.7, 0.7, 90, 62);
-      MARKET.forEach((d, i) => sign(this.scene, `${d.name} • ${d.price}\n${d.tag}`, U(-1.97, 0.8, L.marketItem(i).z), 0.28, 0.14, 90, 110, "#f3e3bb"));
+      this.recipeBoard = label(RECIPES[0].board, U(-4.03, 1.36, 6.2), 1.05, 0.7, 90, 70);
+      this.orderBoard = sign(this.scene, ORDER_TEXT, U(0, 2.3, -63.2), 2.4, 0.95, 0, 64);
+      L.stalls.forEach((s, i) => sign(this.scene, STALL_INFO[i].sign, L.stallPos(s, 0, 2.24, 0), 1.5, 0.6, s.side * 90, 70));
+      sign(this.scene, "✦ إلى السوق ✦", L.portalShop.clone().setY(3.55), 1.3, 0.34, 0, 80, "#2a1c3a", "#ffe7b0");
+      sign(this.scene, "✦ إلى المحل ✦", L.portalMarket.clone().setY(3.55), 1.3, 0.34, 180, 80, "#2a1c3a", "#ffe7b0");
+      sign(this.scene, "سوق القرية", U(0, 3.0, -63.25), 1.6, 0.4, 0, 90, "#7a2a1c", "#ffe7b0");
       this.marketLabel = label("لوحة السوق\nجرعات الجيران: نحو 40 عملة", U(4.03, 1.36, 1.15), 0.76, 0.5, -90, 64); this.marketLabel.visible = false;
     });
   }
 
   // ---------------------------------------------------------------- village market (scene 1)
   async setupMarket() {
-    const S = L.stall, root = this.marketRoot = new THREE.Group(); root.name = "Market stall"; this.scene.add(root);
-    await place(root, "assets/kaykit/Dungeon/table_long.glb", S, { height: L.tableTop, collider: true });
-    const wood = MAT(0x5a3418), cloth1 = MAT(0xb8322a), cloth2 = MAT(0xf0dcb0);
-    for (const dz of [-1.75, 1.75]) for (const dx of [-1.0, 1.0]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 2.6, 8), wood); post.position.copy(S).add(U(dx, 1.3, dz)); post.castShadow = true; root.add(post); }
-    for (let i = 0; i < 6; i++) { const strip = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.03, 0.62), i % 2 ? cloth2 : cloth1); strip.position.copy(S).add(U(0, 2.62, -1.55 + i * 0.62)); strip.rotation.z = -0.16; strip.castShadow = true; root.add(strip); }
-    // Basket at the shop end of the stall: put what you want to buy in it.
-    const basket = new THREE.Group(); basket.position.copy(L.basket); root.add(basket);
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.13, 0.13, 18, 1, true), MAT(0x9a6a2e, { side: THREE.DoubleSide })); body.position.y = 0.065; basket.add(body);
-    const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.13, 18), MAT(0x7a4f20)); bottom.rotation.x = -Math.PI / 2; bottom.position.y = 0.005; basket.add(bottom);
-    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.012, 6, 20, Math.PI), MAT(0x7a4f20)); handle.position.y = 0.13; basket.add(handle);
-    this.basketRing = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.24, 32), new THREE.MeshBasicMaterial({ color: 0x6dffb0, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
-    this.basketRing.rotation.x = -Math.PI / 2; this.basketRing.position.copy(L.basket).setY(L.basket.y + 0.01); this.scene.add(this.basketRing);
-    for (let i = 0; i < MARKET.length; i++) { const it = new Item(this, MARKET[i].key, MARKET[i].name + " • " + MARKET[i].price, i); it.market = MARKET[i]; await it.build(L.marketItem(i)); }
-    this.trader.standAt(L.vendorSpot, -Math.PI / 2);
+    const root = this.marketRoot = new THREE.Group(); root.name = "Market square"; this.scene.add(root);
+    const KK = "assets/kaykit/", jobs = [];
+    // Ground, bounds, buildings and props around the square.
+    for (let ix = -2; ix <= 2; ix++) for (let iz = 0; iz < 5; iz++) jobs.push(place(root, `${KK}Dungeon/floor_tile_large.glb`, U(ix * 3, -0.005, -51 - iz * 3), { width: 3.02, alignTop: true }));
+    for (const [x, z, sx, sz] of [[0, -49.6, 16, 0.4], [0, -64.4, 16, 0.4], [-7.6, -57, 0.4, 15], [7.6, -57, 0.4, 15]]) blocker(U(x, 1.5, z), new THREE.Vector3(sx, 3, sz));
+    jobs.push(place(root, `${KK}Town/building_market_blue.gltf`, U(-9.5, 0, -57), { yaw: -90, height: 3.2 }), place(root, `${KK}Town/building_market_green.gltf`, U(9.5, 0, -57), { yaw: 90, height: 3.2 }));
+    jobs.push(place(root, `${KK}Town/building_tavern_red.gltf`, U(-6, 0, -68), { height: 6 }), place(root, `${KK}Town/building_home_B_yellow.gltf`, U(6, 0, -68), { height: 5 }));
+    jobs.push(place(root, `${KK}Town/building_well_blue.gltf`, U(0, 0, -61.2), { height: 2.2, collider: true }), place(root, `${KK}Town/tent.gltf`, U(-6.2, 0, -52.8), { yaw: 40, height: 2.2, collider: true }));
+    for (const [m, x, z, h] of [["sack", -5.2, -60.8, 0.55], ["sack", 5.3, -56.9, 0.5], ["crate_open", -5.3, -56.8, 0.6], ["wheelbarrow", 5.6, -61.4, 0.8]]) jobs.push(place(root, `${KK}Town/${m}.gltf`, U(x, 0, z), { yaw: x * 20, height: h, collider: true }));
+    for (const [x, z] of [[-5.6, -63.4], [5.6, -63.4], [-6.4, -50.6], [6.4, -50.6]]) jobs.push(place(root, `${KK}Halloween/lantern_standing.gltf`, U(x, 0, z), { height: 0.9 }));
+    for (const [x, z] of [[-4.5, -57], [4.5, -57]]) { const l = new THREE.PointLight(0xffa64d, 7, 9, 1.6); l.position.copy(U(x, 2.4, z)); root.add(l); refs.lights.push(l); }
+    // Two stalls with sellers, each with its own basket.
+    const wood = MAT(0x5a3418), cloth = [[MAT(0xb8322a), MAT(0xf0dcb0)], [MAT(0x2a5fb8), MAT(0xf0dcb0)]];
+    this.baskets = []; this.basketRings = [];
+    for (const [si, s] of L.stalls.entries()) {
+      jobs.push(place(root, `${KK}Dungeon/table_long.glb`, L.stallPos(s, 0, 0, 0), { height: L.tableTop, collider: true }));
+      for (const dz of [-1.75, 1.75]) for (const dx of [-1.0, 1.0]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 2.6, 8), wood); post.position.copy(L.stallPos(s, dx, 1.3, dz)); root.add(post); }
+      for (let i = 0; i < 6; i++) { const strip = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.03, 0.62), cloth[si][i % 2]); strip.position.copy(L.stallPos(s, 0, 2.62, -1.55 + i * 0.62)); strip.rotation.z = 0.16 * s.side; root.add(strip); }
+      const bpos = L.stallPos(s, 0.5, 0.9, 1.2), basket = new THREE.Group(); basket.position.copy(bpos); root.add(basket); this.baskets.push(bpos);
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.13, 0.13, 18, 1, true), MAT(0x9a6a2e, { side: THREE.DoubleSide })); body.position.y = 0.065; basket.add(body);
+      const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.13, 18), MAT(0x7a4f20)); bottom.rotation.x = -Math.PI / 2; bottom.position.y = 0.005; basket.add(bottom);
+      const handle = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.012, 6, 20, Math.PI), MAT(0x7a4f20)); handle.position.y = 0.13; basket.add(handle);
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.24, 32), new THREE.MeshBasicMaterial({ color: 0x6dffb0, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+      ring.rotation.x = -Math.PI / 2; ring.position.copy(bpos).setY(bpos.y + 0.01); this.scene.add(ring); this.basketRings.push(ring);
+      this.vendors[si].standAt(L.stallPos(s, -1.45, 0, 0), -s.side * Math.PI / 2);
+    }
+    // Scene-1 goods: four per stall, with price tags on the stall front.
+    const slot = [0, 0];
+    for (const d of MARKET) {
+      const s = L.stalls[d.stall], k = slot[d.stall]++, dz = -1.1 + k * 0.45;
+      const it = new Item(this, d.key, d.name + " • " + d.price, k); it.market = d; await it.build(L.stallPos(s, 0.54, 0.9, dz));
+      document.fonts.ready.then(() => { d.tagMesh = sign(this.scene, `${d.name} • ${d.price}\n${d.tag}`, L.stallPos(s, 0.93, 0.8, dz), 0.3, 0.15, s.side * 90, 110, "#f3e3bb"); });
+    }
+    // Portals: a stone arch with a swirling gate, one by the shop lane and one in the square.
+    this.portalMat = new THREE.ShaderMaterial({ transparent: true, side: THREE.DoubleSide, depthWrite: false, uniforms: { t: { value: 0 } },
+      vertexShader: "varying vec2 v; void main(){ v = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
+      fragmentShader: "uniform float t; varying vec2 v; void main(){ vec2 p = v*2.0-1.0; float r = length(p); if (r > 1.0) discard; float a = atan(p.y, p.x);" +
+        "float s = sin(a*5.0 + r*12.0 - t*3.0)*0.5+0.5; float s2 = sin(a*3.0 - r*8.0 + t*2.0)*0.5+0.5; vec3 c = mix(vec3(0.15,0.85,0.8), vec3(0.45,0.3,1.0), s*s2);" +
+        "c = mix(c, vec3(1.0,0.95,0.8), smoothstep(0.55,0.0,r)*0.55); gl_FragColor = vec4(c, (1.0 - smoothstep(0.86,1.0,r)) * 0.92); }" });
+    this.portals = [];
+    for (const [at, yaw] of [[L.portalShop, 0], [L.portalMarket, 180]]) {
+      const arch = await place(this.scene, `${KK}Halloween/arch.gltf`, at, { yaw: -yaw, height: 3.4 });
+      const bb = box3(arch), w = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z);
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 48), this.portalMat); disc.scale.set(Math.min(1.05, w * 0.3), 1.35, 1);
+      disc.position.copy(at).setY(1.4); disc.rotation.y = yaw === 180 ? Math.PI : 0; this.scene.add(disc);
+      const glow = new THREE.PointLight(0x7a6bff, 4, 5, 1.6); glow.position.copy(at).setY(1.5); this.scene.add(glow); refs.lights.push(glow);
+      this.portals.push({ at, disc, arch });
+    }
+    await Promise.all(jobs);
     // Little wooden holder for the dropper at the bottling table.
     const hold = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.08), MAT(0x5a3418)); hold.position.copy(L.pipetteSpot).setY(0.925); this.scene.add(hold);
   }
-  // Alchemy map floating above the cauldron (VR): shows where the brew is heading and how precise your stirring is.
+  // Through the portal: quick fade, whoosh, and you are on the other side.
+  travel() {
+    if (this.traveling || this.changing) return; this.traveling = true; const toMarket = this.region() === "village";
+    this.audio.play("whoosh", 0.7, 0.9); this.audio.play("crystal", 0.8, 0.6); this.dropHeld(false);
+    this.ui.fade(true, 260).then(() => {
+      this.teleport(toMarket ? L.marketArrive : L.villageArrive, toMarket ? L.marketYaw : L.villageYaw, true);
+      if (!this.inVR) { this.focused = false; this.skipGlide = true; }
+      this.firas?.resetTo((toMarket ? Stations.portalBack : Stations.portal).firas);
+      this.fx.sparkle((toMarket ? L.marketArrive : L.villageArrive).clone().setY(1.2), 14, 0x9a8cff);
+      return this.ui.fade(false, 380);
+    }).then(() => { this.traveling = false; this.portalCool = performance.now() + 1500; this.refresh(); });
+  }
+    // Alchemy map floating above the cauldron (VR): shows where the brew is heading and how precise your stirring is.
   setupWorldMap() {
     this.mapCv = document.createElement("canvas"); this.mapCv.width = 512; this.mapCv.height = 640;
     this.mapTex = new THREE.CanvasTexture(this.mapCv); this.mapTex.colorSpace = THREE.SRGBColorSpace;
@@ -237,15 +308,18 @@ export class Game {
   }
   marketDrop(it) {
     const d = it.market;
+    if (d.bundle !== undefined) { if (this.phase === P.Supplier) this.buyBatch(d.bundle); else this.bounceHome(it); return; }
     if (this.phase !== P.Purchase) { this.bounceHome(it); return; }
     if (d.buy === undefined) { this.dialogue.say(d.line); this.audio.play("reject", 1.3, 0.4); this.ui.toast(`${d.name} ${d.tag}، مش من الطلب`); this.bounceHome(it); return; }
     this.purchase(d.buy);
   }
+  intoBasket(it, stall, k) { it.consumed = true; it.held = false; it.flying = false; it.obj.scale.setScalar(0.7); it.obj.quaternion.identity(); it.obj.position.copy(this.baskets[stall]).add(new THREE.Vector3((k % 2 - 0.5) * 0.11, 0.03, (Math.floor(k / 2) % 2 - 0.5) * 0.11)); }
   // Ask a character questions: more money words, told in conversation.
   askMenu(speaker) {
     const qs = QUESTIONS[speaker]; if (!qs || this.paused || this.changing) return;
     this.asking = speaker; if (speaker === "فراس") this.dialogue.say("Q_ASK"); this.audio.play("paper", 1, 0.6);
-    this.ui.talk(speaker, "شو بدك تعرف؟", ...qs.map(([q, id]) => C(q, () => { this.dialogue.say(id); this.asking = null; this.refresh(); })), C("رجوع", () => { this.asking = null; this.refresh(); }));
+    const offer = this.phase === P.Supplier && (speaker === "التاجر المتجول" ? C("اشتري العرض الاقتصادي • 45", () => this.buyBatch(Supplier.Cheap)) : speaker === "تاجرة البلّور" ? C("اشتري العرض الممتاز • 60", () => this.buyBatch(Supplier.Premium)) : null);
+    this.ui.talk(speaker, "شو بدك تعرف؟", ...(offer ? [offer] : []), ...qs.map(([q, id]) => C(q, () => { this.dialogue.say(id); this.asking = null; this.refresh(); })), C("رجوع", () => { this.asking = null; this.refresh(); }));
   }
   characters() {
     const out = []; if (this.firas?.shown) out.push({ speaker: "فراس", at: this.firas.head.clone().add(new THREE.Vector3(0, -0.4, 0)) });
@@ -256,11 +330,17 @@ export class Game {
   toggleDoor() { this.fx.openDoor(this.fx.doorGoal < 0.8); }
   // ---------------------------------------------------------------- stations
   stationName() {
+    const n = this.baseStation(); if (!n || n === "welcome") return n;
+    const want = Stations[n].market ? "market" : "village", here = this.region();
+    return want === here ? n : here === "market" ? "portalBack" : "portal";
+  }
+  baseStation() {
     switch (this.phase) {
       case P.Purchase: return this.welcomed ? "market" : "welcome";
       case P.Brew: case P.BatchBrew: { const b = this.brew; return !b.herbInMortar ? "ingredients" : !b.crushed ? "mortar" : !b.readyToStir ? "mix" : !b.readyToBottle ? "cauldron" : "bottling"; }
       case P.Wilt: return "ingredients";
-      case P.Price: case P.Handoff: case P.RevenueQuiz: case P.Offer: case P.Supplier: case P.BatchHandoff: case P.Expenses: case P.FinalQuiz: return "counter";
+      case P.Supplier: return "market";
+      case P.Price: case P.Handoff: case P.RevenueQuiz: case P.Offer: case P.BatchHandoff: case P.Expenses: case P.FinalQuiz: return "counter";
       case P.Report: return "ending";
       default: return null;
     }
@@ -296,7 +376,7 @@ export class Game {
         else { ui.objective("ادخل المتجر"); ui.actions(C("ادخل", () => this.enterShop())); } break;
       case P.Purchase: {
         const n = [0, 1, 2, 3].filter(i => s.has("ingredient-" + i)).length;
-        ui.objective(this.welcomed ? "السوق: حطّ مكونات الطلب بالسلّة" : "اسمع فراس"); if (this.welcomed) ui.progress(`بالسلّة: ${n} / 4`);
+        ui.objective(!this.welcomed ? "اسمع فراس" : this.region() === "market" ? "السوق: حطّ مكونات الطلب بالسلّة" : "اطلع وادخل البوابة عالسوق"); if (this.welcomed) ui.progress(`بالسلّة: ${n} / 4`);
         ui.actions(C("شو الطلب؟", () => { ui.toast(ORDER_TEXT.replace(/\n/g, " • ")); ui.toastUntil = performance.now() + 6000; })); break; }
       case P.Brew: case P.BatchBrew: this.brewObjective(); break;
       case P.Ready: ui.objective("جرعتك جاهزة! • التكلفة 25"); ui.actions(C("افتح الباب للزبون", () => this.nextChapter())); break;
@@ -306,10 +386,9 @@ export class Game {
       case P.RevenueQuiz: ui.objective(`إيراد ولا ربح؟ البيع ${s.revenue} • التكلفة ${s.cogs}`);
         this.ask("P_REVQ", C("إيراد", () => this.revenueAnswer(true)), C("ربح", () => this.revenueAnswer(false))); break;
       case P.Offer: ui.objective("طلبية كبيرة");
+        if (!this.merchant.arrived) { if (!this.merchant.walking) { this.merchant.spot = L.traderSpot; this.merchant.arrive(this).then(() => this.refresh()); } break; }
         this.ask(s.firstPrice === 30 ? "S2_MA" : "S2_MB", C("اتفقنا", () => this.nextChapter())); break;
-      case P.Supplier: ui.objective("اختر المورد");
-        if (!this.trader.arrived) { this.trader.spot = L.traderSpot; this.trader.arrive(this).then(() => { this.dialogue.say("T3_HELLO"); this.refresh(); }); break; }
-        this.ask("P_SUPPLIER", C("اقتصادي • 45", () => this.buyBatch(Supplier.Cheap)), C("ممتاز • 60", () => this.buyBatch(Supplier.Premium))); break;
+      case P.Supplier: ui.objective(this.region() === "market" ? "اختار مورّد: حطّ صندوقه بالسلّة" : "ادخل البوابة عالسوق واختار مورّد"); break;
       case P.Wilt: ui.objective("عشبة ذابلة!");
         this.ask("P_WILT", C("استبدلها • +5", () => this.decideHerb(Herb.Replace)), C("استخدمها", () => this.decideHerb(Herb.UseWilted))); break;
       case P.BatchHandoff: ui.objective("سلّم القوارير للتاجر"); break;
@@ -319,6 +398,7 @@ export class Game {
       case P.Report: ui.objective("تقرير المتجر");
         ui.modal("تقرير المتجر", this.report(), C("إعادة التجربة", () => location.reload()), C("الموسوعة المالية", () => this.glossary(0))); break;
     }
+    const st = this.stationName(); if ((st === "portal" || st === "portalBack") && !ui.st.talk && !ui.st.modal) ui.actions(C("ادخل البوابة ✦", () => this.travel()), ...ui.st.actions);
   }
   // A decision: the character says the line (voice = the same words you read), then the choices appear.
   ask(id, ...choices) {
@@ -330,7 +410,7 @@ export class Game {
     const s = this.state;
     return `رأس المال الأولي: 100    إيرادات المبيعات: ${s.revenue}\nتكلفة البضاعة المباعة: ${s.cogs}    إجمالي الربح: ${s.grossProfit}\nخسائر التلف: ${s.spoilage}    المصروفات التشغيلية: ${s.opex}\nصافي الربح: ${s.netProfit}    الرصيد النقدي النهائي: ${s.cash}\nسمعة المتجر: ${s.reputation} • تقييم غير مالي: ${s.reputationStars} / 4\nمحاكاة مبسطة: لا تشمل الضرائب أو تكاليف التمويل.`;
   }
-  unlock(i) { if (this.state.terms.includes(i)) return; this.state.terms.push(i); this.ui.toast("مصطلح جديد: " + TERMS[i][0]); }
+  unlock(i) { if (this.state.terms.includes(i)) return; this.state.terms.push(i); this.ui.card3("مصطلح جديد: " + TERMS[i][0], TERMS[i][1], "good"); this.audio.play("crystal", 1.3, 0.5); }
   glossary(page) {
     this.paused = true; const s = this.state, open = s.terms.includes(page);
     this.ui.modal(`الموسوعة المالية   ${s.terms.length} / 10`, open ? `${TERMS[page][0]}\n\n${TERMS[page][1]}` : "مصطلح مغلق\nستكتشفه أثناء التجربة",
@@ -346,19 +426,20 @@ export class Game {
   }
   purchase(i) {
     if (this.phase !== P.Purchase || !this.fin.purchaseFirst(i)) return;
-    this.audio.play("coins", 0.8, 0.5); this.trader.receive(); this.fx.sparkle(L.basket.clone().setY(1.05), 6);
-    const mi = this.items.find(x => x.market && x.market.buy === i);
-    if (mi) { mi.consumed = true; mi.held = false; mi.flying = false; mi.obj.scale.setScalar(0.7); mi.obj.quaternion.identity(); mi.obj.position.copy(L.basket).add(new THREE.Vector3((i % 2 - 0.5) * 0.11, 0.03, (Math.floor(i / 2) - 0.5) * 0.11)); }
+    const mi = this.items.find(x => x.market && x.market.buy === i), stall = mi ? mi.market.stall : 0;
+    this.audio.play("coins", 0.8, 0.5); this.vendors[stall].receive(); this.fx.sparkle(this.baskets[stall].clone().setY(1.05), 6);
+    if (mi) this.intoBasket(mi, stall, i);
     if (!this.state.terms.includes(1)) { this.unlock(1); this.dialogue.say("S1_F04"); }
     if ([0, 1, 2, 3].every(k => this.state.has("ingredient-" + k))) { this.phase = P.Brew; this.beginBrew(false); this.dialogue.say("T1_BYE", "S1_BACK", "S1_F05"); }
-    else this.dialogue.say("T1_DEAL");
+    else this.dialogue.say(STALL_INFO[stall].deal);
     this.refresh();
   }
   async beginBrew(batch) {
-    this.batch = batch; this.brew = new RecipeProgress(); this.map.reset(); this.filled = 0; this.bottleIn = null; this.fill = 0; this.pipe = 0; this.fastWarned = false;
+    this.batch = batch; this.brew = new RecipeProgress(); this.map.reset(this.recipe); this.filled = 0; this.bottleIn = null; this.fill = 0; this.pipe = 0; this.fastWarned = false;
     for (const it of this.items) if (!it.consumed && it.kind !== "potion" && !it.market) { this.scene.remove(it.obj); it.consumed = true; }
-    await new Item(this, "herb", "العشبة", 0).build(L.herbSpot); await new Item(this, "crystal", "البلورة", 0).build(L.crystalSpot);
-    await new Item(this, "water", "الماء السحري", 0).build(L.waterSpot); await new Item(this, "pestle", "المدقة", 0).build(L.pestleSpot);
+    const lb = this.recipe.labels;
+    await new Item(this, "herb", lb.herb, 0).build(L.herbSpot); await new Item(this, "crystal", lb.crystal, 0).build(L.crystalSpot);
+    await new Item(this, "water", lb.water, 0).build(L.waterSpot); await new Item(this, "pestle", "المدقة", 0).build(L.pestleSpot);
     await new Item(this, "spoon", "مجداف التحريك", 0).build(L.paddleSpot);
     for (let i = 0; i < (batch ? 3 : 1); i++) await new Item(this, "bottle", "قارورة فارغة", i).build(L.emptyBottle(i));
     await new Item(this, "pipette", "القطّارة", 0).build(L.pipetteSpot);
@@ -375,7 +456,7 @@ export class Game {
   }
   bottleFinished() {
     if (this.phase === P.Brew && this.fin.craftFirst()) { this.unlock(2); this.phase = P.Ready; this.dialogue.say("S1_F06", "S1_F07"); setTimeout(() => this.audio.play("knock"), 2500); }
-    else if (this.phase === P.BatchBrew && this.filled === 3) { this.phase = P.BatchHandoff; this.dialogue.say("S3_GIVE"); }
+    else if (this.phase === P.BatchBrew && this.filled === 3) { this.phase = P.BatchHandoff; this.dialogue.say("S3_GIVE"); this.merchant.spot = L.customerSpot; this.merchant.arrive(this); }
     this.refresh();
   }
   choosePrice(p) { if (this.phase !== P.Price || !this.fin.choosePrice(p)) return; this.phase = P.Handoff; this.dialogue.say(p === 30 ? "S2_CA" : "S2_CB", "S2_GIVE"); this.customer.react(p === 30); this.refresh(); }
@@ -393,24 +474,32 @@ export class Game {
   }
   revenueAnswer(ok) {
     if (this.phase !== P.RevenueQuiz) return; this.dialogue.say(ok ? "S2_Q_OK" : "S2_Q_NO");
-    if (!ok && this.quizTries++ === 0) { this.ui.toast("حاول مرة أخرى: الإيراد قبل طرح التكاليف"); return; }
-    this.phase = P.Offer; this.refresh();
+    const s = this.state;
+    if (ok) this.ui.card3("صح! هاد إيراد", `الإيراد = كل مبلغ البيع (${s.revenue}). الربح بيجي بعد ما تطرح التكلفة: ${s.revenue} − ${s.cogs} = ${s.revenue - s.cogs}.`, "good");
+    else this.ui.card3("مش هيك، بس قرّبت", `المبلغ اللي استلمته كله (${s.revenue}) اسمه إيراد. الربح أقل منه لأنه لازم تطرح التكلفة ${s.cogs}.`, "bad");
+    if (!ok && this.quizTries++ === 0) return;
+    this.phase = P.Offer; this.customer.leave(this); this.refresh();
   }
   buyBatch(sup) {
     if (this.phase !== P.Supplier || !this.fin.purchaseBatch(sup)) return;
-    this.audio.play("coins", 0.8, 0.7); this.dialogue.say(sup === Supplier.Cheap ? "T3_CHEAP" : "T3_PREMIUM"); this.trader.leave(this);
-    if (sup === Supplier.Cheap) { this.phase = P.Wilt; this.showWilted(); this.dialogue.say("S3_FA_RISK"); } else { this.phase = P.BatchBrew; this.beginBrew(true); }
+    const stall = sup === Supplier.Cheap ? 0 : 1; this.audio.play("coins", 0.8, 0.7); this.vendors[stall].receive();
+    for (const b of this.items.filter(x => x.market && x.market.bundle !== undefined)) { if (b.market.bundle === sup) this.intoBasket(b, stall, 0); else b.consumed = true; }
+    this.dialogue.say(sup === Supplier.Cheap ? "T3_CHEAP" : "B3_THANKS");
+    if (sup === Supplier.Cheap) { this.phase = P.Wilt; this.showWilted(); this.dialogue.say("S3_FA_RISK"); } else { this.phase = P.BatchBrew; this.beginBrew(true); this.dialogue.say("S3_BACK"); }
     this.refresh();
   }
   async showWilted() { const w = await place(this.scene, "assets/custom/herb_red.glb", L.wiltedSpot, { scale: 1.55 }); w.rotation.z = 1.2; w.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.set(0x5c3d14); } }); this.wilted = w; this.fx.sparkle(L.wiltedSpot.clone().setY(1), 6); }
-  decideHerb(c) { if (this.phase !== P.Wilt || !this.fin.decideHerb(c)) return; if (c === Herb.Replace) this.dialogue.say("S3_FA_FIX"); if (this.wilted) this.scene.remove(this.wilted); this.phase = P.BatchBrew; this.beginBrew(true); this.refresh(); }
+  decideHerb(c) { if (this.phase !== P.Wilt || !this.fin.decideHerb(c)) return; if (c === Herb.Replace) this.dialogue.say("S3_FA_FIX"); this.dialogue.say("S3_BACK"); if (this.wilted) this.scene.remove(this.wilted); this.phase = P.BatchBrew; this.beginBrew(true); this.refresh(); }
   payExpenses() {
     if (this.phase !== P.Expenses || !this.fin.payOperatingExpenses()) return;
     this.fx.payOut(U(0, 1.2, -0.5)); this.unlock(9); this.phase = P.FinalQuiz; this.quizTries = 0; this.correctLeft = Math.random() > 0.5; this.dialogue.say("S3_NET"); this.refresh();
   }
   finalAnswer(ok) {
     if (this.phase !== P.FinalQuiz) return; this.dialogue.say(ok ? "S3_Q_OK" : "S3_Q_NO");
-    if (!ok && this.quizTries++ === 0) { this.ui.toast(this.state.spoilage > 0 ? "اطرح مصروفات التشغيل 10 وخسائر التلف 15" : "اطرح مصروفات التشغيل 10"); return; }
+    const s = this.state, sub = s.spoilage > 0 ? `المصروفات ${s.opex} والتلف ${s.spoilage}` : `المصروفات ${s.opex}`;
+    if (ok) this.ui.card3("صح عليك! هاد صافي الربح", `إجمالي الربح ${s.grossProfit} ناقص ${sub} = ${s.netProfit}. هاد اللي ربحته فعلًا اليوم.`, "good");
+    else this.ui.card3("هاد إجمالي الربح، مش الصافي", `إجمالي الربح ${s.grossProfit} صح، بس لسّا لازم تطرح ${sub}، فبيطلع الصافي أقل.`, "bad");
+    if (!ok && this.quizTries++ === 0) return;
     this.phase = P.Report; this.state.finished = true; this.dialogue.say("S3_END1", "S3_END2"); this.warm = 1; this.fx.sparkle(L.liquid.clone().setY(1.1), 18); this.audio.play("crystal", 1.1); this.refresh();
   }
   async nextChapter() {
@@ -418,14 +507,23 @@ export class Game {
     const next = this.chapter + 1; await this.ui.fade(true, 700);
     document.getElementById("card-title").textContent = CARDS[next][0]; document.getElementById("card-sub").textContent = CARDS[next][1];
     await wait(this.fast ? 50 : 1400);
-    this.chapter = next; this.state.chapter = next;
+    this.chapter = next; this.state.chapter = next; this.ui.setChapter(next);
     for (const it of this.items) if (it.kind !== "potion" || next === 2) { this.scene.remove(it.obj); it.consumed = true; }
     this.teleport(L.insideStart, L.insideYaw, true); this.fx.pile.forEach(c => this.scene.remove(c)); this.fx.pile = [];
+    this.firas.resetTo(L.firasSpot); this.skipGlide = true; // everyone back to their own place for the new scene
+    for (const n of [this.customer, this.merchant]) n.reset();
     if (next === 1) {
       this.phase = P.Price; await new Item(this, "potion", "جرعة النشاط", 0).build(L.saleBottle); this.unlock(3);
-      this.trader.reset(); this.marketLabel && (this.marketLabel.visible = true); this.customer.arrive(this); this.dialogue.say("S2_C01", "S1_ASK", "S2_F02");
+      this.marketLabel && (this.marketLabel.visible = true); this.customer.arrive(this); this.dialogue.say("S2_C01", "S1_ASK", "S2_F02");
     } else {
-      this.phase = P.Supplier; this.unlock(7); this.merchant.arrive(this); this.dialogue.say("S3_F01");
+      this.phase = P.Supplier; this.unlock(7); this.dialogue.say("S3_F01");
+      if (this.orderBoard) { this.scene.remove(this.orderBoard); this.orderBoard = sign(this.scene, ORDER3_TEXT, U(0, 2.3, -63.2), 2.4, 0.95, 0, 64); }
+      if (this.recipeBoard) { this.recipeBoard.visible = false; sign(this.scene, RECIPES[1].board, U(-4.02, 1.36, 6.2), 1.05, 0.7, 90, 70); }
+      for (const [si, sup] of [[0, Supplier.Cheap], [1, Supplier.Premium]]) {
+        const s = L.stalls[si], it = new Item(this, "bundle", sup === Supplier.Cheap ? "صندوق اقتصادي • 45" : "صندوق ممتاز • 60", 0);
+        it.market = { key: "bundle", bundle: sup, stall: si }; await it.build(L.stallPos(s, 0.54, 0.9, -0.2));
+        sign(this.scene, sup === Supplier.Cheap ? "مكونات 3 جرعات • 45\nاقتصادي" : "مكونات 3 جرعات • 60\nممتاز", L.stallPos(s, 0.93, 0.8, -0.2), 0.42, 0.18, s.side * 90, 100, sup === Supplier.Cheap ? "#f3e3bb" : "#ffe9a8");
+      }
     }
     document.getElementById("card-title").textContent = ""; document.getElementById("card-sub").textContent = "";
     await this.ui.fade(false, 900); this.changing = false; this.refresh();
@@ -464,12 +562,12 @@ export class Game {
   pour(dt) {
     const it = this.bottleIn; if (!it || this.paused) return;
     this.fill = Math.min(1, this.fill + dt / 1.8);
-    const s = this.state, color = it.index === 2 && this.batch && s.herb === Herb.UseWilted ? new THREE.Color(0x665c45) : new THREE.Color(this.batch && s.supplier === Supplier.Premium ? 0x29d98f : 0x1ab866);
-    if (color.r < 0.3) color.multiplyScalar(0.8 + 0.3 * (this.map.quality - 1));
+    const s = this.state, r = this.recipe, color = it.index === 2 && this.batch && s.herb === Herb.UseWilted ? new THREE.Color(0x665c45) : new THREE.Color(r.potion[this.batch && s.supplier === Supplier.Premium ? 1 : 0]);
+    color.lerp(new THREE.Color(0xffffff), 0.06 * (this.map.quality - 1));
     it.fill(this.fill, color); this.pourT = 0.1; this.pourColor = color;
     this.ui.progress(`تعبئة القارورة: ${Math.round(this.fill * 100)}%`);
     if (this.fill >= 1) {
-      it.kind = "potion"; it.label = "جرعة النشاط"; it.filled = true; it.obj.position.copy(L.finishedBottle(this.filled)); it.home = it.obj.position.clone();
+      it.kind = "potion"; it.label = this.recipe.name; it.filled = true; it.obj.position.copy(L.finishedBottle(this.filled)); it.home = it.obj.position.clone();
       if (this.batch) this.fin.craftBatchBottle(it.index);
       this.fx.sparkle(it.obj.position.clone().setY(1.0), 4 + this.map.quality * 4); this.audio.play("glass");
       if (this.filled === 0) this.ui.toast("جرعة النشاط • " + this.map.qualityText);
@@ -479,7 +577,7 @@ export class Game {
   // Drop logic shared by mouse, touch and VR hands.
   tryDrop(it) {
     if (it.consumed || this.paused) return;
-    if (it.market) { const b = L.basket; if (Math.hypot(it.pos.x - b.x, it.pos.z - b.z) < 0.42 && Math.abs(it.pos.y - b.y) < 0.6) this.marketDrop(it); else this.bounceHome(it); return; }
+    if (it.market) { const b = (this.baskets || [L.basket]).find(b => Math.hypot(it.pos.x - b.x, it.pos.z - b.z) < 0.42 && Math.abs(it.pos.y - b.y) < 0.6); if (b) this.marketDrop(it); else this.bounceHome(it); return; }
     const p = it.pos, c = L.cauldron, overCauldron = Math.hypot(p.x - c.x, p.z - c.z) < L.innerRadius + 0.3 && p.y > 0.55 && p.y < 2.1;
     if (overCauldron && it.kind !== "spoon") {
       const ing = ["crushed", "crystal", "water"].includes(it.kind);
@@ -539,14 +637,18 @@ export class Game {
   focusOn(name) {
     const v = Stations[name]; if (!v || !v.cam) return;
     this.fromPos = this.camera.getWorldPosition(new THREE.Vector3()); this.fromQ = this.camera.getWorldQuaternion(new THREE.Quaternion());
-    this.focused = name; this.glide = 0; this.rig.position.set(v.stand.x, 0, v.stand.z); this.yaw = v.standYaw; this.pitch = -0.3;
+    this.focused = name; this.glide = this.skipGlide ? 1 : 0; this.skipGlide = false; this.rig.position.set(v.stand.x, 0, v.stand.z); this.yaw = v.standYaw; this.pitch = -0.3;
   }
   unfocus() { this.fromPos = this.camera.getWorldPosition(new THREE.Vector3()); this.fromQ = this.camera.getWorldQuaternion(new THREE.Quaternion()); this.focused = false; this.glide = 0; }
   walk(move, dt) {
-    if (!move.lengthSq()) return; const r = this.rig.position, next = r.clone().add(move.multiplyScalar(dt));
-    const shut = this.fx.doorRot < 0.9 && !this.inVR;
-    const blocked = p => (shut || (this.inVR && this.fx.doorRot < 0.9)) && Math.abs(p.x) < 0.66 && Math.abs(p.z) < 0.3 || colliders.some(b => p.x > b.min.x - 0.24 && p.x < b.max.x + 0.24 && p.z > b.min.z - 0.24 && p.z < b.max.z + 0.24 && b.min.y < 1.2 && b.max.y > 0.15);
-    if (!blocked(next)) r.copy(next); else { const nx = r.clone().setX(next.x), nz = r.clone().setZ(next.z); if (!blocked(nx)) r.copy(nx); else if (!blocked(nz)) r.copy(nz); }
+    if (!move.lengthSq()) return; const r = this.rig.position, d = move.clone().multiplyScalar(dt);
+    const base = this.inVR ? this.camera.getWorldPosition(new THREE.Vector3()).setY(r.y) : r.clone();
+    const shut = this.fx.doorRot < 0.9, m = 0.2;
+    const blocked = p => (shut && Math.abs(p.x) < 0.66 && Math.abs(p.z) < 0.3) || colliders.some(b => p.x > b.min.x - m && p.x < b.max.x + m && p.z > b.min.z - m && p.z < b.max.z + m && b.min.y < 1.2 && b.max.y > 0.15);
+    if (blocked(base)) { r.add(d); return; } // already inside something (teleport, room-scale step): let the player walk out
+    if (!blocked(base.clone().add(d))) { r.add(d); return; }
+    const dx = new THREE.Vector3(d.x, 0, 0), dz = new THREE.Vector3(0, 0, d.z);
+    if (!blocked(base.clone().add(dx))) r.add(dx); else if (!blocked(base.clone().add(dz))) r.add(dz);
   }
   applyDesktopPose(dt) {
     this.rig.rotation.set(0, 0, 0); this.rig.updateMatrixWorld(true);
@@ -571,7 +673,7 @@ export class Game {
       if (e.pointerType === "mouse" && (e.buttons & 2) && !this.focused) { this.yaw -= e.movementX * 0.0025; this.pitch = THREE.MathUtils.clamp(this.pitch - e.movementY * 0.002, -1.2, 1.3); }
       if (e.pointerType === "mouse" && (e.buttons & 1) && this.held?.kind === "pestle") this.pestleDy = (this.pestleDy || 0) + e.movementY;
     });
-    el.addEventListener("pointerdown", e => { if (e.pointerType === "mouse" && e.button === 0) { this.mouseDown = true; if (!this.held && (this.hover || this.hoverDoor || this.hoverChar)) this.act(); } });
+    el.addEventListener("pointerdown", e => { if (e.pointerType === "mouse" && e.button === 0) { this.mouseDown = true; if (!this.held && (this.hover || this.hoverDoor || this.hoverChar || this.hoverPortal)) this.act(); } });
     addEventListener("pointerup", e => { if (e.button === 0) this.mouseDown = false; });
   }
   setupTouch() {
@@ -600,10 +702,11 @@ export class Game {
     pourBtn.addEventListener("pointerdown", () => this.pourHeld = true); pourBtn.addEventListener("pointerup", () => this.pourHeld = false); pourBtn.addEventListener("pointerleave", () => this.pourHeld = false);
   }
   updateHover() {
-    this.ray.setFromCamera(this.pointer, this.camera); this.ray.far = 3;
+    this.ray.setFromCamera(this.pointer, this.camera); this.ray.far = this.region() === "market" ? 5.5 : 3;
     const objs = this.items.filter(i => !i.consumed && i.obj.visible).map(i => i.obj);
     const hits = this.ray.intersectObjects(objs.concat(refs.door ? [refs.door] : []), true);
-    this.hover = null; this.hoverDoor = false; this.hoverChar = null;
+    this.hover = null; this.hoverDoor = false; this.hoverChar = null; this.hoverPortal = false;
+    if (!hits.length && this.portals) { this.ray.far = 6; this.hoverPortal = this.ray.intersectObjects(this.portals.map(p => p.disc)).length > 0; }
     if (hits.length) { let o = hits[0].object; while (o && !this.items.find(i => i.obj === o) && o !== refs.door) o = o.parent;
       if (o === refs.door) this.hoverDoor = true; else this.hover = this.items.find(i => i.obj === o); }
     if (!this.hover && !this.held) { this.ray.far = 7; this.hoverChar = this.rayCharacter(this.ray.ray); }
@@ -614,6 +717,7 @@ export class Game {
     if (this.hover && !this.hover.consumed && this.hover !== this.bottleIn) { this.held = this.hover; this.held.held = true; this.audio.play("pop", 1, 0.8); }
     else if (this.hoverDoor) this.toggleDoor();
     else if (this.hoverChar) this.askMenu(this.hoverChar.speaker);
+    else if (this.hoverPortal) this.travel();
   }
   dropHeld(drop) { if (!this.held) return; const it = this.held; this.held = null; it.held = false; drop ? this.tryDrop(it) : it.returnHome(); }
   heldTarget() {
@@ -627,10 +731,10 @@ export class Game {
       const t = this.ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -L.liquid.y), new THREE.Vector3());
       if (t && Math.hypot(t.x - L.liquid.x, t.z - L.liquid.z) < L.innerRadius + 0.15) { const f = new THREE.Vector3(t.x - L.liquid.x, 0, t.z - L.liquid.z).clampLength(0, L.innerRadius - 0.1); return L.liquid.clone().add(f).setY(L.liquid.y - 0.05); }
     }
-    if (it.market) { const b = L.basket.clone().setY(L.basket.y + 0.12); if (this.ray.ray.distanceToPoint(b) < 0.35) return b; }
-    this.ray.far = 2.8; const hits = this.ray.intersectObjects([refs.root, this.marketRoot].filter(Boolean), true);
+    if (it.market) { for (const b0 of this.baskets || []) { const b = b0.clone().setY(b0.y + 0.12); if (this.ray.ray.distanceToPoint(b) < 0.35) return b; } }
+    this.ray.far = this.region() === "market" ? 5.5 : 2.8; const hits = this.ray.intersectObjects([refs.root, this.marketRoot].filter(Boolean), true);
     if (hits.length) return hits[0].point.add(new THREE.Vector3(0, 0.01, 0));
-    return this.ray.ray.at(1.1, new THREE.Vector3()).add(new THREE.Vector3(0, -0.15, 0));
+    return this.ray.ray.at(this.region() === "market" ? 2.2 : 1.1, new THREE.Vector3()).add(new THREE.Vector3(0, -0.15, 0));
   }
 
   // ---------------------------------------------------------------- VR (WebXR)
@@ -689,6 +793,7 @@ export class Game {
       if (down(0)) {
         if (ui && ui.button) this.ui.click(ui.button);
         else if (far) this.vrGrab(h, far, true, gp);
+        else if (this.portals && this.ray.intersectObjects(this.portals.map(p => p.disc)).length) this.travel();
         else if (refs.door && this.ray.intersectObject(refs.door, true).length) this.toggleDoor();
         else { const ch = this.rayCharacter(this.ray.ray); if (ch) this.askMenu(ch.speaker); }
       }
@@ -752,7 +857,7 @@ export class Game {
     return best;
   }
   rayZone(ray) {
-    const zones = [{ at: L.basket.clone().setY(1.0), r: 0.35 }, { at: L.liquid.clone().setY(1.12), r: 0.65 }, { at: L.mortar.clone().setY(1.0), r: 0.3 }, { at: L.bottleSocket.clone().setY(1.05), r: 0.3 }, { at: L.handoff.clone().setY(1.1), r: 0.45 }];
+    const zones = [...(this.baskets || []).map(b => ({ at: b.clone().setY(1.0), r: 0.35 })), { at: L.liquid.clone().setY(1.12), r: 0.65 }, { at: L.mortar.clone().setY(1.0), r: 0.3 }, { at: L.bottleSocket.clone().setY(1.05), r: 0.3 }, { at: L.handoff.clone().setY(1.1), r: 0.45 }];
     return zones.find(z => ray.distanceToPoint(z.at) < z.r && ray.origin.distanceTo(z.at) < 8) || null;
   }
   vrGrab(h, it, byTrigger, gp) {
@@ -772,7 +877,7 @@ export class Game {
     this.arcTarget = null;
     for (let i = 0; i < 40; i++) { pts.push(p.clone()); const n = p.clone().addScaledVector(v, 0.04); v.y -= 9.8 * 0.04;
       if (n.y <= 0) { const eye = this.camera.getWorldPosition(new THREE.Vector3()), crosses = this.fx.doorRot < 0.9 && (eye.z < 0.3) !== (n.z < 0.3) && Math.abs(n.x) < 4.6;
-        const ok = (L.isInside(n) || n.z < 0.9) && !crosses; const hitWall = colliders.some(b => b.containsPoint(n.clone().setY(0.5))); if (ok && !hitWall) this.arcTarget = n.setY(0); pts.push(n); break; } p.copy(n); }
+        const ok = (L.isInside(n) || n.z < 0.9) && !crosses && L.inMarket(n) === L.inMarket(eye); const hitWall = colliders.some(b => b.containsPoint(n.clone().setY(0.5))); if (ok && !hitWall) this.arcTarget = n.setY(0); pts.push(n); break; } p.copy(n); }
     this.arc.geometry.setFromPoints(pts); this.arc.visible = true; this.arc.material.color.set(this.arcTarget ? 0x4dffd0 : 0xff5a4d);
     this.arcMark.visible = !!this.arcTarget; if (this.arcTarget) this.arcMark.position.copy(this.arcTarget).setY(0.02);
   }
@@ -794,7 +899,7 @@ export class Game {
     if (this.phase === P.Intro && !this.doorOpened && this.fx.doorRot > 0.6) { this.doorOpened = true; this.refresh(); }
     this.fx.low = this.inVR;
     const name = this.stationName();
-    if (name !== this.lastStation) { this.lastStation = name; this.dropHeld(false); if (!this.inVR) { if (name && Stations[name].cam) this.focusOn(name); else if (this.focused) this.unfocus(); } }
+    if (name !== this.lastStation) { const first = this.lastStation === undefined; this.lastStation = name; this.dropHeld(false); if (!this.inVR) { if (name && Stations[name].cam) this.focusOn(name); else if (this.focused) this.unfocus(); } if (!first) this.refresh(); }
     if (this.inVR) this.updateVR(dt);
     else {
       const k = this.keys, mv = new THREE.Vector2((k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0), (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0));
@@ -813,11 +918,16 @@ export class Game {
         if (it.kind === "pestle") this.observePestle(it.pos);
         if (it.kind === "pipette") { it.obj.quaternion.identity(); this.usePipette(it, !!(this.keys.KeyF || this.pourHeld || this.mouseDown), dt); }
         this.ui.hint(it.label + " • E للإفلات" + (it.kind === "pestle" ? " • اضغط الزر الأيسر وحرّك الفأرة للأعلى والأسفل" : it.kind === "spoon" ? " • حرّك المؤشر دائريًا ببطء داخل المرجل" : it.kind === "pipette" ? " • اضغط F أو الزر الأيسر مطولًا للعصر" : it.market ? " • حطّه بالسلّة" : ""));
-      } else this.ui.hint(this.hover && !this.hover.consumed ? this.hover.label + " • E للإمساك" : this.hoverDoor ? (this.fx.doorGoal > 0.8 ? "الباب • E للإغلاق" : "الباب • E للفتح") : this.hoverChar ? this.hoverChar.speaker + " • E لتسأل" : "");
+      } else this.ui.hint(this.hover && !this.hover.consumed ? this.hover.label + " • E للإمساك" : this.hoverDoor ? (this.fx.doorGoal > 0.8 ? "الباب • E للإغلاق" : "الباب • E للفتح") : this.hoverChar ? this.hoverChar.speaker + " • E لتسأل" : this.hoverPortal ? "البوابة • E للعبور" : "");
       if (this.phase === P.Intro && this.doorOpened && L.isInside(this.rig.position)) this.enterShop();
     }
-    if (this.phase === P.Purchase && this.welcomed && !this.marketHello && this.camera.getWorldPosition(new THREE.Vector3()).distanceTo(L.vendorSpot) < 4.2) { this.marketHello = true; this.dialogue.say("T1_HELLO"); }
-    if (this.basketRing) this.basketRing.visible = this.phase === P.Purchase && this.welcomed;
+    const eye = this.camera.getWorldPosition(new THREE.Vector3()), shopping = (this.phase === P.Purchase && this.welcomed) || this.phase === P.Supplier;
+    this.greeted = this.greeted || new Set();
+    if (shopping) this.vendors.forEach((v, i) => { const key = this.phase + ":" + i; if (!this.greeted.has(key) && eye.distanceTo(v.holder.position) < 3.8) { this.greeted.add(key); this.dialogue.say(this.phase === P.Supplier ? STALL_INFO[i].offer : STALL_INFO[i].hello); } });
+    (this.basketRings || []).forEach(r => r.visible = shopping);
+    if (this.portalMat) this.portalMat.uniforms.t.value = t;
+    if (this.portals && !this.traveling && !this.changing && performance.now() > (this.portalCool || 0)) { const pp = this.inVR ? eye : this.rig.position;
+      for (const p of this.portals) if (Math.hypot(pp.x - p.at.x, pp.z - p.at.z) < 0.6) { this.travel(); break; } }
     const pip = this.items.find(i => i.kind === "pipette" && !i.consumed);
     if (pip) { const f = this.pipe || 0; pip.pipeLiquid.visible = f > 0.01; pip.pipeLiquid.scale.y = 0.19 * f; pip.pipeLiquid.position.y = 0.006 + 0.095 * f; if (this.pourColor) pip.pipeLiquid.material.color.copy(this.pourColor); }
     if (this.inVR) { const head = this.speakerHead(); this.ui.setBubble(this.dialogue.speaker, this.dialogue.speaking ? this.dialogue.text : null, head); } else this.ui.setBubble(null, null, null);
@@ -830,7 +940,7 @@ export class Game {
     const b = this.brew; this.swirl = Math.max(0, (this.swirl || 0) - dt * 1.2);
     this.fx.activity = (this.phase === P.Brew || this.phase === P.BatchBrew) ? (b.readyToBottle ? 0.6 : b.readyToStir ? 0.35 + b.stirring * 0.65 : 0) : 0;
     this.fx.tint = this.map.tint; this.fx.golden = this.map.inZone;
-    if (refs.liquid) { const target = new THREE.Color(0x14261f).lerp(this.batch && this.state.supplier === Supplier.Premium ? new THREE.Color(0x29cc8c) : this.state.herb === Herb.UseWilted && this.batch ? new THREE.Color(0x47803f) : new THREE.Color(0x21ab6b), b.stirring);
+    if (refs.liquid) { const rc = this.recipe.potion, target = new THREE.Color(0x14261f).lerp(this.state.herb === Herb.UseWilted && this.batch ? new THREE.Color(0x6a6a3a) : new THREE.Color(rc[this.batch && this.state.supplier === Supplier.Premium ? 1 : 0]), b.stirring);
       refs.liquid.material.color.lerp(target, Math.min(1, dt * 3)); refs.liquid.material.emissive.copy(refs.liquid.material.color); refs.liquid.position.y = L.liquid.y + Math.sin(t * 3) * 0.004; }
     if (this.pourT > 0) { this.pourT -= dt; } this.audio.setPouring(this.pourT > 0);
     if ((this.lightT = (this.lightT || 0) - dt) <= 0) { this.lightT = 0.4; this.budgetLights(); }

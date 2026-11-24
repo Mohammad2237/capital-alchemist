@@ -30,14 +30,17 @@ export class FX {
       this.add(m, 0.6, (p, dt) => { m.position.addScaledVector(v, dt); v.y -= 6 * dt; });
     }
   }
+  // Soft smoke wisps (sprites with a feathered edge): never a solid bubble over the cauldron.
   steam(from) {
-    const mat = new THREE.MeshBasicMaterial({ color: this.tint.clone(), transparent: true, opacity: 0, depthWrite: false });
-    const m = new THREE.Mesh(sphere, mat); const spin = Math.random() * Math.PI * 2, base = from.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.5, 0.05, (Math.random() - 0.5) * 0.5));
-    const golden = this.golden;
-    this.add(m, golden ? 3.2 : 2.8, p => {
-      const r = 0.08 + p * 0.35; m.position.set(base.x + Math.cos(spin + p * 5) * r, base.y + p * 1.5, base.z + Math.sin(spin + p * 5) * r);
-      m.scale.setScalar((0.1 + p * 0.45) * (this.low ? 0.75 : 1)); mat.opacity = (this.low ? 0.22 : 0.18) * (1 - p) * (p < 0.15 ? p / 0.15 : 1);
-      if (golden && !this.low && Math.random() < 0.02) this.sparkle(m.position, 1);
+    if (!this.puff) { const cv = document.createElement("canvas"); cv.width = cv.height = 64; const c = cv.getContext("2d"), g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.4, "rgba(255,255,255,.45)"); g.addColorStop(1, "rgba(255,255,255,0)"); c.fillStyle = g; c.fillRect(0, 0, 64, 64); this.puff = new THREE.CanvasTexture(cv); }
+    const mat = new THREE.SpriteMaterial({ map: this.puff, color: this.tint.clone().lerp(new THREE.Color(0xffffff), 0.35), transparent: true, opacity: 0, depthWrite: false });
+    const m = new THREE.Sprite(mat); const spin = Math.random() * Math.PI * 2, base = from.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.6, 0.06, (Math.random() - 0.5) * 0.6));
+    const golden = this.golden, life = 3 + Math.random();
+    this.add(m, life, p => {
+      const r = 0.05 + p * 0.25; m.position.set(base.x + Math.cos(spin + p * 3) * r, base.y + p * 1.3, base.z + Math.sin(spin + p * 3) * r);
+      m.scale.setScalar(0.18 + p * 0.5); mat.opacity = 0.32 * (1 - p) * Math.min(1, p / 0.2);
+      if (golden && !this.low && Math.random() < 0.015) this.sparkle(m.position, 1);
     });
   }
   bubble() {
