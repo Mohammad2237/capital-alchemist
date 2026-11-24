@@ -4,8 +4,26 @@
     {
       "name": "capital-web",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8080", "--directory", "Builds/Web"],
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8080",
+        "--directory",
+        "Builds/Web"
+      ],
       "port": 8080
+    },
+    {
+      "name": "capital-three",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8090",
+        "--directory",
+        "web"
+      ],
+      "port": 8090
     }
   ]
 }

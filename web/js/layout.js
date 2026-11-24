@@ -1,7 +1,13 @@
 // Floor plan (metres, Y up, +Z = into the shop). Same plan as the Unity version.
 // Interior x in [-4.5, 4.5], z in [0, 12]; entrance in the south wall at x = 0.
 import * as THREE from "three";
-const V = (x, y, z) => new THREE.Vector3(x, y, z);
+// Numbers are written in the Unity version's coordinates; U() mirrors X so the web shop looks identical
+// (Unity is left-handed, three.js/glTF right-handed). Yaw values convert with uyaw().
+export const U = (x, y, z) => new THREE.Vector3(-x, y, z);
+export const uyaw = deg => THREE.MathUtils.degToRad(-deg);
+const V = U;
+// three.js camera yaw for a Unity heading (0 = facing +Z into the shop).
+export const camYaw = unityDeg => Math.PI - THREE.MathUtils.degToRad(unityDeg);
 
 export const L = {
   tableTop: 0.9,
@@ -18,7 +24,7 @@ export const L = {
   display: i => V(3.9, 1.62, 3.2 + i * 0.3), discard: V(3.6, 0.35, 0.95),
   firasPedestal: V(-1.75, 0, 8.1), get firasSpot() { return V(-1.75, 1.12, 8.1); }, firasHeight: 1.15,
   doorHinge: V(-0.6, 0, 0.02),
-  outsideStart: V(0, 0, -5.4), insideStart: V(0.6, 0, 3.4), insideYaw: 20,
+  outsideStart: V(0, 0, -5.4), insideStart: V(0.6, 0, 3.4), outsideYaw: camYaw(0), insideYaw: camYaw(20),
   isInside: p => p.z > 0.9 && Math.abs(p.x) < 4.5 && p.z < 12,
   customerPath: [V(0, 0, -2.4), V(0, 0, -0.6), V(0.2, 0, 1.0)],
 };
@@ -36,5 +42,5 @@ export const Stations = {
   ending: { cam: V(-2.9, 2.35, 10.7), look: V(0.2, 1.0, 5.6), stand: V(-0.6, 0, 3.6), firas: L.firasSpot },
 };
 for (const s of Object.values(Stations)) {
-  const d = (s.look || V(0, 0, 9)).clone().sub(s.stand); s.standYaw = Math.atan2(d.x, d.z);
+  const d = (s.look || V(0, 0, 9)).clone().sub(s.stand); s.standYaw = Math.atan2(-d.x, -d.z); // three.js camera yaw
 }

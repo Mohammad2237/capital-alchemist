@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>رأس المال: إرث الكيميائي</title>
+  <meta name="description" content="لعبة واقع افتراضي تعليمية عن الإيرادات والأرباح">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+  { "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }
+  </script>
+</head>
+<body>
+  <div id="loading">
+    <div class="card">
+      <div class="crest">⚗</div>
+      <h1>رأس المال</h1>
+      <h2>إرث الكيميائي</h2>
+      <div class="bar"><div id="bar-fill"></div></div>
+      <p id="loading-text">جارٍ تحميل المتجر… <span id="pct">0%</span></p>
+    </div>
+  </div>
+  <div id="hud" hidden>
+    <div id="top">
+      <div class="left">
+        <button id="btn-book">الموسوعة</button>
+        <button id="btn-station">انتقل إلى المحطة</button>
+      </div>
+      <div id="step"></div>
+      <div id="purse"><span class="coin"></span><span id="cash">100</span><span id="delta"></span></div>
+    </div>
+    <div id="toast"></div>
+    <div id="progress"></div>
+    <div id="hint"></div>
+    <div id="map" hidden><canvas id="map-canvas" width="360" height="360"></canvas><p id="map-quality"></p><p class="small">مع عقارب الساعة: يمين • عكسها: يسار</p></div>
+    <div id="talk" hidden><div class="name"></div><p class="line"></p><div class="choices"></div></div>
+    <div id="modal" hidden><h3></h3><p class="body"></p><div class="choices"></div></div>
+    <div id="actions"></div>
+    <div id="subtitle" hidden></div>
+    <div id="keys">WASD • E • Q • Tab</div>
+    <div id="stick" hidden><div id="knob"></div></div>
+    <button id="pour" hidden>اضغط مطولًا<br>للصب</button>
+  </div>
+  <div id="fade"><div id="card-title"></div><div id="card-sub"></div></div>
+  <button id="entervr" hidden>ادخل الواقع الافتراضي 🥽</button>
+  <p id="vr-help" hidden></p>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
