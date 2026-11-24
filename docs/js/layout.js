@@ -27,12 +27,16 @@ export const L = {
   outsideStart: V(0, 0, -5.4), insideStart: V(0.6, 0, 3.4), outsideYaw: camYaw(0), insideYaw: camYaw(20),
   isInside: p => p.z > 0.9 && Math.abs(p.x) < 4.5 && p.z < 12,
   customerPath: [V(0, 0, -2.4), V(0, 0, -0.6), V(0.2, 0, 1.0)],
+  // Village market stall (scene 1): ingredients in a row on the stall front, basket at the shop end.
+  stall: V(-2.9, 0, -4.3), marketItem: i => V(-2.36, 0.9, -5.35 + i * 0.3), basket: V(-2.4, 0.9, -2.9), vendorSpot: V(-4.3, 0, -4.3),
+  pipetteSpot: V(2.25, 0.92, 7.3),
 };
 
 // Where each step happens: desktop camera view (cam/look), VR "stand here" ring (stand), Firas's spot.
 const C = L.cauldron;
 export const Stations = {
   welcome: { cam: null, look: null, stand: L.insideStart, firas: V(-0.45, 0.8, 4.85) },
+  market: { cam: V(-0.55, 1.8, -4.3), look: V(-2.7, 1.2, -4.3), stand: V(-1.1, 0, -4.3), firas: V(-1.5, 0.8, -6.7) },
   ingredients: { cam: V(-0.95, 2.05, 4.2), look: V(-2.0, 0.9, 4.9), stand: V(-1.2, 0, 4.6), firas: V(-2.9, 0.8, 3.3) },
   mortar: { cam: V(-1.45, 1.62, 3.45), look: V(-1.85, 0.92, 4.2), stand: V(-1.55, 0, 3.5), firas: V(-2.75, 0.8, 3.7) },
   mix: { cam: V(-1.05, 2.3, 4.55), look: V(-1.05, 0.9, 6.2), stand: V(-1.0, 0, 5.0), firas: V(-1.7, 0.8, 7.85) },

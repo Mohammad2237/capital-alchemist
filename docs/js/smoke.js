@@ -23,11 +23,15 @@ export async function runSmoke(g, branch) {
     const pestle = find("pestle"); drop(pestle, L.liquid.clone().setY(1.2)); ck(!pestle.consumed, "cauldron rejects the pestle");
     for (let i = 0; i < 160 && !g.brew.readyToBottle; i++) { const a = i * 0.1; g.observeStir(L.liquid.clone().add({ x: Math.cos(a) * 0.2, y: 0.05, z: Math.sin(a) * 0.2 })); }
     ck(g.brew.readyToBottle, "circular stirring");
-    for (let i = 0; i < (batch ? 3 : 1); i++) { const b = find("bottle"); drop(b, L.bottleSocket); ck(g.bottleIn === b, "bottle snapped"); for (let f = 0; f < 10 && g.bottleIn; f++) g.pour(0.25); }
+    for (let i = 0; i < (batch ? 3 : 1); i++) { const b = find("bottle"); drop(b, L.bottleSocket); ck(g.bottleIn === b, "bottle snapped"); const pip = find("pipette"); ck(!!pip, "dropper ready");
+      for (let f = 0; f < 40 && g.bottleIn; f++) { pip.obj.position.copy(L.liquid).setY(L.liquid.y - 0.04); g.usePipette(pip, true, 0.1); pip.obj.position.copy(L.bottleSocket).setY(L.bottleSocket.y + 0.2); g.usePipette(pip, true, 0.1); } ck(!g.bottleIn, "dropper filled the bottle"); }
   }
   ck(g.phase === 0, "starts outside the shop");
   g.openShopDoor(); await sleep(200); g.enterShop(); ck(g.phase === 1 && g.firas.shown, "entered, Firas appears");
-  await until(() => g.ui.st.talk); ck(!!g.ui.st.talk, "trader arrived and talks");
+  ck(g.trader.arrived && g.items.filter(i => i.market).length === 8, "market stall: vendor + 8 ingredients");
+  await until(() => g.welcomed);
+  const decoy = g.items.find(i => i.market && i.market.key === "m_mush"); drop(decoy, L.basket); ck(g.state.cash === 100 && !decoy.consumed, "wrong ingredient refused, no charge");
+  const herb0 = g.items.find(i => i.market && i.market.buy === 0); drop(herb0, L.basket); ck(g.state.cash === 90 && herb0.consumed, "right ingredient bought from the basket");
   for (let i = 0; i < 4; i++) { g.purchase(i); g.purchase(i); }
   ck(g.state.cash === 75 && g.state.inventoryValue === 25, "purchase posted once (100->75)");
   await brew(false); ck(g.phase === 3, "first bottle ready");

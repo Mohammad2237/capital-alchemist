@@ -19,18 +19,21 @@ class Animated {
 
 export class NPC extends Animated {
   // role: "Customer" | "Merchant" | "Trader"
-  constructor(c, role, speaker, spot) { super(c); this.role = role; this.speaker = speaker; this.spot = spot; this.arrived = false; this.walking = false; this.gestureAt = 0; this.gesture = 0; this.holder.visible = false; }
+  constructor(c, role, speaker, spot) { super(c); this.role = role; this.speaker = speaker; this.spot = spot; this.arrived = false; this.walking = false; this.baseYaw = 0; this.gestureAt = 0; this.gesture = 0; this.holder.visible = false; }
   static async create(scene, url, height, role, speaker, spot) {
     const c = await character(url, height); if (!c) return null;
     const n = new NPC(c, role, speaker, spot); scene.add(n.holder); n.holder.position.copy(L.customerPath[0]); n.play("Idle"); return n;
   }
+  // Stand at a fixed spot already 'arrived' (the market vendor).
+  standAt(pos, yaw) { this.holder.position.copy(pos); this.holder.rotation.y = yaw; this.baseYaw = yaw; this.holder.visible = true; this.arrived = true; this.walking = false; this.path = null; this.play("Idle"); }
+  reset() { this.arrived = false; this.walking = false; this.path = null; this.holder.visible = false; this.holder.position.copy(L.customerPath[0]); }
   get head() { return this.holder.position.clone().add(new THREE.Vector3(0, this.role === "Merchant" ? 1.95 : 1.85, 0)); }
   async arrive(game) {
     if (this.arrived || this.walking) return; this.walking = true; this.holder.visible = true;
     await sleep(game.fast ? 50 : 900); game.fx.swingDoor(); await sleep(game.fast ? 50 : 800);
     this.game = game; await this.walk([...L.customerPath.slice(1), this.spot], game);
     await this.face(new THREE.Vector3(0, 0, 1)); // toward the counter (+Z into the shop)
-    this.play("Idle"); this.walking = false; this.arrived = true;
+    this.play("Idle"); this.walking = false; this.arrived = true; this.baseYaw = 0;
   }
   async leave(game) {
     if (!this.arrived) return; this.arrived = false; this.walking = true;
@@ -59,8 +62,9 @@ export class NPC extends Animated {
       if (turnToward(h, this.faceDir, dt * 4)) { this.faceDir = null; this.onFace && this.onFace(); }
     } else if (this.arrived && eye) {
       // Look at the player while standing at the counter (within a comfortable turn from the counter).
-      const d = eye.clone().sub(h.position); d.y = 0; const want = Math.atan2(d.x, d.z), lim = 1.2;
-      turnToward(h, new THREE.Vector3(Math.sin(THREE.MathUtils.clamp(want, -lim, lim)), 0, Math.cos(THREE.MathUtils.clamp(want, -lim, lim))), dt * 2.5);
+      const d = eye.clone().sub(h.position); d.y = 0; let rel = Math.atan2(d.x, d.z) - this.baseYaw; rel = Math.atan2(Math.sin(rel), Math.cos(rel));
+      const yaw = this.baseYaw + THREE.MathUtils.clamp(rel, -1.2, 1.2);
+      turnToward(h, new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)), dt * 2.5);
     }
     if (this.arrived && dialogue.speaking && dialogue.speaker === this.speaker && t > this.gestureAt) {
       this.gestureAt = t + 2.4; this.play(this.gesture++ % 2 === 0 ? "Interact" : "Use_Item", 0.2, true);

@@ -146,6 +146,16 @@ Alchemy map (creative brewing):
 - Perf: on headset/phone only the fire + 3 nearest lamps are lit, shadows update every 1.5 s, NPCs cast no shadow in VR.
 - Player measured ~20 FPS before these perf changes.
 
+## 8c. Second headset round (24 Nov evening)
+- Dialogue rewritten (no fillers like همم/أوه); every decision prompt is a voiced line (`ask(id, ...)` in game.js) so the voice = the text. 63 voices.
+- Choices wait until the line is spoken (`ui.setHold`); in VR the line floats in a speech bubble over the speaker (`ui.setBubble`).
+- Scene 1 now starts at a village market stall outside (`setupMarket`, `MARKET` table in game.js, `L.stall/marketItem/basket/vendorSpot` in layout.js): 4 correct + 4 decoy ingredients, drop into the basket to buy; decoys are refused with a voiced reason and cost nothing (finance unchanged).
+- Door is player-owned: grip the handle in VR, E/trigger toggles; a shut door blocks walking and teleport (`fx.doorRot/doorGoal`).
+- Bottling uses a squeeze dropper (`usePipette`): dip + squeeze fills it, squeeze over the bottle fills the bottle.
+- Alchemy map floats above the cauldron in VR (`setupWorldMap`); stir speed sets precision (`BrewMap.stir(turns, dir, speed)`), Firas explains it (S1_MAP, S1_FAST).
+- Point at any character + trigger/E: question menu (`QUESTIONS`) with extra money ideas (هامش الربح، الميزانية، العرض والطلب، خصم الكمية...).
+- VR effects lighter (`fx.low`).
+
 ## 9. Next steps
 
 1. **The user tests VR on the headset** at the live URL, then reports what breaks. Fix those issues first.

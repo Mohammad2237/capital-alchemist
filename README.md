@@ -3,8 +3,9 @@
 **Play in the browser (desktop, phone, or a VR headset's browser):** https://mohammad2237.github.io/capital-alchemist/
 In a headset (e.g. Meta Quest Browser) press **«ادخل الواقع الافتراضي»**.
 
-A short Arabic VR financial-literacy game: you inherit a potion shop, buy ingredients from a wandering trader,
-crush, mix, stir and bottle a potion in a big central cauldron, sell it, take a bulk order, face a supplier
+A short Arabic VR financial-literacy game: you inherit a potion shop, pick the right ingredients for a customer's order at the
+village market stall (four decoys look close), crush, mix, stir (slow, steady stirring is more precise on the alchemy map) and
+fill bottles with a squeeze dropper in a big central cauldron, sell it, take a bulk order, face a supplier
 risk, pay the shop's bills — and learn the difference between **revenue, gross profit, net profit and cash**
 by doing it. Six financial outcomes, all exact to the competition spec.
 
@@ -36,7 +37,8 @@ The earlier Unity version is preserved on the `unity-version` branch.
 |---|---|---|
 | WASD walk (Shift run), right-mouse look | Left thumb joystick, drag to look | Left stick walk, right stick snap-turn / push forward to aim a teleport arc |
 | E or left-click: grab / drop / open door | Tap item to grab, tap a spot to drop | Grip: grab; move your hand to stir and crush. Trigger at a far item: it flies to your hand; release while pointing at the cauldron/mortar/bottle ring/counter tray and it flies there |
-| F (hold): pour | «اضغط مطولًا للصب» button | Right trigger: pour; trigger on buttons and the door |
+| F or left mouse (hold) while holding the dropper: squeeze | «اضغط مطولًا للعصر» button | Trigger while holding the dropper: squeeze (dip in the cauldron, then over the bottle) |
+| E on the door: open/close; E on a character: ask questions | Tap | Grip the door handle and swing it; trigger at a character: ask questions |
 | Q / «انتقل إلى المحطة»: station view | same button | same button: blink-teleport to the floor ring |
 | Tab: encyclopedia, R: restart | «الموسوعة» button | X: encyclopedia, B: reset eye height (auto when the floor is missing) |
 

@@ -19,7 +19,58 @@ const TERMS = [["رأس المال", "الأموال أو الموارد الت�
   ["المصروفات التشغيلية", "تكاليف تشغيل المتجر غير الداخلة في تكلفة الجرعات مباشرة."], ["صافي الربح", "إجمالي الربح بعد طرح خسائر التلف والمصروفات التشغيلية في هذه المحاكاة."]];
 const CARDS = [["إرث الكيميائي", "المشهد الأول: الإرث"], ["المشهد الثاني", "أول زبون"], ["المشهد الثالث", "الطلبية الكبرى"]];
 const MODELS = { herb: "herb_red", crystal: "crystal_blue", water: "water_flask", bottle: "potion_bottle", potion: "potion_bottle", pestle: "pestle", spoon: "stir_paddle" };
-const GRIP = { spoon: 0.95, pestle: 0.2 };
+const GRIP = { spoon: 0.95, pestle: 0.2, pipette: 0.24 };
+// Village market (scene 1): four ingredients the order needs (buy = ingredient index) and four that look close but are wrong.
+const MARKET = [
+  { key: "m_herb", name: "عشبة حمراء", price: 10, tag: "للطاقة", buy: 0, model: "herb_red", scale: 1.3 },
+  { key: "m_mush", name: "فطر أحمر", price: 6, tag: "للنوم", line: "T1_NO_MUSH" },
+  { key: "m_crystal", name: "بلورة زرقاء", price: 8, tag: "لصفاء الذهن", buy: 1, model: "crystal_blue", scale: 1.3 },
+  { key: "m_feather", name: "ريشة زرقاء", price: 9, tag: "للخفّة", line: "T1_NO_FEATHER" },
+  { key: "m_water", name: "ماء سحري", price: 5, tag: "للمزج", buy: 2, model: "water_flask", scale: 1.1 },
+  { key: "m_honey", name: "عسل القمر", price: 7, tag: "للحلاوة", line: "T1_NO_HONEY" },
+  { key: "m_bottle", name: "قارورة", price: 2, tag: "للتعبئة", buy: 3, model: "potion_bottle", scale: 1 },
+  { key: "m_salt", name: "ملح أسود", price: 4, tag: "للحفظ", line: "T1_NO_SALT" },
+];
+const ORDER_TEXT = "طلب الزبون: جرعة نشاط\nإشي أحمر للطاقة • إشي أزرق لصفاء الذهن\nماء سحري للمزج • قارورة";
+// Questions you can ask each character (point at them and press trigger / E).
+const QUESTIONS = {
+  "فراس": [["شو يعني هامش الربح؟", "A_MARGIN"], ["المصاري اللي معي كلها ربح؟", "A_CASH"], ["ليش الجودة مهمة؟", "A_QUALITY"], ["شو يعني ميزانية؟", "A_BUDGET"]],
+  "التاجر المتجول": [["ليش الأسعار مختلفة؟", "A_T_PRICE"], ["في خصم إذا اشتريت كتير؟", "A_T_BULK"]],
+  "الزبون": [["شو بهمّك بالجرعة؟", "A_C_WHY"], ["قدّيش سعرها عادة؟", "A_C_PRICE"]],
+  "التاجر": [["ليش بدك كمية كبيرة؟", "A_M_ORDER"], ["شو بتفحص بالجرعة؟", "A_M_CHECK"]],
+};
+// Canvas sign in the world (Arabic shaped by the browser). yawUnity uses the Unity heading convention.
+function sign(scene, text, pos, w, h, yawUnity, size = 64, bg = "#e8d4a6", ink = "#301e13") {
+  const cv = document.createElement("canvas"); cv.width = 1024; cv.height = Math.round(1024 * h / w); const c = cv.getContext("2d");
+  c.fillStyle = bg; c.fillRect(0, 0, cv.width, cv.height); c.strokeStyle = "#73501c"; c.lineWidth = 14; c.strokeRect(7, 7, cv.width - 14, cv.height - 14);
+  c.fillStyle = ink; c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `bold ${size}px Amiri`;
+  const lines = text.split("\n"); lines.forEach((l, i) => c.fillText(l, cv.width / 2, cv.height / 2 + (i - (lines.length - 1) / 2) * size * 1.3));
+  const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: tx, roughness: 0.9 }));
+  m.position.copy(pos); m.rotation.y = -yawUnity * Math.PI / 180; scene.add(m); return m;
+}
+const MAT = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.6, ...o });
+function buildPipette(it) {
+  const g = it.obj, glass = MAT(0xd6f2ff, { transparent: true, opacity: 0.45, roughness: 0.1 });
+  const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.004, 0.2, 12), glass); tube.position.y = 0.1; g.add(tube);
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.014, 12), MAT(0xc2873a, { metalness: 0.7, roughness: 0.3 })); collar.position.y = 0.203; g.add(collar);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 12), MAT(0xb3261e, { roughness: 0.5 })); bulb.position.y = 0.24; bulb.scale.set(1, 1.3, 1); g.add(bulb);
+  const liq = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.003, 1, 10), new THREE.MeshBasicMaterial({ color: 0x1ab866 })); liq.name = "Liquid"; liq.visible = false; g.add(liq);
+  it.bulb = bulb; it.pipeLiquid = liq;
+}
+function buildDecoy(it) {
+  const g = it.obj, k = it.market.key;
+  if (k === "m_mush") { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.016, 0.06, 10), MAT(0xf2e8d0)); st.position.y = 0.03; g.add(st);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.045, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), MAT(0xc0281c)); cap.position.y = 0.055; cap.scale.y = 0.7; g.add(cap);
+    for (let i = 0; i < 5; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.007, 6, 4), MAT(0xffffff)); const a = i * 1.3; d.position.set(Math.cos(a) * 0.025, 0.08 - (i % 2) * 0.008, Math.sin(a) * 0.025); g.add(d); } }
+  else if (k === "m_feather") { const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.2, 6), MAT(0xf0e6d0)); sh.position.y = 0.1; sh.rotation.z = 0.35; g.add(sh);
+    const v = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), MAT(0x2f6fe0, { emissive: 0x0a2a70, emissiveIntensity: 0.4 })); v.scale.set(0.028, 0.085, 0.006); v.position.set(-0.03, 0.12, 0); v.rotation.z = 0.35; g.add(v); }
+  else if (k === "m_honey") { const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.036, 0.09, 16), MAT(0xffe9b0, { transparent: true, opacity: 0.5, roughness: 0.1 })); jar.position.y = 0.045; g.add(jar);
+    const hon = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.032, 0.07, 16), MAT(0xe0a020, { emissive: 0x603800, emissiveIntensity: 0.3 })); hon.position.y = 0.037; g.add(hon);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.046, 0.02, 16), MAT(0x9a3b2a)); lid.position.y = 0.098; g.add(lid); }
+  else if (k === "m_salt") { const s = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), MAT(0x3a3a40, { roughness: 0.95 })); s.scale.set(0.05, 0.055, 0.045); s.position.y = 0.05; g.add(s);
+    const tie = new THREE.Mesh(new THREE.TorusGeometry(0.018, 0.005, 6, 12), MAT(0xc2873a)); tie.rotation.x = Math.PI / 2; tie.position.y = 0.1; g.add(tie); }
+}
 const C = (text, action) => ({ text, action });
 
 // ------------------------------------------------------------------ dialogue
@@ -30,11 +81,12 @@ class Dialogue {
     for (const raw of csv.split("\n")) { const c = raw.trim().split(","); if (c.length !== 8 || c[0] === "id") continue; this.lines[c[0]] = { speaker: c[1], text: c[4], dur: parseFloat(c[6]) }; }
     if (!this.g.fast) this.g.audio.preloadVoices(Object.keys(this.lines));
   }
+  get busy() { return this.speaking || this.queue.length > 0; }
   say(...ids) { for (const id of ids) if (this.lines[id] && !this.queue.includes(id)) this.queue.push(id); }
   update(dt) {
     if (this.speaking) { this.left -= dt; if (this.left <= 0) { this.speaking = false; this.speaker = ""; this.g.ui.subtitle(""); this.g.audio.setSpeaking(false); this.gap = 0.25; } return; }
     if ((this.gap -= dt) > 0 || !this.queue.length) return;
-    const id = this.queue.shift(), l = this.lines[id]; this.speaking = true; this.speaker = l.speaker; this.left = this.g.fast ? 0.05 : l.dur;
+    const id = this.queue.shift(), l = this.lines[id]; this.speaking = true; this.speaker = l.speaker; this.text = l.text; this.left = this.g.fast ? 0.05 : l.dur;
     this.g.ui.subtitle(l.speaker + ": " + l.text); this.g.audio.setSpeaking(true);
     if (!this.g.fast) this.g.audio.speak(id).then(d => { if (d && this.speaker === l.speaker) this.left = Math.max(this.left - (l.dur - d - 0.3), 0.3); });
   }
@@ -48,7 +100,10 @@ class Item {
     if (this.kind === "crushed") {
       const bowl = await place(g, "assets/kaykit/Restaurant/bowl_small.gltf", new THREE.Vector3(), { width: 0.16 });
       for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), new THREE.MeshStandardMaterial({ color: 0x8a2b10 })); m.position.set(Math.sin(i * 3) * 0.035, 0.045, Math.cos(i * 3) * 0.035); g.add(m); }
-    } else {
+    } else if (this.kind === "pipette") buildPipette(this);
+    else if (this.market && !this.market.model) buildDecoy(this);
+    else if (this.market) await place(g, `assets/custom/${this.market.model}.glb`, new THREE.Vector3(), { scale: this.market.scale });
+    else {
       const m = await place(g, `assets/custom/${MODELS[this.kind]}.glb`, new THREE.Vector3(), { scale: this.kind === "water" ? 1.3 : (this.kind === "herb" || this.kind === "crystal") ? 1.55 : 1 });
     }
     if (this.kind === "potion") this.fill(1, new THREE.Color(0x1ab866));
@@ -78,15 +133,18 @@ class BrewMap {
     for (let i = 1; i <= 5; i++) { this.pos.x += push[0] / 5; this.pos.y += push[1] / 5; this.trail.push(this.pos.clone()); }
     this.heading = Math.atan2(push[1], push[0]) * 180 / Math.PI; this.any = true; this.track();
   }
-  stir(turns, dir) {
+  // speed = degrees per second of the paddle: slow and steady steers precisely, fast stirring wobbles the marker.
+  stir(turns, dir, speed = 0) {
     if (!this.any || turns <= 0) return false; const wasIn = this.inZone;
-    this.heading -= dir * 75 * turns; const r = this.heading * Math.PI / 180;
-    this.pos.add(new THREE.Vector2(Math.cos(r), Math.sin(r)).multiplyScalar(0.34 * turns)); if (this.pos.length() > 0.95) this.pos.setLength(0.95);
+    this.wobble = THREE.MathUtils.clamp((speed - 260) / 300, 0, 1);
+    this.heading -= dir * 75 * turns + (Math.random() - 0.5) * 140 * this.wobble; const r = this.heading * Math.PI / 180;
+    this.pos.add(new THREE.Vector2(Math.cos(r), Math.sin(r)).multiplyScalar(0.34 * turns * (1 + 0.8 * this.wobble))); if (this.pos.length() > 0.95) this.pos.setLength(0.95);
     if (Math.random() < 0.5) this.trail.push(this.pos.clone()); this.track(); return !wasIn && this.inZone;
   }
   track() { this.best = Math.min(this.best, this.pos.distanceTo(BrewMap.zone)); }
   get qualityText() { return "الجودة " + this.quality + " / 3" + (this.quality === 3 ? " — ممتازة!" : ""); }
   get tint() { if (!this.any) return new THREE.Color(0xd9e0dc); if (this.inZone) return new THREE.Color(0xffd973); return new THREE.Color(0xd95a4d).lerp(new THREE.Color(0x598cff), THREE.MathUtils.clamp(this.pos.x * 2 + 0.5, 0, 1)); }
+  get speedText() { return this.wobble > 0.5 ? "التحريك سريع: العلامة بتفلت" : "التحريك هادئ: تحكّم دقيق"; }
   draw(c, size) {
     const s = size / 2, P2 = v => [s + v.x * s, s - v.y * s];
     c.clearRect(0, 0, size, size); c.fillStyle = "#eedbb0"; c.beginPath(); c.arc(s, s, s - 2, 0, Math.PI * 2); c.fill();
@@ -116,7 +174,7 @@ export class Game {
     this.merchant = await NPC.create(this.scene, "assets/kaykit/Characters/Knight.glb", 1.8, "Merchant", "التاجر", L.customerSpot);
     this.npcs = [this.trader, this.customer, this.merchant].filter(Boolean);
     for (const name of ["herb_red", "crystal_blue", "water_flask", "potion_bottle", "pestle", "stir_paddle"]) await load(`assets/custom/${name}.glb`);
-    this.labels();
+    this.labels(); await this.setupMarket(); this.setupWorldMap();
     this.ui.onBook = () => this.glossary(0); this.ui.onStation = () => this.goToStation(); this.ui.onClick = () => this.audio.play("paper", 1.1, 0.8);
     this.setupDesktop(); this.setupTouch(); this.setupVR();
     this.ui.card(...CARDS[0], this.fast ? 0 : 1600);
@@ -135,14 +193,71 @@ export class Game {
     document.fonts.ready.then(() => {
       label("إرث الكيميائي\nمتجر الجرعات", U(0, 2.93, -0.545), 1.1, 0.5, 180, 90);
       label("جرعة النشاط\nعشبة 10 • بلورة 8\nماء 5 • قارورة 2", U(-4.03, 1.36, 6.2), 1.05, 0.7, 90, 70);
+      sign(this.scene, ORDER_TEXT, L.stall.clone().setY(2.24), 1.7, 0.7, 90, 62);
+      MARKET.forEach((d, i) => sign(this.scene, `${d.name} • ${d.price}\n${d.tag}`, U(-1.97, 0.8, L.marketItem(i).z), 0.28, 0.14, 90, 110, "#f3e3bb"));
       this.marketLabel = label("لوحة السوق\nجرعات الجيران: نحو 40 عملة", U(4.03, 1.36, 1.15), 0.76, 0.5, -90, 64); this.marketLabel.visible = false;
     });
   }
 
+  // ---------------------------------------------------------------- village market (scene 1)
+  async setupMarket() {
+    const S = L.stall, root = this.marketRoot = new THREE.Group(); root.name = "Market stall"; this.scene.add(root);
+    await place(root, "assets/kaykit/Dungeon/table_long.glb", S, { height: L.tableTop, collider: true });
+    const wood = MAT(0x5a3418), cloth1 = MAT(0xb8322a), cloth2 = MAT(0xf0dcb0);
+    for (const dz of [-1.75, 1.75]) for (const dx of [-1.0, 1.0]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 2.6, 8), wood); post.position.copy(S).add(U(dx, 1.3, dz)); post.castShadow = true; root.add(post); }
+    for (let i = 0; i < 6; i++) { const strip = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.03, 0.62), i % 2 ? cloth2 : cloth1); strip.position.copy(S).add(U(0, 2.62, -1.55 + i * 0.62)); strip.rotation.z = -0.16; strip.castShadow = true; root.add(strip); }
+    // Basket at the shop end of the stall: put what you want to buy in it.
+    const basket = new THREE.Group(); basket.position.copy(L.basket); root.add(basket);
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.13, 0.13, 18, 1, true), MAT(0x9a6a2e, { side: THREE.DoubleSide })); body.position.y = 0.065; basket.add(body);
+    const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.13, 18), MAT(0x7a4f20)); bottom.rotation.x = -Math.PI / 2; bottom.position.y = 0.005; basket.add(bottom);
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.012, 6, 20, Math.PI), MAT(0x7a4f20)); handle.position.y = 0.13; basket.add(handle);
+    this.basketRing = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.24, 32), new THREE.MeshBasicMaterial({ color: 0x6dffb0, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+    this.basketRing.rotation.x = -Math.PI / 2; this.basketRing.position.copy(L.basket).setY(L.basket.y + 0.01); this.scene.add(this.basketRing);
+    for (let i = 0; i < MARKET.length; i++) { const it = new Item(this, MARKET[i].key, MARKET[i].name + " • " + MARKET[i].price, i); it.market = MARKET[i]; await it.build(L.marketItem(i)); }
+    this.trader.standAt(L.vendorSpot, -Math.PI / 2);
+    // Little wooden holder for the dropper at the bottling table.
+    const hold = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.08), MAT(0x5a3418)); hold.position.copy(L.pipetteSpot).setY(0.925); this.scene.add(hold);
+  }
+  // Alchemy map floating above the cauldron (VR): shows where the brew is heading and how precise your stirring is.
+  setupWorldMap() {
+    this.mapCv = document.createElement("canvas"); this.mapCv.width = 512; this.mapCv.height = 640;
+    this.mapTex = new THREE.CanvasTexture(this.mapCv); this.mapTex.colorSpace = THREE.SRGBColorSpace;
+    this.mapMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.9), new THREE.MeshBasicMaterial({ map: this.mapTex, transparent: true }));
+    this.mapMesh.position.copy(L.liquid).add(U(0, 0.95, 0.75)); this.mapMesh.visible = false; this.scene.add(this.mapMesh);
+    this.mapMesh.lookAt(Stations.cauldron.stand.clone().setY(1.6));
+  }
+  drawWorldMap() {
+    const c = this.mapCv.getContext("2d"); c.clearRect(0, 0, 512, 640);
+    c.fillStyle = "rgba(20,27,23,.9)"; c.beginPath(); c.roundRect(0, 0, 512, 640, 30); c.fill();
+    c.save(); c.translate(16, 70); this.map.draw(c, 480); c.restore();
+    c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#ffcf7a"; c.font = "bold 40px Amiri"; c.fillText("خريطة الجرعة", 256, 38);
+    c.font = "bold 32px Amiri"; c.fillStyle = "#f1dcae"; c.fillText(this.map.any ? this.map.qualityText : "أضف المكونات", 256, 580);
+    c.font = "26px Amiri"; c.fillStyle = this.map.wobble > 0.5 ? "#ff8a70" : "#7dffc0"; c.fillText(this.map.any ? this.map.speedText : "وصّل العلامة للدائرة الخضرا", 256, 618);
+    this.mapTex.needsUpdate = true;
+  }
+  marketDrop(it) {
+    const d = it.market;
+    if (this.phase !== P.Purchase) { this.bounceHome(it); return; }
+    if (d.buy === undefined) { this.dialogue.say(d.line); this.audio.play("reject", 1.3, 0.4); this.ui.toast(`${d.name} ${d.tag}، مش من الطلب`); this.bounceHome(it); return; }
+    this.purchase(d.buy);
+  }
+  // Ask a character questions: more money words, told in conversation.
+  askMenu(speaker) {
+    const qs = QUESTIONS[speaker]; if (!qs || this.paused || this.changing) return;
+    this.asking = speaker; if (speaker === "فراس") this.dialogue.say("Q_ASK"); this.audio.play("paper", 1, 0.6);
+    this.ui.talk(speaker, "شو بدك تعرف؟", ...qs.map(([q, id]) => C(q, () => { this.dialogue.say(id); this.asking = null; this.refresh(); })), C("رجوع", () => { this.asking = null; this.refresh(); }));
+  }
+  characters() {
+    const out = []; if (this.firas?.shown) out.push({ speaker: "فراس", at: this.firas.head.clone().add(new THREE.Vector3(0, -0.4, 0)) });
+    for (const n of this.npcs) if (n.arrived && n.holder.visible) out.push({ speaker: n.speaker, at: n.holder.position.clone().add(new THREE.Vector3(0, 1.15, 0)) });
+    return out;
+  }
+  rayCharacter(ray) { let best = null, bd = 0.42; for (const ch of this.characters()) { const d = ray.distanceToPoint(ch.at); if (d < bd && ch.at.distanceTo(ray.origin) < 7) { bd = d; best = ch; } } return best; }
+  toggleDoor() { this.fx.openDoor(this.fx.doorGoal < 0.8); }
   // ---------------------------------------------------------------- stations
   stationName() {
     switch (this.phase) {
-      case P.Purchase: return this.trader ? "counter" : "welcome";
+      case P.Purchase: return this.welcomed ? "market" : "welcome";
       case P.Brew: case P.BatchBrew: { const b = this.brew; return !b.herbInMortar ? "ingredients" : !b.crushed ? "mortar" : !b.readyToStir ? "mix" : !b.readyToBottle ? "cauldron" : "bottling"; }
       case P.Wilt: return "ingredients";
       case P.Price: case P.Handoff: case P.RevenueQuiz: case P.Offer: case P.Supplier: case P.BatchHandoff: case P.Expenses: case P.FinalQuiz: return "counter";
@@ -158,7 +273,7 @@ export class Game {
     const b = this.brew;
     if (!b.herbInMortar) return it.kind === "herb"; if (!b.crushed) return it.kind === "pestle";
     if (!b.readyToStir) return ["crushed", "crystal", "water"].includes(it.kind); if (!b.readyToBottle) return it.kind === "spoon";
-    return it.kind === "bottle" && !this.bottleIn;
+    return this.bottleIn ? it.kind === "pipette" : it.kind === "bottle";
   }
   speakerHead() {
     const d = this.dialogue; if (!d.speaking) return null;
@@ -172,38 +287,44 @@ export class Game {
 
   // ---------------------------------------------------------------- story
   refresh() {
-    const ui = this.ui, s = this.state; ui.actions(); ui.close();
+    const ui = this.ui, s = this.state; ui.actions(); ui.close(); this.asking = null;
+    if (this.askKey && !this.askKey.startsWith(this.phase + ":")) this.askKey = null;
     if (this.phase !== P.Brew && this.phase !== P.BatchBrew) ui.progress("");
     switch (this.phase) {
       case P.Intro:
-        if (!this.doorOpened) { ui.objective("افتح باب متجرك"); ui.actions(C("افتح الباب", () => this.openShopDoor())); }
+        if (!this.doorOpened) { ui.objective("افتح باب متجرك بإيدك"); ui.actions(C("افتح الباب", () => this.openShopDoor())); }
         else { ui.objective("ادخل المتجر"); ui.actions(C("ادخل", () => this.enterShop())); } break;
       case P.Purchase: {
-        ui.objective("اشترِ المكونات من التاجر");
-        if (!this.trader.arrived) { this.trader.arrive(this).then(() => { this.dialogue.say("T1_HELLO"); this.refresh(); }); break; }
-        const names = ["عشبة حمراء • 10", "بلورة زرقاء • 8", "ماء سحري • 5", "قارورة • 2"];
-        ui.talk("التاجر المتجول", "ماذا تحتاج لجرعة النشاط؟", ...[0, 1, 2, 3].filter(i => !s.has("ingredient-" + i)).map(i => C(names[i], () => this.purchase(i)))); break; }
+        const n = [0, 1, 2, 3].filter(i => s.has("ingredient-" + i)).length;
+        ui.objective(this.welcomed ? "السوق: حطّ مكونات الطلب بالسلّة" : "اسمع فراس"); if (this.welcomed) ui.progress(`بالسلّة: ${n} / 4`);
+        ui.actions(C("شو الطلب؟", () => { ui.toast(ORDER_TEXT.replace(/\n/g, " • ")); ui.toastUntil = performance.now() + 6000; })); break; }
       case P.Brew: case P.BatchBrew: this.brewObjective(); break;
       case P.Ready: ui.objective("جرعتك جاهزة! • التكلفة 25"); ui.actions(C("افتح الباب للزبون", () => this.nextChapter())); break;
       case P.Price: ui.objective("اختر سعرك");
-        ui.talk("الزبون", "بكم جرعة النشاط؟ الجيران يبيعونها بنحو 40.", C("30 عملة", () => this.choosePrice(30)), C("50 عملة", () => this.choosePrice(50))); break;
+        this.ask("P_PRICE", C("30 عملة", () => this.choosePrice(30)), C("50 عملة", () => this.choosePrice(50))); break;
       case P.Handoff: ui.objective("ضع الجرعة على الصينية"); break;
-      case P.RevenueQuiz: ui.objective("إيراد أم ربح؟");
-        ui.talk("فراس", `الإيراد ${s.revenue} • التكلفة ${s.cogs} — المال الذي استلمته: إيراد أم ربح؟`, C("إيراد", () => this.revenueAnswer(true)), C("ربح", () => this.revenueAnswer(false))); break;
+      case P.RevenueQuiz: ui.objective(`إيراد ولا ربح؟ البيع ${s.revenue} • التكلفة ${s.cogs}`);
+        this.ask("P_REVQ", C("إيراد", () => this.revenueAnswer(true)), C("ربح", () => this.revenueAnswer(false))); break;
       case P.Offer: ui.objective("طلبية كبيرة");
-        ui.talk("التاجر", `أريد 3 جرعات، وأدفع ${s.merchantPrice} لكل جرعة سليمة.`, C("اتفقنا", () => this.nextChapter())); break;
+        this.ask(s.firstPrice === 30 ? "S2_MA" : "S2_MB", C("اتفقنا", () => this.nextChapter())); break;
       case P.Supplier: ui.objective("اختر المورد");
         if (!this.trader.arrived) { this.trader.spot = L.traderSpot; this.trader.arrive(this).then(() => { this.dialogue.say("T3_HELLO"); this.refresh(); }); break; }
-        ui.talk("التاجر المتجول", "3 جرعات: اقتصادي رخيص، أو ممتاز بجودة ثابتة.", C("اقتصادي • 45", () => this.buyBatch(Supplier.Cheap)), C("ممتاز • 60", () => this.buyBatch(Supplier.Premium))); break;
+        this.ask("P_SUPPLIER", C("اقتصادي • 45", () => this.buyBatch(Supplier.Cheap)), C("ممتاز • 60", () => this.buyBatch(Supplier.Premium))); break;
       case P.Wilt: ui.objective("عشبة ذابلة!");
-        ui.talk("فراس", "إحدى الأعشاب ذابلة. ماذا تفعل؟", C("استبدلها • +5", () => this.decideHerb(Herb.Replace)), C("استخدمها", () => this.decideHerb(Herb.UseWilted))); break;
+        this.ask("P_WILT", C("استبدلها • +5", () => this.decideHerb(Herb.Replace)), C("استخدمها", () => this.decideHerb(Herb.UseWilted))); break;
       case P.BatchHandoff: ui.objective("سلّم القوارير للتاجر"); break;
-      case P.Expenses: ui.objective("فاتورة اليوم"); ui.talk("فراس", "فاتورة المتجر: إيجار وشموع وحطب.", C("ادفع 10", () => this.payExpenses())); break;
+      case P.Expenses: ui.objective("فاتورة اليوم: 10 عملات"); this.ask("S3_OPEX", C("ادفع 10", () => this.payExpenses())); break;
       case P.FinalQuiz: { ui.objective("السؤال الأخير"); const a = C(s.netProfit + " عملة", () => this.finalAnswer(true)), b = C(s.grossProfit + " عملة", () => this.finalAnswer(false));
-        ui.talk("فراس", "كم صافي ربحك اليوم؟", ...(this.correctLeft ? [a, b] : [b, a])); break; }
+        this.ask("P_FINAL", ...(this.correctLeft ? [a, b] : [b, a])); break; }
       case P.Report: ui.objective("تقرير المتجر");
         ui.modal("تقرير المتجر", this.report(), C("إعادة التجربة", () => location.reload()), C("الموسوعة المالية", () => this.glossary(0))); break;
     }
+  }
+  // A decision: the character says the line (voice = the same words you read), then the choices appear.
+  ask(id, ...choices) {
+    const l = this.dialogue.lines[id], key = this.phase + ":" + id; if (!l) return;
+    if (this.askKey !== key) { this.askKey = key; this.dialogue.say(id); }
+    this.ui.talk(l.speaker, l.text, ...choices);
   }
   report() {
     const s = this.state;
@@ -215,35 +336,38 @@ export class Game {
     this.ui.modal(`الموسوعة المالية   ${s.terms.length} / 10`, open ? `${TERMS[page][0]}\n\n${TERMS[page][1]}` : "مصطلح مغلق\nستكتشفه أثناء التجربة",
       C("السابق", () => this.glossary((page + 9) % 10)), C("التالي", () => this.glossary((page + 1) % 10)), C("عودة", () => { this.paused = false; this.refresh(); }));
   }
-  openShopDoor() { if (this.phase !== P.Intro || this.doorOpened) return; this.doorOpened = true; this.fx.openDoor(); this.refresh(); }
+  openShopDoor() { if (this.fx.doorGoal > 0.8) return; this.fx.openDoor(true); }
   enterShop() {
     if (this.phase !== P.Intro) return;
-    if (!this.doorOpened) { this.doorOpened = true; this.fx.openDoor(); }
+    if (!this.doorOpened) { this.doorOpened = true; this.fx.openDoor(true); }
     const p = new THREE.Vector3(); this.camera.getWorldPosition(p);
     if (!L.isInside(p)) this.teleport(L.insideStart, L.insideYaw);
-    this.phase = P.Purchase; this.unlock(0); this.firas.show(this); this.dialogue.say("S1_F01", "S1_F03"); this.refresh();
+    this.phase = P.Purchase; this.unlock(0); this.firas.show(this); this.welcomed = false; this.dialogue.say("S1_F01", "S1_F03", "S1_ORDER"); this.refresh();
   }
   purchase(i) {
     if (this.phase !== P.Purchase || !this.fin.purchaseFirst(i)) return;
-    this.audio.play("coins", 0.8, 0.5); this.trader.receive();
+    this.audio.play("coins", 0.8, 0.5); this.trader.receive(); this.fx.sparkle(L.basket.clone().setY(1.05), 6);
+    const mi = this.items.find(x => x.market && x.market.buy === i);
+    if (mi) { mi.consumed = true; mi.held = false; mi.flying = false; mi.obj.scale.setScalar(0.7); mi.obj.quaternion.identity(); mi.obj.position.copy(L.basket).add(new THREE.Vector3((i % 2 - 0.5) * 0.11, 0.03, (Math.floor(i / 2) - 0.5) * 0.11)); }
     if (!this.state.terms.includes(1)) { this.unlock(1); this.dialogue.say("S1_F04"); }
-    if ([0, 1, 2, 3].every(k => this.state.has("ingredient-" + k))) { this.phase = P.Brew; this.beginBrew(false); this.dialogue.say("T1_BYE", "S1_F05"); this.trader.leave(this); }
+    if ([0, 1, 2, 3].every(k => this.state.has("ingredient-" + k))) { this.phase = P.Brew; this.beginBrew(false); this.dialogue.say("T1_BYE", "S1_BACK", "S1_F05"); }
     else this.dialogue.say("T1_DEAL");
     this.refresh();
   }
   async beginBrew(batch) {
-    this.batch = batch; this.brew = new RecipeProgress(); this.map.reset(); this.filled = 0; this.bottleIn = null; this.fill = 0;
-    for (const it of this.items) if (!it.consumed && it.kind !== "potion") { this.scene.remove(it.obj); it.consumed = true; }
+    this.batch = batch; this.brew = new RecipeProgress(); this.map.reset(); this.filled = 0; this.bottleIn = null; this.fill = 0; this.pipe = 0; this.fastWarned = false;
+    for (const it of this.items) if (!it.consumed && it.kind !== "potion" && !it.market) { this.scene.remove(it.obj); it.consumed = true; }
     await new Item(this, "herb", "العشبة", 0).build(L.herbSpot); await new Item(this, "crystal", "البلورة", 0).build(L.crystalSpot);
     await new Item(this, "water", "الماء السحري", 0).build(L.waterSpot); await new Item(this, "pestle", "المدقة", 0).build(L.pestleSpot);
     await new Item(this, "spoon", "مجداف التحريك", 0).build(L.paddleSpot);
     for (let i = 0; i < (batch ? 3 : 1); i++) await new Item(this, "bottle", "قارورة فارغة", i).build(L.emptyBottle(i));
+    await new Item(this, "pipette", "القطّارة", 0).build(L.pipetteSpot);
     this.refresh();
   }
   brewObjective() {
     const b = this.brew;
-    this.ui.objective(!b.herbInMortar ? "ضع العشبة في الهاون" : !b.crushed ? "اسحق العشبة بالمدقة" : !b.readyToStir ? "أضف المسحوق والبلورة والماء إلى المرجل" : !b.readyToBottle ? "حرّك المجداف دائريًا داخل المرجل" : this.bottleIn ? "املأ القارورة: اضغط F مطولًا" : "ضع قارورة فارغة في حلقة التعبئة");
-    this.ui.progress(b.herbInMortar && !b.crushed ? `السحق: ${b.strokes} / 5` : b.readyToStir && !b.readyToBottle ? `المزج: ${Math.round(b.stirring * 100)}%` : b.readyToBottle ? `القوارير: ${this.filled} / ${this.batch ? 3 : 1}` : "");
+    this.ui.objective(!b.herbInMortar ? "ضع العشبة في الهاون" : !b.crushed ? "اسحق العشبة بالمدقة" : !b.readyToStir ? "أضف المسحوق والبلورة والماء إلى المرجل" : !b.readyToBottle ? "حرّك بهدوء ووجّه العلامة للدائرة الخضرا" : !this.bottleIn ? "ضع قارورة فارغة في حلقة التعبئة" : this.pipe > 0.02 ? "اعصر القطّارة فوق القارورة" : "اغمس القطّارة بالمرجل واعصرها");
+    this.ui.progress(b.herbInMortar && !b.crushed ? `السحق: ${b.strokes} / 5` : b.readyToStir && !b.readyToBottle ? `المزج: ${Math.round(b.stirring * 100)}%` : b.readyToBottle ? `القطّارة ${Math.round(this.pipe * 100)}% • القارورة ${Math.round(this.fill * 100)}% • ${this.filled} / ${this.batch ? 3 : 1}` : "");
     if (b.herbInMortar && !b.crushed) this.ui.actions(C("مساعدة: ضربة سحق", () => this.crushStroke()));
     else if (b.readyToStir && !b.readyToBottle) this.ui.actions(C("مساعدة: دورة تحريك", () => this.stir(0.25, 0)));
     else if (this.bottleIn) this.ui.actions(C("مساعدة التعبئة", () => this.pour(0.55)));
@@ -251,10 +375,10 @@ export class Game {
   }
   bottleFinished() {
     if (this.phase === P.Brew && this.fin.craftFirst()) { this.unlock(2); this.phase = P.Ready; this.dialogue.say("S1_F06", "S1_F07"); setTimeout(() => this.audio.play("knock"), 2500); }
-    else if (this.phase === P.BatchBrew && this.filled === 3) this.phase = P.BatchHandoff;
+    else if (this.phase === P.BatchBrew && this.filled === 3) { this.phase = P.BatchHandoff; this.dialogue.say("S3_GIVE"); }
     this.refresh();
   }
-  choosePrice(p) { if (this.phase !== P.Price || !this.fin.choosePrice(p)) return; this.phase = P.Handoff; this.dialogue.say(p === 30 ? "S2_CA" : "S2_CB"); this.customer.react(p === 30); this.refresh(); }
+  choosePrice(p) { if (this.phase !== P.Price || !this.fin.choosePrice(p)) return; this.phase = P.Handoff; this.dialogue.say(p === 30 ? "S2_CA" : "S2_CB", "S2_GIVE"); this.customer.react(p === 30); this.refresh(); }
   deliver(index) {
     const s = this.state;
     if (this.phase === P.Handoff && this.fin.sellFirst()) {
@@ -263,14 +387,14 @@ export class Game {
     } else if (this.phase === P.BatchHandoff && this.fin.deliverBatchBottle(index)) {
       const reject = index === 2 && s.herb === Herb.UseWilted; this.merchant.react(!reject);
       if (reject) { this.audio.play("reject"); this.dialogue.say("S3_M_REJECT", "S3_SPOIL"); } else this.fx.coinsTo(s.merchantPrice, L.handoff.clone().setY(1.14));
-      if (s.inventoryValue === 0) { this.phase = P.Expenses; this.unlock(8); this.dialogue.say("S3_M_OK"); if (s.supplier === Supplier.Premium) this.dialogue.say("S3_FB"); this.dialogue.say("S3_OPEX"); }
+      if (s.inventoryValue === 0) { this.phase = P.Expenses; this.unlock(8); this.dialogue.say("S3_M_OK"); if (s.supplier === Supplier.Premium) this.dialogue.say("S3_FB"); }
     } else return false;
     this.refresh(); return true;
   }
   revenueAnswer(ok) {
     if (this.phase !== P.RevenueQuiz) return; this.dialogue.say(ok ? "S2_Q_OK" : "S2_Q_NO");
     if (!ok && this.quizTries++ === 0) { this.ui.toast("حاول مرة أخرى: الإيراد قبل طرح التكاليف"); return; }
-    this.phase = P.Offer; this.dialogue.say(this.state.firstPrice === 30 ? "S2_MA" : "S2_MB"); this.refresh();
+    this.phase = P.Offer; this.refresh();
   }
   buyBatch(sup) {
     if (this.phase !== P.Supplier || !this.fin.purchaseBatch(sup)) return;
@@ -299,7 +423,7 @@ export class Game {
     this.teleport(L.insideStart, L.insideYaw, true); this.fx.pile.forEach(c => this.scene.remove(c)); this.fx.pile = [];
     if (next === 1) {
       this.phase = P.Price; await new Item(this, "potion", "جرعة النشاط", 0).build(L.saleBottle); this.unlock(3);
-      this.marketLabel && (this.marketLabel.visible = true); this.customer.arrive(this); this.dialogue.say("S2_C01", "S2_F02");
+      this.trader.reset(); this.marketLabel && (this.marketLabel.visible = true); this.customer.arrive(this); this.dialogue.say("S2_C01", "S1_ASK", "S2_F02");
     } else {
       this.phase = P.Supplier; this.unlock(7); this.merchant.arrive(this); this.dialogue.say("S3_F01");
     }
@@ -317,7 +441,7 @@ export class Game {
   }
   stir(turns, dir) {
     if (this.paused || !this.brew.readyToStir || this.brew.readyToBottle) return;
-    if (this.map.stir(turns, dir)) { this.audio.play("crystal", 1.2, 0.7); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
+    if (this.map.stir(turns, dir, this.stirSpeed || 0)) { this.audio.play("crystal", 1.2, 0.7); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
     this.brew.stir(turns); this.stirAcc = (this.stirAcc || 0) + turns; if (this.stirAcc > 0.22) { this.stirAcc = 0; this.audio.play("swish", 0.9 + Math.random() * 0.2, 0.7); } this.swirl = Math.min(3, (this.swirl || 0) + turns * 9);
     if (this.brew.readyToBottle) { this.audio.play("chime", 1.25); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
     this.brewObjective();
@@ -326,8 +450,12 @@ export class Game {
     const c = L.liquid, d = p.clone().sub(c), r = Math.hypot(d.x, d.z);
     if (!this.brew.readyToStir || r < 0.06 || r > L.innerRadius || Math.abs(d.y) > 0.5) { this.lastAngle = null; return; }
     const a = Math.atan2(d.z, d.x) * 180 / Math.PI;
-    if (this.lastAngle != null) { let s = a - this.lastAngle; s = ((s + 540) % 360) - 180; if (Math.abs(s) < 60) this.stir(Math.abs(s) / 360, s > 0 ? 1 : -1); }
-    this.lastAngle = a;
+    const now = performance.now();
+    if (this.lastAngle != null) { let s = a - this.lastAngle; s = ((s + 540) % 360) - 180;
+      const sp = Math.abs(s) / Math.max((now - this.lastStirT) / 1000, 0.008); this.stirSpeed = (this.stirSpeed || 0) * 0.8 + sp * 0.2;
+      if (this.stirSpeed > 560 && !this.fastWarned && !this.fast) { this.fastWarned = true; this.dialogue.say("S1_FAST"); }
+      if (Math.abs(s) < 60) this.stir(Math.abs(s) / 360, s > 0 ? 1 : -1); }
+    this.lastAngle = a; this.lastStirT = now;
   }
   observePestle(p) {
     const m = L.mortar; if (Math.hypot(p.x - m.x, p.z - m.z) > 0.26 || !this.brew.herbInMortar || this.brew.crushed) return;
@@ -351,12 +479,15 @@ export class Game {
   // Drop logic shared by mouse, touch and VR hands.
   tryDrop(it) {
     if (it.consumed || this.paused) return;
+    if (it.market) { const b = L.basket; if (Math.hypot(it.pos.x - b.x, it.pos.z - b.z) < 0.42 && Math.abs(it.pos.y - b.y) < 0.6) this.marketDrop(it); else this.bounceHome(it); return; }
     const p = it.pos, c = L.cauldron, overCauldron = Math.hypot(p.x - c.x, p.z - c.z) < L.innerRadius + 0.3 && p.y > 0.55 && p.y < 2.1;
     if (overCauldron && it.kind !== "spoon") {
       const ing = ["crushed", "crystal", "water"].includes(it.kind);
       if (ing && (this.phase === P.Brew || this.phase === P.BatchBrew) && this.brew.add(it.kind)) {
         const col = it.kind === "crystal" ? 0x4d8cff : it.kind === "water" ? 0x66d9ff : 0xd9401f;
-        this.fx.bits(L.liquid.clone().setY(0.92), col, 9); this.fx.sparkle(L.liquid.clone().setY(0.96), 8); this.map.add(it.kind); it.consume(); this.audio.play("splash", 0.9 + Math.random() * 0.2); this.refresh(); return;
+        this.fx.bits(L.liquid.clone().setY(0.92), col, 9); this.fx.sparkle(L.liquid.clone().setY(0.96), 8); this.map.add(it.kind); it.consume(); this.audio.play("splash", 0.9 + Math.random() * 0.2);
+        if (this.brew.readyToStir && !this.mapExplained) { this.mapExplained = true; this.dialogue.say("S1_MAP"); }
+        this.refresh(); return;
       }
       this.ui.toast(it.kind === "herb" ? "اسحق العشبة في الهاون أولًا" : ing ? (this.brew.readyToStir ? "المرجل ممتلئ — حرّك الآن" : "ليس الآن") : "هذا لا يوضع في المرجل");
       this.bounceHome(it); return;
@@ -368,14 +499,31 @@ export class Game {
     } else if (it.kind === "bottle" && near(L.bottleSocket, 0.32, 0.6)) {
       if (!this.brew.readyToBottle) { this.ui.toast("أكمل الخلط أولًا"); this.bounceHome(it); return; }
       if (this.bottleIn && this.bottleIn !== it) { this.ui.toast("انتظر حتى تمتلئ القارورة الحالية"); this.bounceHome(it); return; }
-      this.bottleIn = it; this.fill = 0; it.obj.position.copy(L.bottleSocket); it.obj.quaternion.identity(); it.fill(0, new THREE.Color(0x1ab866)); this.audio.play("glass", 1.1, 0.7); this.refresh();
+      this.bottleIn = it; this.fill = 0; it.obj.position.copy(L.bottleSocket); it.obj.quaternion.identity(); it.fill(0, new THREE.Color(0x1ab866)); this.audio.play("glass", 1.1, 0.7);
+      if (!this.pipeExplained) { this.pipeExplained = true; this.dialogue.say("S1_PIPE"); } this.refresh();
     } else if (it.kind === "potion" && near(L.handoff, 0.45, 0.5)) {
       if (this.deliver(it.index)) {
         it.consumed = true; const rejected = it.index === 2 && this.state.herb === Herb.UseWilted && this.chapter === 2;
         const from = it.pos.clone(), to = rejected ? L.discard : L.display(this.chapter === 2 ? it.index + 1 : 0);
         this.fx.add(new THREE.Object3D(), 1, k => { it.obj.position.lerpVectors(from, to, k * k * (3 - 2 * k)); if (k >= 1 && rejected) it.obj.visible = false; });
-      }
-    }
+      } else this.bounceHome(it);
+    } else if (it.pos.distanceTo(it.home) > 0.05) this.bounceHome(it); // never leave things floating in the air
+  }
+  // The dropper: squeeze in the cauldron to draw liquid up, squeeze over the bottle to fill it.
+  usePipette(it, squeezing, dt) {
+    const k = Math.min(1, dt * 14), sq = squeezing ? 1 : 0; it.bulb.scale.lerp(new THREE.Vector3(1 + 0.3 * sq, 1.3 - 0.5 * sq, 1 + 0.3 * sq), k);
+    if (!squeezing || this.paused) { this.pipeSound = false; return; }
+    const tip = it.pos, c = L.liquid, s = L.bottleSocket;
+    const inPot = Math.hypot(tip.x - c.x, tip.z - c.z) < L.innerRadius - 0.03 && tip.y < c.y + 0.16 && tip.y > c.y - 0.6;
+    const overBottle = this.bottleIn && Math.hypot(tip.x - s.x, tip.z - s.z) < 0.14 && tip.y > s.y + 0.04 && tip.y < s.y + 0.5;
+    if (inPot) {
+      if (!this.brew.readyToBottle) { if (!this.pipeWarn) { this.pipeWarn = true; this.ui.toast("حرّك الخليط أول"); } return; }
+      if (this.pipe < 1) { this.pipe = Math.min(1, this.pipe + dt / 0.9); this.audio.play("splash", 1.8, 0.25); if (Math.random() < dt * 8) this.fx.bubble(); this.brewObjective(); }
+    } else if (overBottle && this.pipe > 0) {
+      const a = Math.min(this.pipe, dt / 1.1); this.pipe -= a; this.pour(a * 1.8);
+      if (Math.random() < dt * 12) this.fx.bits(tip.clone(), this.pourColor ? this.pourColor.getHex() : 0x1ab866, 1);
+      if (this.bottleIn) this.brewObjective();
+    } else if (this.pipe > 0) { this.pipe = Math.max(0, this.pipe - dt * 0.6); if (Math.random() < dt * 10) this.fx.bits(tip.clone(), 0x1ab866, 1); }
   }
   bounceHome(it) {
     this.audio.play("whoosh", 1.4, 0.35); const from = it.pos.clone();
@@ -396,7 +544,8 @@ export class Game {
   unfocus() { this.fromPos = this.camera.getWorldPosition(new THREE.Vector3()); this.fromQ = this.camera.getWorldQuaternion(new THREE.Quaternion()); this.focused = false; this.glide = 0; }
   walk(move, dt) {
     if (!move.lengthSq()) return; const r = this.rig.position, next = r.clone().add(move.multiplyScalar(dt));
-    const blocked = p => colliders.some(b => p.x > b.min.x - 0.24 && p.x < b.max.x + 0.24 && p.z > b.min.z - 0.24 && p.z < b.max.z + 0.24 && b.min.y < 1.2 && b.max.y > 0.15);
+    const shut = this.fx.doorRot < 0.9 && !this.inVR;
+    const blocked = p => (shut || (this.inVR && this.fx.doorRot < 0.9)) && Math.abs(p.x) < 0.66 && Math.abs(p.z) < 0.3 || colliders.some(b => p.x > b.min.x - 0.24 && p.x < b.max.x + 0.24 && p.z > b.min.z - 0.24 && p.z < b.max.z + 0.24 && b.min.y < 1.2 && b.max.y > 0.15);
     if (!blocked(next)) r.copy(next); else { const nx = r.clone().setX(next.x), nz = r.clone().setZ(next.z); if (!blocked(nx)) r.copy(nx); else if (!blocked(nz)) r.copy(nz); }
   }
   applyDesktopPose(dt) {
@@ -422,7 +571,8 @@ export class Game {
       if (e.pointerType === "mouse" && (e.buttons & 2) && !this.focused) { this.yaw -= e.movementX * 0.0025; this.pitch = THREE.MathUtils.clamp(this.pitch - e.movementY * 0.002, -1.2, 1.3); }
       if (e.pointerType === "mouse" && (e.buttons & 1) && this.held?.kind === "pestle") this.pestleDy = (this.pestleDy || 0) + e.movementY;
     });
-    el.addEventListener("pointerdown", e => { if (e.pointerType === "mouse" && e.button === 0 && !this.held && this.hover) this.act(); });
+    el.addEventListener("pointerdown", e => { if (e.pointerType === "mouse" && e.button === 0) { this.mouseDown = true; if (!this.held && (this.hover || this.hoverDoor || this.hoverChar)) this.act(); } });
+    addEventListener("pointerup", e => { if (e.button === 0) this.mouseDown = false; });
   }
   setupTouch() {
     const stick = document.getElementById("stick"), knob = document.getElementById("knob"), pourBtn = document.getElementById("pour");
@@ -453,15 +603,17 @@ export class Game {
     this.ray.setFromCamera(this.pointer, this.camera); this.ray.far = 3;
     const objs = this.items.filter(i => !i.consumed && i.obj.visible).map(i => i.obj);
     const hits = this.ray.intersectObjects(objs.concat(refs.door ? [refs.door] : []), true);
-    this.hover = null; this.hoverDoor = false;
+    this.hover = null; this.hoverDoor = false; this.hoverChar = null;
     if (hits.length) { let o = hits[0].object; while (o && !this.items.find(i => i.obj === o) && o !== refs.door) o = o.parent;
-      if (o === refs.door) this.hoverDoor = this.phase === P.Intro; else this.hover = this.items.find(i => i.obj === o); }
+      if (o === refs.door) this.hoverDoor = true; else this.hover = this.items.find(i => i.obj === o); }
+    if (!this.hover && !this.held) { this.ray.far = 7; this.hoverChar = this.rayCharacter(this.ray.ray); }
   }
   act() {
     if (this.paused || this.inVR) return; this.audio.start();
     if (this.held) { const it = this.held; this.held = null; it.held = false; this.tryDrop(it); return; }
     if (this.hover && !this.hover.consumed && this.hover !== this.bottleIn) { this.held = this.hover; this.held.held = true; this.audio.play("pop", 1, 0.8); }
-    else if (this.hoverDoor) this.openShopDoor();
+    else if (this.hoverDoor) this.toggleDoor();
+    else if (this.hoverChar) this.askMenu(this.hoverChar.speaker);
   }
   dropHeld(drop) { if (!this.held) return; const it = this.held; this.held = null; it.held = false; drop ? this.tryDrop(it) : it.returnHome(); }
   heldTarget() {
@@ -470,7 +622,13 @@ export class Game {
       if (t && Math.hypot(t.x - L.liquid.x, t.z - L.liquid.z) < L.innerRadius + 0.1) { const f = new THREE.Vector3(t.x - L.liquid.x, 0, t.z - L.liquid.z).clampLength(0, L.innerRadius - 0.05); return L.liquid.clone().add(f).setY(L.liquid.y - 0.08); } }
     if (it.kind === "pestle" && this.pestleDy !== undefined && this.camera.getWorldPosition(new THREE.Vector3()).distanceTo(L.mortar) < 2.4) {
       const y = THREE.MathUtils.clamp(it.pos.y - this.pestleDy * 0.006, L.mortar.y + 0.03, L.mortar.y + 0.42); this.pestleDy = 0; return L.mortar.clone().setY(y); }
-    this.ray.far = 2.8; const hits = this.ray.intersectObject(refs.root, true);
+    if (it.kind === "pipette") {
+      const top = L.bottleSocket.clone().setY(L.bottleSocket.y + 0.2); if (this.bottleIn && this.ray.ray.distanceToPoint(top) < 0.3) return top;
+      const t = this.ray.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -L.liquid.y), new THREE.Vector3());
+      if (t && Math.hypot(t.x - L.liquid.x, t.z - L.liquid.z) < L.innerRadius + 0.15) { const f = new THREE.Vector3(t.x - L.liquid.x, 0, t.z - L.liquid.z).clampLength(0, L.innerRadius - 0.1); return L.liquid.clone().add(f).setY(L.liquid.y - 0.05); }
+    }
+    if (it.market) { const b = L.basket.clone().setY(L.basket.y + 0.12); if (this.ray.ray.distanceToPoint(b) < 0.35) return b; }
+    this.ray.far = 2.8; const hits = this.ray.intersectObjects([refs.root, this.marketRoot].filter(Boolean), true);
     if (hits.length) return hits[0].point.add(new THREE.Vector3(0, 0.01, 0));
     return this.ray.ray.at(1.1, new THREE.Vector3()).add(new THREE.Vector3(0, -0.15, 0));
   }
@@ -531,10 +689,23 @@ export class Game {
       if (down(0)) {
         if (ui && ui.button) this.ui.click(ui.button);
         else if (far) this.vrGrab(h, far, true, gp);
-        else if (this.phase === P.Intro && refs.door && this.ray.intersectObject(refs.door, true).length) this.openShopDoor();
+        else if (refs.door && this.ray.intersectObject(refs.door, true).length) this.toggleDoor();
+        else { const ch = this.rayCharacter(this.ray.ray); if (ch) this.askMenu(ch.speaker); }
+      }
+      // Door: grip near the handle and swing it with your hand.
+      if (down(1) && !h.held && refs.door) {
+        const hinge = refs.door.getWorldPosition(new THREE.Vector3()), r = this.fx.doorRot;
+        const handle = hinge.clone().add(new THREE.Vector3(-Math.cos(r), 0, Math.sin(r)).multiplyScalar(1.0)).setY(1.0);
+        if (gripPos.distanceTo(handle) < 0.28) { h.door = true; this.fx.doorHeld = true; gp.hapticActuators?.[0]?.pulse?.(0.3, 50); this.audio.play("creak", 1.1, 0.4); }
+      }
+      if (h.door) {
+        if (!squeeze) { h.door = false; this.fx.doorHeld = false; this.fx.doorGoal = this.fx.doorRot; }
+        else { const hinge = refs.door.getWorldPosition(new THREE.Vector3()), d = gripPos.clone().sub(hinge);
+          const a = THREE.MathUtils.clamp(Math.atan2(d.z, -d.x), 0, 1.66); if (Math.abs(a - this.fx.doorRot) > 0.5) { this.audio.play("creak", 1, 0.35); }
+          this.fx.doorRot = this.fx.doorRot + (a - this.fx.doorRot) * Math.min(1, dt * 15); this.fx.doorGoal = this.fx.doorRot; }
       }
       // Grab with the grip button: nearest item within reach of the hand (or the one the ray points at).
-      if (down(1) && !h.held) {
+      if (down(1) && !h.held && !h.door) {
         let best = null, bd = 0.2;
         for (const it of this.items) if (!it.consumed && !it.flying && it.obj.visible && it !== this.bottleIn) { const gp2 = it.pos.clone().add(new THREE.Vector3(0, GRIP[it.kind] || 0.08, 0)), d = gp2.distanceTo(gripPos); if (d < bd) { bd = d; best = it; } }
         if (best) this.vrGrab(h, best, false, gp); else if (far) this.vrGrab(h, far, false, gp);
@@ -546,10 +717,10 @@ export class Game {
         if (h.fly < 1) { it.obj.position.lerpVectors(h.flyFrom, target, h.fly * h.fly * (3 - 2 * h.fly)); it.obj.quaternion.slerp(q, h.fly); }
         else { it.obj.quaternion.copy(q); it.obj.position.copy(target); }
         if (it.kind === "spoon") this.observeStir(it.pos); if (it.kind === "pestle") this.observePestle(it.pos);
+        if (it.kind === "pipette") this.usePipette(it, h.byTrigger ? squeeze : trigger, dt);
         if (h.byTrigger ? !trigger : !squeeze) { h.held = null; it.held = false; it.obj.quaternion.identity(); this.vrRelease(it, zone, gripPos); }
       }
       if (h.hand === "right" && down(5)) this.calibrate(true);
-      if (trigger && h.hand === "right" && this.bottleIn && !h.held) this.pour(dt);
       if (h.hand === "left" && down(4)) this.paused ? (this.paused = false, this.refresh()) : this.glossary(0);
       // Locomotion: left stick walks (head-relative), right stick snap-turns or aims a teleport arc.
       if (h.hand === "left" && stick.lengthSq() > 0.04 && !this.paused) {
@@ -581,7 +752,7 @@ export class Game {
     return best;
   }
   rayZone(ray) {
-    const zones = [{ at: L.liquid.clone().setY(1.12), r: 0.65 }, { at: L.mortar.clone().setY(1.0), r: 0.3 }, { at: L.bottleSocket.clone().setY(1.05), r: 0.3 }, { at: L.handoff.clone().setY(1.1), r: 0.45 }];
+    const zones = [{ at: L.basket.clone().setY(1.0), r: 0.35 }, { at: L.liquid.clone().setY(1.12), r: 0.65 }, { at: L.mortar.clone().setY(1.0), r: 0.3 }, { at: L.bottleSocket.clone().setY(1.05), r: 0.3 }, { at: L.handoff.clone().setY(1.1), r: 0.45 }];
     return zones.find(z => ray.distanceToPoint(z.at) < z.r && ray.origin.distanceTo(z.at) < 8) || null;
   }
   vrGrab(h, it, byTrigger, gp) {
@@ -600,7 +771,8 @@ export class Game {
     const pts = [], p = ctrl.getWorldPosition(new THREE.Vector3()), v = new THREE.Vector3(0, 0, -1).applyQuaternion(ctrl.getWorldQuaternion(new THREE.Quaternion())).multiplyScalar(6.5);
     this.arcTarget = null;
     for (let i = 0; i < 40; i++) { pts.push(p.clone()); const n = p.clone().addScaledVector(v, 0.04); v.y -= 9.8 * 0.04;
-      if (n.y <= 0) { const ok = L.isInside(n) || n.z < 0.9; const hitWall = colliders.some(b => b.containsPoint(n.clone().setY(0.5))); if (ok && !hitWall) this.arcTarget = n.setY(0); pts.push(n); break; } p.copy(n); }
+      if (n.y <= 0) { const eye = this.camera.getWorldPosition(new THREE.Vector3()), crosses = this.fx.doorRot < 0.9 && (eye.z < 0.3) !== (n.z < 0.3) && Math.abs(n.x) < 4.6;
+        const ok = (L.isInside(n) || n.z < 0.9) && !crosses; const hitWall = colliders.some(b => b.containsPoint(n.clone().setY(0.5))); if (ok && !hitWall) this.arcTarget = n.setY(0); pts.push(n); break; } p.copy(n); }
     this.arc.geometry.setFromPoints(pts); this.arc.visible = true; this.arc.material.color.set(this.arcTarget ? 0x4dffd0 : 0xff5a4d);
     this.arcMark.visible = !!this.arcTarget; if (this.arcTarget) this.arcMark.position.copy(this.arcTarget).setY(0.02);
   }
@@ -617,6 +789,10 @@ export class Game {
   // ---------------------------------------------------------------- frame
   update(dt, t) {
     this.dialogue.update(dt);
+    this.ui.setHold(this.dialogue.busy && !this.asking && !this.paused);
+    if (this.phase === P.Purchase && !this.welcomed && !this.dialogue.busy) { this.welcomed = true; this.refresh(); }
+    if (this.phase === P.Intro && !this.doorOpened && this.fx.doorRot > 0.6) { this.doorOpened = true; this.refresh(); }
+    this.fx.low = this.inVR;
     const name = this.stationName();
     if (name !== this.lastStation) { this.lastStation = name; this.dropHeld(false); if (!this.inVR) { if (name && Stations[name].cam) this.focusOn(name); else if (this.focused) this.unfocus(); } }
     if (this.inVR) this.updateVR(dt);
@@ -635,13 +811,18 @@ export class Game {
         if (it.kind === "spoon") { const off = it.pos.clone().sub(L.liquid).setY(0); const up = new THREE.Vector3(0, 1, 0).add(off.lengthSq() > 1e-4 ? off.normalize().multiplyScalar(0.38) : new THREE.Vector3()).normalize();
           it.obj.quaternion.slerp(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), up), Math.min(1, dt * 8)); this.observeStir(it.pos); }
         if (it.kind === "pestle") this.observePestle(it.pos);
-        this.ui.hint(it.label + " • E للإفلات" + (it.kind === "pestle" ? " • اضغط الزر الأيسر وحرّك الفأرة للأعلى والأسفل" : it.kind === "spoon" ? " • حرّك المؤشر دائريًا داخل المرجل" : ""));
-      } else this.ui.hint(this.hover && !this.hover.consumed ? this.hover.label + " • E للإمساك" : this.hoverDoor ? "الباب • E للفتح" : "");
-      if ((this.keys.KeyF || this.pourHeld) && this.bottleIn) this.pour(dt);
+        if (it.kind === "pipette") { it.obj.quaternion.identity(); this.usePipette(it, !!(this.keys.KeyF || this.pourHeld || this.mouseDown), dt); }
+        this.ui.hint(it.label + " • E للإفلات" + (it.kind === "pestle" ? " • اضغط الزر الأيسر وحرّك الفأرة للأعلى والأسفل" : it.kind === "spoon" ? " • حرّك المؤشر دائريًا ببطء داخل المرجل" : it.kind === "pipette" ? " • اضغط F أو الزر الأيسر مطولًا للعصر" : it.market ? " • حطّه بالسلّة" : ""));
+      } else this.ui.hint(this.hover && !this.hover.consumed ? this.hover.label + " • E للإمساك" : this.hoverDoor ? (this.fx.doorGoal > 0.8 ? "الباب • E للإغلاق" : "الباب • E للفتح") : this.hoverChar ? this.hoverChar.speaker + " • E لتسأل" : "");
       if (this.phase === P.Intro && this.doorOpened && L.isInside(this.rig.position)) this.enterShop();
     }
+    if (this.phase === P.Purchase && this.welcomed && !this.marketHello && this.camera.getWorldPosition(new THREE.Vector3()).distanceTo(L.vendorSpot) < 4.2) { this.marketHello = true; this.dialogue.say("T1_HELLO"); }
+    if (this.basketRing) this.basketRing.visible = this.phase === P.Purchase && this.welcomed;
+    const pip = this.items.find(i => i.kind === "pipette" && !i.consumed);
+    if (pip) { const f = this.pipe || 0; pip.pipeLiquid.visible = f > 0.01; pip.pipeLiquid.scale.y = 0.19 * f; pip.pipeLiquid.position.y = 0.006 + 0.095 * f; if (this.pourColor) pip.pipeLiquid.material.color.copy(this.pourColor); }
+    if (this.inVR) { const head = this.speakerHead(); this.ui.setBubble(this.dialogue.speaker, this.dialogue.speaking ? this.dialogue.text : null, head); } else this.ui.setBubble(null, null, null);
     if (this.inVR && this.phase === P.Intro && this.doorOpened && L.isInside(this.camera.getWorldPosition(new THREE.Vector3()))) this.enterShop();
-    document.getElementById("pour").hidden = !(this.touchUsed && this.bottleIn);
+    document.getElementById("pour").hidden = !(this.touchUsed && this.held?.kind === "pipette");
     document.getElementById("keys").style.opacity = t > 25 ? 0 : 0.7;
     // Item glow: next item pulses gold, hovered item glows brighter.
     for (const it of this.items) { if (it.consumed) continue; const hov = it === this.hover && !it.held, tgt = this.isTarget(it) && !it.held; it.setGlow(hov ? 0.75 : tgt ? 0.18 + 0.22 * (0.5 + 0.5 * Math.sin(t * 4.5)) : 0); }
@@ -660,6 +841,7 @@ export class Game {
     // Alchemy map panel (desktop/phone) while mixing or stirring.
     const showMap = (name === "mix" || name === "cauldron") && (this.phase === P.Brew || this.phase === P.BatchBrew);
     const mapEl = document.getElementById("map"); mapEl.hidden = !showMap || this.inVR;
+    this.mapMesh.visible = showMap && this.inVR; if (this.mapMesh.visible && (this.mapT = (this.mapT || 0) - dt) <= 0) { this.mapT = 0.1; this.drawWorldMap(); }
     if (showMap) { this.map.draw(document.getElementById("map-canvas").getContext("2d"), 360); document.getElementById("map-quality").textContent = this.map.any ? this.map.qualityText : "أضف المكونات"; }
     if (this.warm) { this.sun.intensity = Math.min(3.0, this.sun.intensity + dt * 0.3); }
   }

@@ -16,7 +16,28 @@ export class UI {
     this.tex = new THREE.CanvasTexture(this.canvas); this.tex.colorSpace = THREE.SRGBColorSpace;
     this.panel = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 0.879), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: false }));
     this.panel.renderOrder = 10; this.panel.visible = false; scene.add(this.panel);
-    this.hits = []; this.dirty = true; this.following = true;
+    this.hits = []; this.dirty = true; this.following = true; this.hold = false;
+    // VR speech bubble: the spoken line floats above whoever is talking (not in front of your eyes).
+    this.bcv = document.createElement("canvas"); this.bcv.width = 1024; this.bcv.height = 320; this.btex = new THREE.CanvasTexture(this.bcv); this.btex.colorSpace = THREE.SRGBColorSpace;
+    this.bubble = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.344), new THREE.MeshBasicMaterial({ map: this.btex, transparent: true, depthTest: false }));
+    this.bubble.renderOrder = 9; this.bubble.visible = false; scene.add(this.bubble); this.bubbleOn = false;
+  }
+  // While someone is talking, decision boxes wait; they appear when the line is finished.
+  setHold(b) { if (this.hold !== b) { this.hold = b; this.dirty = true; this.renderDom("talk"); } }
+  setBubble(speaker, text, head) {
+    const on = !!(text && head); if (on !== this.bubbleOn) { this.bubbleOn = on; this.dirty = true; } this.bubble.visible = on; if (!on) { this.bubbleText = null; return; }
+    if (this.bubbleText !== text) {
+      this.bubbleText = text; const c = this.bcv.getContext("2d"); c.clearRect(0, 0, 1024, 320); c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle";
+      c.font = "bold 46px Amiri"; const lines = wrap(c, text, 940).slice(0, 3), h = 70 + lines.length * 60;
+      c.fillStyle = "rgba(236,217,171,.97)"; c.strokeStyle = "#73501c"; c.lineWidth = 6; c.beginPath(); c.roundRect(8, 300 - h - 8, 1008, h, 26); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(480, 292); c.lineTo(512, 318); c.lineTo(544, 292); c.fill();
+      c.fillStyle = "#1f3a30"; c.font = "bold 34px Amiri"; c.fillText(speaker, 512, 300 - h + 28);
+      c.fillStyle = "#2a190d"; c.font = "bold 46px Amiri"; lines.forEach((l, i) => c.fillText(l, 512, 300 - h + 80 + i * 60));
+      this.btex.needsUpdate = true;
+    }
+    const cam = new THREE.Vector3(); this.camera.getWorldPosition(cam);
+    this.bubble.position.copy(head).add(new THREE.Vector3(0, 0.5, 0)); this.bubble.lookAt(cam);
+    this.bubble.scale.setScalar(THREE.MathUtils.clamp(cam.distanceTo(this.bubble.position) / 2.2, 0.7, 1.7));
   }
   set(k, v) { if (this.st[k] !== v) { this.st[k] = v; this.dirty = true; this.renderDom(k); } }
   objective(s) { this.set("objective", s || ""); }
@@ -36,12 +57,12 @@ export class UI {
     if (k === "toast") { $("toast").textContent = s.toast; $("toast").style.opacity = s.toast ? 1 : 0; }
     if (k === "progress") $("progress").textContent = s.progress;
     if (k === "hint") $("hint").textContent = s.hint;
-    if (k === "subtitle") { $("subtitle").textContent = s.subtitle; $("subtitle").hidden = !s.subtitle || !!s.talk; }
+    if (k === "subtitle") { $("subtitle").textContent = s.subtitle; $("subtitle").hidden = !s.subtitle || (!!s.talk && !this.hold); }
     if (k === "actions") this.buttons($("actions"), s.actions);
     if (k === "talk") {
-      $("talk").hidden = !s.talk;
+      $("talk").hidden = !s.talk || this.hold;
       if (s.talk) { $("talk").querySelector(".name").textContent = s.talk.speaker; $("talk").querySelector(".line").textContent = s.talk.line; this.buttons($("talk").querySelector(".choices"), s.talk.choices); }
-      $("subtitle").hidden = !s.subtitle || !!s.talk;
+      $("subtitle").hidden = !s.subtitle || (!!s.talk && !this.hold);
     }
     if (k === "modal") {
       $("modal").hidden = !s.modal;
@@ -66,7 +87,7 @@ export class UI {
     }
     if (this.st.toast && performance.now() > this.toastUntil) this.toast("");
     if (inVR) this.updatePanel(dt);
-    this.panel.visible = inVR;
+    this.panel.visible = inVR; if (!inVR) this.bubble.visible = false;
   }
 
   // ---------------------------------------------------------------- VR panel
@@ -93,18 +114,18 @@ export class UI {
     panel(6, 6, 136, 92, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffcf7a"; c.font = "bold 48px Amiri"; c.fillText(String(s.cash), 74, 54);
     if (s.toast) { c.fillStyle = "#ffcf7a"; c.font = "bold 40px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(fit(c, s.toast, 980), 512, 126); c.fillText(fit(c, s.toast, 980), 512, 132); }
     if (s.progress) { c.fillStyle = "#7dffc0"; c.font = "bold 42px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(s.progress, 512, 174); c.fillText(s.progress, 512, 174); }
-    const box = s.talk || s.modal;
+    const talk = s.talk && !this.hold ? s.talk : null, box = talk || s.modal;
     if (box) {
       const y0 = 228, h = 484, btnY = y0 + h - 118;
       panel(16, y0, 992, h, "#ecd9ab", "#73501c");
-      if (s.talk) { panel(352, y0 - 26, 320, 58, "#1f3a30", "#c2873a"); c.font = "bold 36px Amiri"; c.fillStyle = "#ffcf7a"; c.fillText(s.talk.speaker, 512, y0 + 3); }
+      if (talk) { panel(352, y0 - 26, 320, 58, "#1f3a30", "#c2873a"); c.font = "bold 36px Amiri"; c.fillStyle = "#ffcf7a"; c.fillText(talk.speaker, 512, y0 + 3); }
       else { c.font = "bold 44px Amiri"; c.fillStyle = "#301e13"; c.fillText(s.modal.title, 512, y0 + 46); }
-      c.fillStyle = "#301e13"; const big = !!s.talk; c.font = (big ? "bold 44px" : "32px") + " Amiri";
-      const lines = wrap(c, s.talk ? s.talk.line : s.modal.body, 940), step = big ? 58 : 42, top = y0 + (big ? 80 : 100);
+      c.fillStyle = "#301e13"; const big = !!talk; c.font = (big ? "bold 44px" : "32px") + " Amiri";
+      const lines = wrap(c, talk ? talk.line : s.modal.body, 940), step = big ? 58 : 42, top = y0 + (big ? 80 : 100);
       lines.slice(0, big ? 5 : 7).forEach((l, i) => c.fillText(l, 512, top + i * step));
       this.drawButtons(box.choices, btnY);
     } else if (s.actions.length) this.drawButtons(s.actions, 470);
-    if (s.subtitle && !box) {
+    if (s.subtitle && !box && !this.bubbleOn) {
       c.font = "bold 40px Amiri"; const lines = wrap(c, s.subtitle, 950).slice(0, 2), hh = 30 + lines.length * 52;
       panel(10, H - hh - 6, 1004, hh, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffe7b0";
       lines.forEach((l, i) => c.fillText(l, 512, H - hh - 6 + 41 + i * 52));
