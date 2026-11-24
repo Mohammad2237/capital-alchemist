@@ -50,6 +50,12 @@ const STALL_INFO = [
   { sign: "تاجرة البلّور\nبلّور • قناني", hello: "B_HELLO", deal: "B_DEAL", offer: "B3_OFFER" },
 ];
 const ORDER_TEXT = "طلب الزبون: جرعة نشاط\nإشي أحمر للطاقة • إشي أزرق لصفاء الذهن\nماء سحري للمزج • قارورة • طحن متوسط";
+// Trader sells single pieces (pick 3 of each; 7 + 5 + 3 = 15 per potion, 45 for three). Each piece shows its quality.
+const LOOSE = [
+  { kind: "herb", name: "ورقة فضية", price: 7, notes: ["طرية", "عادية", "يابسة شوي", "طازة"], good: [0.82, 0.66, 0.48, 0.9] },
+  { kind: "crystal", name: "جمرة الشمس", price: 5, notes: ["لامعة", "فيها شقّ", "عادية", "صغيرة"], good: [0.86, 0.45, 0.68, 0.6] },
+  { kind: "water", name: "ندى الفجر", price: 3, notes: ["صافي", "عكر شوي", "عادي", "صافي جدًا"], good: [0.8, 0.5, 0.65, 0.92] },
+];
 const ORDER3_TEXT = "طلب التاجر: 3 جرعات شفاء\nورقة ناعمة كالبودرة • جمرة شمس محمّاة • ندى الفجر\nاختار مورّد: اقتصادي ولا ممتاز؟";
 // Scene 1 and scene 3 brew different potions: new ingredients, colours and a different target on the alchemy map.
 const RECIPES = [
@@ -333,6 +339,12 @@ export class Game {
   marketDrop(it) {
     const d = it.market;
     if (d.bundle !== undefined) { if (this.phase === P.Supplier) this.buyBatch(d.bundle); else this.bounceHome(it); return; }
+    if (d.loose) {
+      if (this.phase !== P.Supplier) { this.bounceHome(it); return; }
+      if (this.cart.filter(c => c.market.loose === d.loose).length >= 3) { this.dialogue.say("T3_FULL"); this.ui.toast("عندك 3 من هاد النوع"); this.bounceHome(it); return; }
+      this.cart.push(it); this.intoBasket(it, 0, this.cart.length - 1); it.obj.position.y += Math.floor((this.cart.length - 1) / 4) * 0.05; this.audio.play("pop", 1.1, 0.6);
+      if (this.cart.length === 9) this.buyBatch(Supplier.Cheap); else this.refresh(); return;
+    }
     if (this.phase !== P.Purchase) { this.bounceHome(it); return; }
     if (d.buy === undefined) { this.dialogue.say(d.line); this.audio.play("reject", 1.3, 0.4); this.ui.toast(`${d.name} ${d.tag}، مش من الطلب`); this.bounceHome(it); return; }
     this.purchase(d.buy);
@@ -342,7 +354,7 @@ export class Game {
   askMenu(speaker) {
     const qs = QUESTIONS[speaker]; if (!qs || this.paused || this.changing) return;
     this.asking = speaker; if (speaker === "فراس") this.dialogue.say("Q_ASK"); this.audio.play("paper", 1, 0.6);
-    const offer = this.phase === P.Supplier && (speaker === "التاجر المتجول" ? C("اشتري العرض الاقتصادي • 45", () => this.buyBatch(Supplier.Cheap)) : speaker === "تاجرة البلّور" ? C("اشتري العرض الممتاز • 60", () => this.buyBatch(Supplier.Premium)) : null);
+    const offer = this.phase === P.Supplier && (speaker === "التاجر المتجول" ? C("عبّيلي الأحسن بالحبّة • 45", () => this.buyBatch(Supplier.Cheap)) : speaker === "تاجرة البلّور" ? C("اشتري العرض الممتاز • 60", () => this.buyBatch(Supplier.Premium)) : null);
     this.ui.talk(speaker, "شو بدك تعرف؟", ...(offer ? [offer] : []), ...qs.map(([q, id]) => C(q, () => { this.dialogue.say(id); this.asking = null; this.refresh(); })), C("رجوع", () => { this.asking = null; this.refresh(); }));
   }
   characters() {
@@ -411,7 +423,9 @@ export class Game {
       case P.Offer: ui.objective("طلبية كبيرة");
         if (!this.merchant.arrived) { if (!this.merchant.walking) { this.merchant.spot = L.traderSpot; this.merchant.arrive(this).then(() => this.refresh()); } break; }
         this.ask(s.firstPrice === 30 ? "S2_MA" : "S2_MB", C("اتفقنا", () => this.nextChapter())); break;
-      case P.Supplier: ui.objective(this.region() === "market" ? "اختار مورّد: حطّ صندوقه بالسلّة" : "ادخل البوابة عالسوق واختار مورّد"); break;
+      case P.Supplier: { const n = k => (this.cart || []).filter(c => c.market.loose === k).length, sum = (this.cart || []).reduce((a, c) => a + c.market.price, 0);
+        ui.objective(this.region() === "market" ? "اشتري: 3 من كل نوع بالحبّة، أو الصندوق الممتاز" : "امشِ عبر البوابة للسوق");
+        if (this.cart?.length) ui.progress(`ورق ${n("herb")}/3 • جمر ${n("crystal")}/3 • ندى ${n("water")}/3 • ${sum} عملة`); break; }
       case P.Wilt: ui.objective("عشبة ذابلة!");
         this.ask("P_WILT", C("استبدلها • +5", () => this.decideHerb(Herb.Replace)), C("استخدمها", () => this.decideHerb(Herb.UseWilted))); break;
       case P.BatchHandoff: ui.objective("سلّم القوارير للتاجر"); break;
@@ -462,7 +476,7 @@ export class Game {
     this.refresh();
   }
   async beginBrew(batch) {
-    this.batch = batch; this.brew = new RecipeProgress(); this.map.reset(this.recipe); this.grindLocked = false; this.grindLevelUsed = null; this.crushedItem = null; this.lastGrind = 0; this.filled = 0; this.bottleIn = null; this.fill = 0; this.pipe = 0; this.fastWarned = false;
+    this.batch = batch; this.brew = new RecipeProgress(); this.map.reset(this.recipe); this.usedEmberStage = null; this.grindLocked = false; this.grindLevelUsed = null; this.crushedItem = null; this.lastGrind = 0; this.filled = 0; this.bottleIn = null; this.fill = 0; this.pipe = 0; this.fastWarned = false;
     for (const it of this.items) if (!it.consumed && it.kind !== "potion" && !it.market) { this.scene.remove(it.obj); it.consumed = true; }
     const lb = this.recipe.labels;
     await new Item(this, "herb", lb.herb, 0).build(L.herbSpot); await new Item(this, "crystal", lb.crystal, 0).build(L.crystalSpot);
@@ -476,6 +490,7 @@ export class Game {
   brewObjective() {
     const b = this.brew;
     const r = this.recipe, cold = r.heat && !b.crystal && !this.items.find(i => i.kind === "crystal" && !i.consumed && i.hot);
+    if (this.heatText && !b.crystal) this.ui.toast(this.heatText);
     this.ui.objective(!b.herbInMortar ? "ضع العشبة في الهاون" : !b.crushed ? `اسحق العشبة • الطلب: ${GRIND[r.grind]}` : !b.herb && this.grindLevel < r.grind ? `كمّل سحق: الطلب ${GRIND[r.grind]}` : !b.readyToStir ? (cold ? "حمّي الجمرة عالموقد، وبعدين حطّ المكونات بالمرجل" : "أضف المسحوق والبلورة والماء إلى المرجل") : !b.readyToBottle ? "حرّك بهدوء ووجّه العلامة للدائرة الخضرا" : !this.bottleIn ? "ضع قارورة فارغة في حلقة التعبئة" : this.pipe > 0.02 ? "اعصر القطّارة فوق القارورة" : "اغمس القطّارة بالمرجل واعصرها");
     this.ui.progress(b.herbInMortar && !b.herb ? `الطحن: ${b.crushed ? GRIND[this.grindLevel] : "لسّا"} • الطلب: ${GRIND[r.grind]}` : b.readyToStir && !b.readyToBottle ? `المزج: ${Math.round(b.stirring * 100)}%` : b.readyToBottle ? `القطّارة ${Math.round(this.pipe * 100)}% • القارورة ${Math.round(this.fill * 100)}% • ${this.filled} / ${this.batch ? 3 : 1}` : "");
     if (b.herbInMortar && !this.grindLocked && !b.readyToStir) this.ui.actions(C("مساعدة: ضربة سحق", () => this.crushStroke()));
@@ -512,7 +527,12 @@ export class Game {
   buyBatch(sup) {
     if (this.phase !== P.Supplier || !this.fin.purchaseBatch(sup)) return;
     const stall = sup === Supplier.Cheap ? 0 : 1; this.audio.play("coins", 0.8, 0.7); this.vendors[stall].receive();
-    for (const b of this.items.filter(x => x.market && x.market.bundle !== undefined)) { if (b.market.bundle === sup) this.intoBasket(b, stall, 0); else b.consumed = true; }
+    const loose = this.items.filter(x => x.market && x.market.loose && !x.consumed);
+    if (sup === Supplier.Cheap) { // fill the basket with the best remaining pieces if you bought through the menu
+      for (const kind of ["herb", "crystal", "water"]) { while ((this.cart || []).filter(c => c.market.loose === kind).length < 3) { const best = loose.filter(x => x.market.loose === kind && !this.cart.includes(x)).sort((a, b) => b.market.good - a.market.good)[0]; if (!best) break; this.cart.push(best); this.intoBasket(best, 0, this.cart.length - 1); } }
+      this.batchGood = this.cart.reduce((a, c) => a + c.market.good, 0) / Math.max(1, this.cart.length);
+    } else { for (const c of this.cart || []) { c.consumed = false; c.returnHome(); c.obj.scale.setScalar(1); } this.batchGood = 0.95; }
+    for (const x of this.items.filter(x => x.market && (x.market.loose || x.market.bundle !== undefined))) { if (x.market.bundle === sup) this.intoBasket(x, stall, 0); else x.consumed = true; }
     this.dialogue.say(sup === Supplier.Cheap ? "T3_CHEAP" : "B3_THANKS");
     if (sup === Supplier.Cheap) { this.phase = P.Wilt; this.showWilted(); this.dialogue.say("S3_FA_RISK"); } else { this.phase = P.BatchBrew; this.beginBrew(true); this.dialogue.say("S3_BACK"); }
     this.refresh();
@@ -548,11 +568,19 @@ export class Game {
       this.phase = P.Supplier; this.unlock(7); this.dialogue.say("S3_F01");
       if (this.orderBoard) { this.scene.remove(this.orderBoard); this.orderBoard = sign(this.scene, ORDER3_TEXT, U(0, 3.55, -123.2), 2.4, 0.95, 0, 64); }
       if (this.recipeBoard) { this.recipeBoard.visible = false; sign(this.scene, RECIPES[1].board, U(-4.02, 1.36, 6.2), 1.05, 0.7, 90, 70); }
-      for (const [si, sup] of [[0, Supplier.Cheap], [1, Supplier.Premium]]) {
-        const s = L.stalls[si], it = new Item(this, "bundle", sup === Supplier.Cheap ? "صندوق اقتصادي • 45" : "صندوق ممتاز • 60", 0);
-        it.market = { key: "bundle", bundle: sup, stall: si }; await it.build(L.stallPos(s, 0.54, 0.9, -0.2));
-        sign(this.scene, sup === Supplier.Cheap ? "مكونات 3 جرعات • 45\nاقتصادي" : "مكونات 3 جرعات • 60\nممتاز", L.stallPos(s, 0.93, 0.8, -0.2), 0.42, 0.18, s.side * 90, 100, sup === Supplier.Cheap ? "#f3e3bb" : "#ffe9a8");
+      // Trader: loose pieces, each with its own quality. Glass seller: one premium crate.
+      const s0 = L.stalls[0], s1 = L.stalls[1]; let slot = 0; this.cart = [];
+      for (const [k, d] of LOOSE.entries()) for (let i = 0; i < 4; i++, slot++) {
+        const row = slot % 2, col = Math.floor(slot / 2), good = d.good[i];
+        const it = new Item(this, "loose", `${d.name} • ${d.notes[i]} • ${d.price} عملة • الجودة ${Math.round(good * 100)}%`, slot);
+        it.market = { key: "loose", loose: d.kind, stall: 0, price: d.price, good, model: { herb: "herb_red", crystal: "crystal_blue", water: "water_flask" }[d.kind], scale: d.kind === "water" ? 0.95 : 1.1,
+          tint: new THREE.Color(RECIPES[1].tint[d.kind]).lerp(new THREE.Color(0x5a4a3a), (1 - good) * 0.9).getHex() };
+        await it.build(L.stallPos(s0, row ? 0.28 : 0.6, 0.9, -1.55 + col * 0.42));
       }
+      sign(this.scene, "بالحبّة: ورقة 7 • جمرة 5 • ندى 3\nاختار 3 من كل نوع • شوف الجودة", L.stallPos(s0, 0.93, 0.8, -0.2), 0.6, 0.2, s0.side * 90, 80, "#f3e3bb");
+      const crate = new Item(this, "bundle", "صندوق ممتاز • 60 عملة • الجودة 95% لكل المكونات", 0); crate.market = { key: "bundle", bundle: Supplier.Premium, stall: 1, good: 0.95 };
+      await crate.build(L.stallPos(s1, 0.54, 0.9, -0.2));
+      sign(this.scene, "صندوق كامل لـ3 جرعات • 60\nجودة 95% مضمونة", L.stallPos(s1, 0.93, 0.8, -0.2), 0.5, 0.2, s1.side * 90, 90, "#ffe9a8");
     }
     document.getElementById("card-title").textContent = ""; document.getElementById("card-sub").textContent = "";
     await this.ui.fade(false, 900); this.changing = false; this.refresh();
@@ -573,13 +601,28 @@ export class Game {
   }
   updateGrindLook() { const it = this.crushedItem; if (!it) return; const k = [1, 0.7, 0.42][this.grindLevel]; it.obj.children.forEach(m => { if (m.isMesh && m.geometry.type === "SphereGeometry") m.scale.setScalar(k); }); it.label = "عشبة مسحوقة • " + GRIND[this.grindLevel]; }
   // The sun ember must glow before it goes in: hold it over the brazier.
+  // Heat stages: warming (dull red) -> ready (bright orange, best) -> too hot (white) -> burnt (dark). Away from the coals it cools slowly.
+  static HEAT = [[0, "باردة", 0x000000, 0], [0.9, "بتسخن", 0xa02810, 0.5], [1.8, "جاهزة ✓", 0xff6a10, 1.5], [3.4, "سخنة كتير", 0xfff0b0, 1.8], [4.8, "احترقت ✗", 0x201810, 0.2]];
+  heatStage(h) { let s = 0; Game.HEAT.forEach((x, i) => { if (h >= x[0]) s = i; }); return s; }
   updateHeat(dt) {
-    if (!this.recipe.heat || !this.brazier) return; const c = this.items.find(i => i.kind === "crystal" && !i.consumed); if (!c || c.hot) return;
-    const p = c.pos, b = this.brazier; if (Math.hypot(p.x - b.x, p.z - b.z) < 0.26 && p.y > b.y - 0.1 && p.y < b.y + 0.55) { c.heat = (c.heat || 0) + dt; if (Math.random() < dt * 6) this.fx.bits(p.clone(), 0xff9a3a, 1); }
-    if ((c.heat || 0) >= 1.6) { c.hot = true; c.glow.forEach(m => { if (m.emissive) { m.emissive.set(0xff6a10); m.emissiveIntensity = 1.4; } }); c.label = "جمرة الشمس • محمّاة"; this.fx.sparkle(p.clone(), 10, 0xffb040); this.audio.play("crystal", 0.9, 0.7); this.dialogue.say("S3_HOT"); this.refresh(); }
+    if (!this.recipe.heat || !this.brazier) return; const c = this.items.find(i => i.kind === "crystal" && !i.consumed); if (!c) return;
+    const p = c.pos, b = this.brazier, on = Math.hypot(p.x - b.x, p.z - b.z) < 0.26 && p.y > b.y - 0.1 && p.y < b.y + 0.55;
+    const before = this.heatStage(c.heat || 0);
+    if (on) { c.heat = (c.heat || 0) + dt; if (Math.random() < dt * 6) this.fx.bits(p.clone(), 0xff9a3a, 1); if ((this.sizzleT = (this.sizzleT || 0) - dt) <= 0) { this.sizzleT = 0.35; this.audio.play("swish", 1.6, 0.35); } }
+    else if (c.heat && c.heat < 4.8) c.heat = Math.max(0, c.heat - dt * 0.12); // cools slowly once you take it away
+    const st = this.heatStage(c.heat || 0), H = Game.HEAT[st]; c.heatColor = st ? H : null; c.hot = st >= 2 && st <= 4;
+    c.label = `جمرة الشمس • ${H[1]}`; this.heatText = on || (st && st !== 2) ? `حرارة الجمرة: ${H[1]}` : null;
+    if (st !== before) {
+      if (st === 2) { this.fx.sparkle(p.clone(), 10, 0xffb040); this.audio.play("crystal", 0.9, 0.7); this.dialogue.say("S3_HOT"); }
+      if (st === 3) this.audio.play("reject", 1.6, 0.3);
+      if (st === 4) { this.dialogue.say("S3_BURN"); this.audio.play("reject", 1, 0.5); }
+      this.refresh();
+    }
   }
+  get heatQuality() { const c = this.usedEmberStage ?? 2; return c === 2 ? 3 : c === 3 ? 2 : 1; }
   // How close the potion is to what the buyer asked for (map path + grind + heated ember).
-  get prepQuality() { return Math.max(1, Math.min(this.map.quality, 3 - Math.abs((this.grindLevelUsed ?? this.recipe.grind) - this.recipe.grind))); }
+  get goodQuality() { const g = this.batch ? this.batchGood ?? 0.95 : 0.9; return g >= 0.82 ? 3 : g >= 0.62 ? 2 : 1; }
+  get prepQuality() { return Math.max(1, Math.min(this.map.quality, 3 - Math.abs((this.grindLevelUsed ?? this.recipe.grind) - this.recipe.grind), this.recipe.heat ? this.heatQuality : 3, this.goodQuality)); }
   stir(turns, dir) {
     if (this.paused || !this.brew.readyToStir || this.brew.readyToBottle) return;
     if (this.map.stir(turns, dir, this.stirSpeed || 0)) { this.audio.play("crystal", 1.2, 0.7); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
@@ -614,20 +657,22 @@ export class Game {
       if (this.batch) this.fin.craftBatchBottle(it.index);
       this.fx.sparkle(it.obj.position.clone().setY(1.0), 4 + this.map.quality * 4); this.audio.play("glass");
       if (this.filled === 0) { const q = this.prepQuality, r = this.recipe, used = this.grindLevelUsed ?? r.grind;
-        this.ui.card3(`${r.name} • الجودة ${q} / 3`, `مسار الخريطة: ${this.map.quality} / 3. الطحن: ${GRIND[used]}${used === r.grind ? " ✓ زي ما طلب" : ` (الطلب كان ${GRIND[r.grind]})`}.${r.heat ? " الجمرة محمّاة ✓." : ""} الجودة ما بتغيّر السعر هون، بس بتبني سمعة.`, q >= 2 ? "good" : "bad"); }
+        this.ui.card3(`${r.name} • الجودة ${q} / 3`, `مسار الخريطة: ${this.map.quality} / 3. الطحن: ${GRIND[used]}${used === r.grind ? " ✓" : ` (الطلب ${GRIND[r.grind]})`}.${r.heat ? ` الجمرة: ${Game.HEAT[this.usedEmberStage ?? 2][1]}.` : ""}${this.batch ? ` جودة المكونات: ${Math.round((this.batchGood ?? 0.95) * 100)}%.` : ""} الجودة بتبني سمعة.`, q >= 2 ? "good" : "bad"); }
       this.bottleIn = null; this.filled++; this.bottleFinished();
     }
   }
   // Drop logic shared by mouse, touch and VR hands.
   tryDrop(it) {
     if (it.consumed || this.paused) return;
+    if (it.market && it.market.loose && it.market.stall === 0 && this.baskets) { const b = this.baskets[0]; if (Math.hypot(it.pos.x - b.x, it.pos.z - b.z) < 0.42 && Math.abs(it.pos.y - b.y) < 0.6) this.marketDrop(it); else this.bounceHome(it); return; }
     if (it.market) { const b = (this.baskets || [L.basket]).find(b => Math.hypot(it.pos.x - b.x, it.pos.z - b.z) < 0.42 && Math.abs(it.pos.y - b.y) < 0.6); if (b) this.marketDrop(it); else this.bounceHome(it); return; }
     const p = it.pos, c = L.cauldron, overCauldron = Math.hypot(p.x - c.x, p.z - c.z) < L.innerRadius + 0.3 && p.y > 0.55 && p.y < 2.1;
     if (overCauldron && it.kind !== "spoon") {
       const ing = ["crushed", "crystal", "water"].includes(it.kind);
-      if (it.kind === "crystal" && this.recipe.heat && !it.hot) { this.dialogue.say("S3_COLD"); this.ui.toast("الجمرة باردة: حمّيها عالموقد أول"); this.bounceHome(it); return; }
+      if (it.kind === "crystal" && this.recipe.heat && !it.hot && this.heatStage(it.heat || 0) < 2) { this.dialogue.say("S3_COLD"); this.ui.toast("الجمرة باردة: حمّيها عالموقد أول"); this.bounceHome(it); return; }
       if (ing && (this.phase === P.Brew || this.phase === P.BatchBrew) && this.brew.add(it.kind)) {
         if (it.kind === "crushed") { this.grindLocked = true; this.grindLevelUsed = this.grindLevel; }
+        if (it.kind === "crystal" && this.recipe.heat) this.usedEmberStage = this.heatStage(it.heat || 0);
         const col = it.kind === "crystal" ? 0x4d8cff : it.kind === "water" ? 0x66d9ff : 0xd9401f;
         this.fx.bits(L.liquid.clone().setY(0.92), col, 9); this.fx.sparkle(L.liquid.clone().setY(0.96), 8); this.map.add(it.kind); it.consume(); this.audio.play("splash", 0.9 + Math.random() * 0.2);
         if (this.brew.readyToStir && !this.mapExplained) { this.mapExplained = true; this.dialogue.say("S1_MAP"); }
@@ -940,7 +985,6 @@ export class Game {
   update(dt, t) {
     this.dialogue.update(dt);
     this.ui.setHold(this.dialogue.busy && !this.asking && !this.paused);
-    if (this.ui.cardOn && this.dialogue.busy) this.ui.cardOn.until = Math.max(this.ui.cardOn.until, performance.now() + 2500);
     this.updateHeat(dt);
     if (this.pendingTerms?.length) { this.termWait = this.dialogue.busy ? 0 : (this.termWait || 0) + dt; if (this.termWait > 0.6) this.showTerm(this.pendingTerms[0]); }
     if (this.phase === P.Purchase && !this.welcomed && !this.dialogue.busy) { this.welcomed = true; this.refresh(); }
@@ -984,7 +1028,11 @@ export class Game {
     document.getElementById("pour").hidden = !(this.touchUsed && this.held?.kind === "pipette");
     document.getElementById("keys").style.opacity = t > 25 ? 0 : 0.7;
     // Item glow: next item pulses gold, hovered item glows brighter.
-    for (const it of this.items) { if (it.consumed) continue; const hov = it === this.hover && !it.held, tgt = this.isTarget(it) && !it.held; it.setGlow(hov ? 0.75 : tgt ? 0.18 + 0.22 * (0.5 + 0.5 * Math.sin(t * 4.5)) : 0); }
+    for (const it of this.items) { if (it.consumed) continue; const hov = it === this.hover && !it.held, tgt = this.isTarget(it) && !it.held;
+      if (it.heatColor) { for (const m of it.glow) if (m.emissive) { m.emissive.setHex(it.heatColor[2]); m.emissiveIntensity = it.heatColor[3] * (0.85 + 0.15 * Math.sin(t * 9)); } if (it.heatColor[0] >= 4.8) for (const m of it.glow) m.color && m.color.setHex(0x2a2018); continue; }
+      it.setGlow(hov ? 0.75 : tgt ? 0.18 + 0.22 * (0.5 + 0.5 * Math.sin(t * 4.5)) : 0); }
+    const tagIt = this.inVR ? (this.hover || this.hands?.map(h => h.held).find(Boolean)) : null;
+    this.ui.setTag(tagIt && (tagIt.market || tagIt.kind === "crystal" || tagIt.kind === "crushed") ? tagIt.label : null, tagIt ? tagIt.pos.clone().setY(tagIt.pos.y + 0.28) : null);
     // Brew visuals.
     const b = this.brew; this.swirl = Math.max(0, (this.swirl || 0) - dt * 1.2);
     this.fx.activity = (this.phase === P.Brew || this.phase === P.BatchBrew) ? (b.readyToBottle ? 0.6 : b.readyToStir ? 0.35 + b.stirring * 0.65 : 0) : 0;

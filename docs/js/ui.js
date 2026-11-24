@@ -33,12 +33,21 @@ export class UI {
   }
   // While someone is talking, decision boxes wait; they appear when the line is finished.
   setHold(b) { this.holdReq = b; const h = b; if (this.hold !== h) { this.hold = h; this.dirty = true; this.renderDom("talk"); } }
+  // Small floating label over the item you point at (VR): name, price, quality.
+  setTag(text, pos) {
+    if (!this.tag) { this.tcv = document.createElement("canvas"); this.tcv.width = 768; this.tcv.height = 110; this.ttex = new THREE.CanvasTexture(this.tcv); this.ttex.colorSpace = THREE.SRGBColorSpace;
+      this.tag = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.06), new THREE.MeshBasicMaterial({ map: this.ttex, transparent: true, depthTest: false })); this.tag.renderOrder = 15; this.scene.add(this.tag); }
+    this.tag.visible = !!(text && pos); if (!this.tag.visible) return;
+    if (this.tagText !== text) { this.tagText = text; const c = this.tcv.getContext("2d"); c.clearRect(0, 0, 768, 110); c.fillStyle = "rgba(14,20,17,.88)"; c.strokeStyle = "#c2873a"; c.lineWidth = 4; c.beginPath(); c.roundRect(4, 4, 760, 102, 22); c.fill(); c.stroke();
+      c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#ffe7b0"; c.font = "bold 40px Amiri"; c.fillText(fit(c, text, 730), 384, 56); this.ttex.needsUpdate = true; }
+    const cam = new THREE.Vector3(); this.camera.getWorldPosition(cam); this.tag.position.copy(pos); this.tag.lookAt(cam); this.tag.scale.setScalar(THREE.MathUtils.clamp(cam.distanceTo(pos) / 1.4, 0.8, 2.2));
+  }
   card3(title, body, kind = "good") { this.cards.push({ title, body, kind }); }
   setChapter(n) { this.chapter = n; this.dirty = true; [...$("timeline").children].forEach((s, i) => { s.className = i === n ? "now" : i < n ? "done" : ""; }); }
   updateCards(dt, inVR) {
     if (this.cardOn && performance.now() > this.cardOn.until) { this.cardOn = null; $("termcard").hidden = true; this.cardMesh.visible = false; this.setHold(this.holdReq); }
     if (!this.cardOn && this.cards.length) {
-      const c = this.cardOn = this.cards.shift(); c.until = performance.now() + Math.max(9000, 3000 + c.body.length * 75);
+      const c = this.cardOn = this.cards.shift(); c.until = performance.now() + Math.min(9000, Math.max(6000, 2500 + c.body.length * 45));
       const el = $("termcard"); el.className = c.kind; el.querySelector("b").textContent = c.title; el.querySelector("p").textContent = c.body; el.hidden = false; el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
       const x = this.ccv.getContext("2d"); x.clearRect(0, 0, 1024, 460); const good = c.kind === "good";
       const g = x.createLinearGradient(0, 0, 0, 460); g.addColorStop(0, good ? "#2f9a63" : "#c0563f"); g.addColorStop(1, good ? "#1d6b45" : "#8f3a2a");
@@ -52,8 +61,7 @@ export class UI {
       const head = new THREE.Vector3(), fwd = new THREE.Vector3(); this.camera.getWorldPosition(head); this.camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
       const target = head.clone().addScaledVector(fwd, 1.15); target.y = head.y + (this.panel.visible ? 0.4 : 0.02);
       const to = this.cardMesh.position.clone().sub(head).setY(0);
-      if (this.placeCard || to.angleTo(fwd) > 0.6 || Math.abs(this.cardMesh.position.y - target.y) > 0.15) { this.cardMesh.position.lerp(target, this.placeCard ? 1 : Math.min(1, dt * 4)); this.placeCard = false; }
-      this.cardMesh.lookAt(head);
+      if (this.placeCard) { this.cardMesh.position.copy(target); this.cardMesh.lookAt(head); this.placeCard = false; } // stays where it appeared
     }
   }
   setBubble(speaker, text, head) {
@@ -149,6 +157,7 @@ export class UI {
     const lines = wrap(c, s.objective || "", 700).slice(0, 2); lines.forEach((l, i) => c.fillText(l, W / 2, (lines.length > 1 ? 122 : 146) + i * 52));
     const extra = s.toast ? [s.toast, "#ffcf7a"] : s.progress ? [s.progress, "#7dffc0"] : s.subtitle && !this.bubbleOn ? [s.subtitle, "#d9cfb8"] : null;
     if (extra) { c.fillStyle = extra[1]; c.font = "bold 30px Amiri"; c.fillText(fit(c, extra[0], 720), W / 2, 268); }
+    if (this.build) { c.textAlign = "left"; c.fillStyle = "rgba(255,255,255,.35)"; c.font = "22px Amiri"; c.fillText(this.build, 24, 300); }
     this.ktex.needsUpdate = true;
   }
   draw() {

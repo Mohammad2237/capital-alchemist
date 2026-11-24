@@ -177,6 +177,13 @@ Alchemy map (creative brewing):
 - Generator: `Tools/voices/make_voices_sofelia.py <model dir> [--all]`, needs a Python 3.12 venv (kokoro 0.9 doesn't support 3.13). Setup steps are in the script header.
 - New/changed lines: edit DIALOGUE.csv, delete that line's .ogg, rerun (only missing files are generated).
 
+## 8g. Scene-3 shopping + heat stages (r8)
+- Scene 3: the trader sells loose pieces (`LOOSE` in game.js: 4 leaves 7, 4 embers 5, 4 dews 3, each with its own quality %); pick 3 of each into his basket (9 pieces = 45 = `purchaseBatch(Cheap)`). The glass seller sells one premium crate (60, quality 95%). `batchGood` feeds potion quality.
+- VR point-at tag shows name • price • quality (`ui.setTag`).
+- Ember heat stages (`Game.HEAT`): cold, warming, ready ✓, too hot, burnt ✗; cools slowly off the coals; quality uses the stage it went in at.
+- Term cards: 6–9 s, stay where they appeared (no follow).
+- Version label «إصدار r8» in the desktop key hint and the VR corner card, to confirm the browser loaded the latest build.
+
 ## 9. Next steps
 
 1. **The user tests VR on the headset** at the live URL, then reports what breaks. Fix those issues first.
