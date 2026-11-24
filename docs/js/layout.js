@@ -28,11 +28,11 @@ export const L = {
   isInside: p => p.z > 0.9 && Math.abs(p.x) < 4.5 && p.z < 12,
   customerPath: [V(0, 0, -2.4), V(0, 0, -0.6), V(0.2, 0, 1.0)],
   // Market square far from the village, reached through two portals.
-  portalShop: V(0, 0, -8.0), portalMarket: V(0, 0, -51.5),
-  villageArrive: V(0, 0, -6.4), villageYaw: camYaw(0), marketArrive: V(0, 0, -53.1), marketYaw: camYaw(180),
-  inMarket: p => p.z < -30,
+  portalShop: V(0, 0, -8.0), portalMarket: V(0, 0, -111.5),
+  villageArrive: V(0, 0, -6.4), villageYaw: camYaw(0), marketArrive: V(0, 0, -113.1), marketYaw: camYaw(180),
+  inMarket: p => p.z < -80,
   // Two stalls (Unity numbers): side +1 = front faces +x (west stall), -1 = front faces -x (east stall).
-  stalls: [{ x: -2.8, z: -59, side: 1 }, { x: 2.8, z: -59, side: -1 }],
+  stalls: [{ x: -2.8, z: -119, side: 1 }, { x: 2.8, z: -119, side: -1 }],
   stallPos: (s, dx, y, dz) => V(s.x + s.side * dx, y, s.z + dz),
   get basket() { return this.stallPos(this.stalls[0], 0.5, 0.9, 1.2); },
   pipetteSpot: V(2.25, 0.92, 7.3),
@@ -42,9 +42,9 @@ export const L = {
 const C = L.cauldron;
 export const Stations = {
   welcome: { cam: null, look: null, stand: L.insideStart, firas: V(-0.45, 0.8, 4.85) },
-  market: { cam: V(0, 2.7, -53.4), look: V(0, 0.95, -59.2), stand: V(0, 0, -56.2), firas: V(1.4, 0.8, -55.0), market: true },
+  market: { cam: V(0, 2.7, -113.4), look: V(0, 0.95, -119.2), stand: V(0, 0, -116.2), firas: V(1.4, 0.8, -115), market: true },
   portal: { cam: V(0, 1.75, -5.0), look: V(0, 1.4, -8.0), stand: V(0, 0, -6.3), firas: V(1.5, 0.8, -6.7) },
-  portalBack: { cam: V(0, 1.75, -54.6), look: V(0, 1.4, -51.5), stand: V(0, 0, -53.0), firas: V(1.5, 0.8, -53.4), market: true },
+  portalBack: { cam: V(0, 1.75, -114.6), look: V(0, 1.4, -111.5), stand: V(0, 0, -113), firas: V(1.5, 0.8, -113.4), market: true },
   ingredients: { cam: V(-0.95, 2.05, 4.2), look: V(-2.0, 0.9, 4.9), stand: V(-1.2, 0, 4.6), firas: V(-2.9, 0.8, 3.3) },
   mortar: { cam: V(-1.45, 1.62, 3.45), look: V(-1.85, 0.92, 4.2), stand: V(-1.55, 0, 3.5), firas: V(-2.75, 0.8, 3.7) },
   mix: { cam: V(-1.05, 2.3, 4.55), look: V(-1.05, 0.9, 6.2), stand: V(-1.0, 0, 5.0), firas: V(-1.7, 0.8, 7.85) },

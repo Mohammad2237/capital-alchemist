@@ -16,8 +16,10 @@ export async function runSmoke(g, branch) {
   async function brew(batch) {
     await until(() => find("herb"));
     drop(find("herb"), L.mortar); ck(g.brew.herbInMortar, "herb into mortar");
-    for (let i = 0; i < 5; i++) g.crushStroke(); ck(g.brew.crushed, "crushed (5 strokes)");
+    for (let i = 0; i < (batch ? 8 : 5); i++) g.crushStroke(); ck(g.brew.crushed && g.grindLevel === g.recipe.grind, "crushed to the ordered texture");
     await until(() => find("crushed"));
+    if (g.recipe.heat) { const cr = find("crystal"); drop(cr, L.liquid.clone().setY(1.2)); ck(!cr.consumed, "cold ember refused");
+      cr.obj.position.copy(g.brazier).setY(g.brazier.y + 0.15); for (let k = 0; k < 20 && !cr.hot; k++) g.updateHeat(0.1); ck(cr.hot, "ember heated on the brazier"); }
     drop(find("crushed"), L.liquid.clone().setY(1.2)); drop(find("crystal"), L.liquid.clone().setY(1.2)); drop(find("water"), L.liquid.clone().setY(1.2));
     ck(g.brew.readyToStir, "ingredients accepted by cauldron");
     const pestle = find("pestle"); drop(pestle, L.liquid.clone().setY(1.2)); ck(!pestle.consumed, "cauldron rejects the pestle");

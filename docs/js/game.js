@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { GameState, Finance, RecipeProgress, Supplier, Herb } from "./finance.js";
 import { L, Stations, U } from "./layout.js";
-import { place, load, colliders, box3, blocker } from "./assets.js";
+import { place, load, colliders, box3, blocker, box } from "./assets.js";
 import { refs } from "./shop.js";
 import { UI, wait } from "./ui.js";
 import { Audio } from "./audio.js";
@@ -17,6 +17,19 @@ const TERMS = [["رأس المال", "الأموال أو الموارد الت�
   ["الإيرادات", "الأموال الناتجة عن بيع المنتجات قبل طرح التكاليف."], ["تكلفة البضاعة المباعة", "التكلفة المباشرة للمنتجات التي تم بيعها."],
   ["إجمالي الربح", "الإيرادات ناقص تكلفة البضاعة المباعة."], ["المخاطرة", "احتمال حدوث خسارة أو نتيجة غير متوقعة."],
   ["المصروفات التشغيلية", "تكاليف تشغيل المتجر غير الداخلة في تكلفة الجرعات مباشرة."], ["صافي الربح", "إجمالي الربح بعد طرح خسائر التلف والمصروفات التشغيلية في هذه المحاكاة."]];
+const TERM_CARDS = [
+  "المال أو الموارد اللي بتبدأ فيها مشروعك. إنت بلّشت بـ100 عملة، ومنها رح تشتري كل إشي. الهدف إنه يكبر مع الوقت، مش يصغر.",
+  "الأشياء اللي بتصنع منها المنتج: العشبة والبلورة والماء والقارورة. كل مادة إلها سعر، ومجموع أسعارها بيصير تكلفة الجرعة.",
+  "مجموع تكاليف صناعة المنتج. جرعتك كلّفت 10 + 8 + 5 + 2 = 25 عملة. إذا بعتها بأقل من 25، بتخسر.",
+  "المبلغ اللي بيدفعه الزبون. السعر العالي بيعطيك ربح أكبر بالجرعة، بس ممكن يزعّل الزبون ويأثّر على سمعة محلّك.",
+  "كل المال اللي بيدخل من البيع قبل ما تطرح أي تكلفة. إذا بعت الجرعة بـ30، إيرادك 30، مش ربحك.",
+  "تكلفة المنتجات اللي بعتها فعلًا. بعت جرعة كلّفتك 25، فتكلفة البضاعة المباعة = 25.",
+  "الإيرادات ناقص تكلفة البضاعة المباعة. مثال: 30 − 25 = 5. هاد ربح قبل باقي المصاريف.",
+  "احتمال يصير إشي ما بتتوقعه ويكلّفك مال. المورد الرخيص ممكن يجيب عشبة ذابلة، والممتاز أغلى بس أضمن.",
+  "مصاريف تشغيل المحل نفسه، مثل الإيجار والشمع والحطب. مش جزء من تكلفة الجرعة، بس لازم تندفع كل يوم.",
+  "اللي بيضل معك فعلًا بعد كل إشي: إجمالي الربح ناقص خسائر التلف والمصروفات التشغيلية. هاد ربحك الحقيقي.",
+];
+const GRIND = ["خشن", "متوسط", "ناعم كالبودرة"];
 const TERM_WORDS = ["رأس مال", "الخام", "تكلفت", "سعر", "إيراد", "التكاليف", "الربح", "سعر", "مصروفات تشغيل", "صافي الربح"];
 const CARDS = [["المشهد ١ من ٣", "الإرث"], ["المشهد ٢ من ٣", "أول زبون"], ["المشهد ٣ من ٣", "الطلبية الكبرى"]];
 const MODELS = { herb: "herb_red", crystal: "crystal_blue", water: "water_flask", bottle: "potion_bottle", potion: "potion_bottle", pestle: "pestle", spoon: "stir_paddle" };
@@ -36,14 +49,14 @@ const STALL_INFO = [
   { sign: "التاجر المتجول\nأعشاب • سوائل", hello: "T1_HELLO", deal: "T1_DEAL", offer: "T3_OFFER" },
   { sign: "تاجرة البلّور\nبلّور • قناني", hello: "B_HELLO", deal: "B_DEAL", offer: "B3_OFFER" },
 ];
-const ORDER_TEXT = "طلب الزبون: جرعة نشاط\nإشي أحمر للطاقة • إشي أزرق لصفاء الذهن\nماء سحري للمزج • قارورة";
-const ORDER3_TEXT = "طلب التاجر: 3 جرعات شفاء\nورقة فضية • جمرة الشمس • ندى الفجر\nاختار مورّد: اقتصادي ولا ممتاز؟";
+const ORDER_TEXT = "طلب الزبون: جرعة نشاط\nإشي أحمر للطاقة • إشي أزرق لصفاء الذهن\nماء سحري للمزج • قارورة • طحن متوسط";
+const ORDER3_TEXT = "طلب التاجر: 3 جرعات شفاء\nورقة ناعمة كالبودرة • جمرة شمس محمّاة • ندى الفجر\nاختار مورّد: اقتصادي ولا ممتاز؟";
 // Scene 1 and scene 3 brew different potions: new ingredients, colours and a different target on the alchemy map.
 const RECIPES = [
-  { name: "جرعة النشاط", labels: { herb: "العشبة الحمراء", crystal: "البلورة الزرقاء", water: "الماء السحري" }, tint: {}, crushed: 0x8a2b10,
-    zone: [0.42, 0.62], push: { crushed: [-0.05, 0.36], crystal: [0.3, 0.08], water: [-0.08, 0.1] }, potion: [0x1ab866, 0x29d98f], steam: [0xc2cec6, 0x8dffc0], board: "جرعة النشاط\nعشبة 10 • بلورة 8\nماء 5 • قارورة 2" },
-  { name: "جرعة الشفاء", labels: { herb: "الورقة الفضية", crystal: "جمرة الشمس", water: "ندى الفجر" }, tint: { herb: 0xc4e8de, crystal: 0xff7a1a, water: 0xff8fc4 }, crushed: 0x9fc8c0,
-    zone: [-0.45, 0.58], push: { crushed: [0.06, 0.34], crystal: [-0.32, 0.1], water: [0.06, 0.1] }, potion: [0xf0b030, 0xffd24a], steam: [0xd2c8b8, 0xffcf80], board: "جرعة الشفاء\nورقة فضية • جمرة الشمس\nندى الفجر • قارورة" },
+  { name: "جرعة النشاط", grind: 1, heat: false, labels: { herb: "العشبة الحمراء", crystal: "البلورة الزرقاء", water: "الماء السحري" }, tint: {}, crushed: 0x8a2b10,
+    zone: [0.42, 0.62], push: { crushed: [-0.05, 0.36], crystal: [0.3, 0.08], water: [-0.08, 0.1] }, potion: [0x1ab866, 0x29d98f], steam: [0xc2cec6, 0x8dffc0], board: "جرعة النشاط\nعشبة 10 • بلورة 8 • ماء 5 • قارورة 2\nالطحن: متوسط" },
+  { name: "جرعة الشفاء", grind: 2, heat: true, labels: { herb: "الورقة الفضية", crystal: "جمرة الشمس", water: "ندى الفجر" }, tint: { herb: 0xc4e8de, crystal: 0xff7a1a, water: 0xff8fc4 }, crushed: 0x9fc8c0,
+    zone: [-0.45, 0.58], push: { crushed: [0.06, 0.34], crystal: [-0.32, 0.1], water: [0.06, 0.1] }, potion: [0xf0b030, 0xffd24a], steam: [0xd2c8b8, 0xffcf80], board: "جرعة الشفاء\nورقة فضية • جمرة الشمس • ندى الفجر\nالطحن: ناعم كالبودرة • الجمرة محمّاة" },
 ];
 // Questions you can ask each character (point at them and press trigger / E).
 const QUESTIONS = {
@@ -215,11 +228,11 @@ export class Game {
     document.fonts.ready.then(() => {
       label("إرث الكيميائي\nمتجر الجرعات", U(0, 2.93, -0.545), 1.1, 0.5, 180, 90);
       this.recipeBoard = label(RECIPES[0].board, U(-4.03, 1.36, 6.2), 1.05, 0.7, 90, 70);
-      this.orderBoard = sign(this.scene, ORDER_TEXT, U(0, 2.3, -63.2), 2.4, 0.95, 0, 64);
+      this.orderBoard = sign(this.scene, ORDER_TEXT, U(0, 3.55, -123.2), 2.4, 0.95, 0, 64);
       L.stalls.forEach((s, i) => sign(this.scene, STALL_INFO[i].sign, L.stallPos(s, 0, 2.24, 0), 1.5, 0.6, s.side * 90, 70));
       sign(this.scene, "✦ إلى السوق ✦", L.portalShop.clone().setY(3.55), 1.3, 0.34, 0, 80, "#2a1c3a", "#ffe7b0");
       sign(this.scene, "✦ إلى المحل ✦", L.portalMarket.clone().setY(3.55), 1.3, 0.34, 180, 80, "#2a1c3a", "#ffe7b0");
-      sign(this.scene, "سوق القرية", U(0, 3.0, -63.25), 1.6, 0.4, 0, 90, "#7a2a1c", "#ffe7b0");
+      sign(this.scene, "سوق القرية", U(0, 4.4, -123.25), 1.6, 0.4, 0, 90, "#7a2a1c", "#ffe7b0");
       this.marketLabel = label("لوحة السوق\nجرعات الجيران: نحو 40 عملة", U(4.03, 1.36, 1.15), 0.76, 0.5, -90, 64); this.marketLabel.visible = false;
     });
   }
@@ -228,15 +241,17 @@ export class Game {
   async setupMarket() {
     const root = this.marketRoot = new THREE.Group(); root.name = "Market square"; this.scene.add(root);
     const KK = "assets/kaykit/", jobs = [];
+    box(root, U(0, -0.08, -117), new THREE.Vector3(70, 0.1, 50), 0x2b3819, { shadow: false }); // its own meadow, far past the mountain
+    for (const x of [-1.3, 1.3]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 4.2, 8), MAT(0x5a3418)); post.position.copy(U(x, 2.1, -123.3)); root.add(post); }
     // Ground, bounds, buildings and props around the square.
-    for (let ix = -2; ix <= 2; ix++) for (let iz = 0; iz < 5; iz++) jobs.push(place(root, `${KK}Dungeon/floor_tile_large.glb`, U(ix * 3, -0.005, -51 - iz * 3), { width: 3.02, alignTop: true }));
-    for (const [x, z, sx, sz] of [[0, -49.6, 16, 0.4], [0, -64.4, 16, 0.4], [-7.6, -57, 0.4, 15], [7.6, -57, 0.4, 15]]) blocker(U(x, 1.5, z), new THREE.Vector3(sx, 3, sz));
-    jobs.push(place(root, `${KK}Town/building_market_blue.gltf`, U(-9.5, 0, -57), { yaw: -90, height: 3.2 }), place(root, `${KK}Town/building_market_green.gltf`, U(9.5, 0, -57), { yaw: 90, height: 3.2 }));
-    jobs.push(place(root, `${KK}Town/building_tavern_red.gltf`, U(-6, 0, -68), { height: 6 }), place(root, `${KK}Town/building_home_B_yellow.gltf`, U(6, 0, -68), { height: 5 }));
-    jobs.push(place(root, `${KK}Town/building_well_blue.gltf`, U(0, 0, -61.2), { height: 2.2, collider: true }), place(root, `${KK}Town/tent.gltf`, U(-6.2, 0, -52.8), { yaw: 40, height: 2.2, collider: true }));
-    for (const [m, x, z, h] of [["sack", -5.2, -60.8, 0.55], ["sack", 5.3, -56.9, 0.5], ["crate_open", -5.3, -56.8, 0.6], ["wheelbarrow", 5.6, -61.4, 0.8]]) jobs.push(place(root, `${KK}Town/${m}.gltf`, U(x, 0, z), { yaw: x * 20, height: h, collider: true }));
-    for (const [x, z] of [[-5.6, -63.4], [5.6, -63.4], [-6.4, -50.6], [6.4, -50.6]]) jobs.push(place(root, `${KK}Halloween/lantern_standing.gltf`, U(x, 0, z), { height: 0.9 }));
-    for (const [x, z] of [[-4.5, -57], [4.5, -57]]) { const l = new THREE.PointLight(0xffa64d, 7, 9, 1.6); l.position.copy(U(x, 2.4, z)); root.add(l); refs.lights.push(l); }
+    for (let ix = -2; ix <= 2; ix++) for (let iz = 0; iz < 5; iz++) jobs.push(place(root, `${KK}Dungeon/floor_tile_large.glb`, U(ix * 3, -0.005, -111 - iz * 3), { width: 3.02, alignTop: true }));
+    for (const [x, z, sx, sz] of [[0, -109.6, 16, 0.4], [0, -124.4, 16, 0.4], [-7.6, -117, 0.4, 15], [7.6, -117, 0.4, 15]]) blocker(U(x, 1.5, z), new THREE.Vector3(sx, 3, sz));
+    jobs.push(place(root, `${KK}Town/building_market_blue.gltf`, U(-9.5, 0, -117), { yaw: -90, height: 3.2 }), place(root, `${KK}Town/building_market_green.gltf`, U(9.5, 0, -117), { yaw: 90, height: 3.2 }));
+    jobs.push(place(root, `${KK}Town/building_tavern_red.gltf`, U(-6, 0, -128), { height: 6 }), place(root, `${KK}Town/building_home_B_yellow.gltf`, U(6, 0, -128), { height: 5 }));
+    jobs.push(place(root, `${KK}Town/building_well_blue.gltf`, U(0, 0, -121.2), { height: 2.2, collider: true }), place(root, `${KK}Town/tent.gltf`, U(-6.2, 0, -112.8), { yaw: 40, height: 2.2, collider: true }));
+    for (const [m, x, z, h] of [["sack", -5.2, -120.8, 0.55], ["sack", 5.3, -116.9, 0.5], ["crate_open", -5.3, -116.8, 0.6], ["wheelbarrow", 5.6, -121.4, 0.8]]) jobs.push(place(root, `${KK}Town/${m}.gltf`, U(x, 0, z), { yaw: x * 20, height: h, collider: true }));
+    for (const [x, z] of [[-5.6, -123.4], [5.6, -123.4], [-6.4, -110.6], [6.4, -110.6]]) jobs.push(place(root, `${KK}Halloween/lantern_standing.gltf`, U(x, 0, z), { height: 0.9 }));
+    for (const [x, z] of [[-4.5, -117], [4.5, -117]]) { const l = new THREE.PointLight(0xffa64d, 7, 9, 1.6); l.position.copy(U(x, 2.4, z)); root.add(l); refs.lights.push(l); }
     // Two stalls with sellers, each with its own basket.
     const wood = MAT(0x5a3418), cloth = [[MAT(0xb8322a), MAT(0xf0dcb0)], [MAT(0x2a5fb8), MAT(0xf0dcb0)]];
     this.baskets = []; this.basketRings = [];
@@ -275,6 +290,14 @@ export class Game {
       this.portals.push({ at, disc, arch });
     }
     await Promise.all(jobs);
+    // Brazier for heating the sun ember (scene 3).
+    const bz = new THREE.Group(), bpos = U(-1.6, 0, 5.4); bz.position.copy(bpos); (refs.root || this.scene).add(bz);
+    for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3, leg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 0.8, 6), MAT(0x2a2422, { metalness: 0.6 })); leg.position.set(Math.cos(a) * 0.14, 0.4, Math.sin(a) * 0.14); leg.rotation.z = Math.cos(a) * 0.15; leg.rotation.x = -Math.sin(a) * 0.15; bz.add(leg); }
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.12, 0.12, 18), MAT(0x3a302a, { metalness: 0.7, roughness: 0.4 })); bowl.position.y = 0.82; bz.add(bowl);
+    const coals = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.03, 18), new THREE.MeshBasicMaterial({ color: 0xff5a1a })); coals.position.y = 0.88; bz.add(coals);
+    for (let i = 0; i < 4; i++) { const f = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 8), new THREE.MeshBasicMaterial({ color: i % 2 ? 0xffb02a : 0xff6a10 })); f.scale.set(0.07, 0.16, 0.07); f.position.set(Math.cos(i * 1.6) * 0.07, 0.95, Math.sin(i * 1.6) * 0.07); bz.add(f); refs.flames.push({ m: f, base: f.scale.clone(), seed: 10 + i }); }
+    colliders.push(new THREE.Box3().setFromCenterAndSize(bpos.clone().setY(0.45), new THREE.Vector3(0.4, 0.9, 0.4)));
+    this.brazier = bpos.clone().setY(0.92);
     // Little wooden holder for the dropper at the bottling table.
     const hold = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.08), MAT(0x5a3418)); hold.position.copy(L.pipetteSpot).setY(0.925); this.scene.add(hold);
   }
@@ -404,14 +427,16 @@ export class Game {
   ask(id, ...choices) {
     const l = this.dialogue.lines[id], key = this.phase + ":" + id; if (!l) return;
     if (this.askKey !== key) { this.askKey = key; this.dialogue.say(id); }
-    this.ui.talk(l.speaker, l.text, ...choices);
+    const s = this.state, facts = this.phase === P.RevenueQuiz ? `\nبعت الجرعة بـ${s.revenue} • كلّفتك ${s.cogs}`
+      : this.phase === P.FinalQuiz ? `\nتذكّر أرقام يومك:\nالإيرادات ${s.revenue} • تكلفة البضاعة المباعة ${s.cogs} • إجمالي الربح ${s.grossProfit}\nخسائر التلف ${s.spoilage} • المصروفات التشغيلية ${s.opex}` : "";
+    this.ui.talk(l.speaker, l.text + facts, ...choices);
   }
   report() {
     const s = this.state;
     return `رأس المال الأولي: 100    إيرادات المبيعات: ${s.revenue}\nتكلفة البضاعة المباعة: ${s.cogs}    إجمالي الربح: ${s.grossProfit}\nخسائر التلف: ${s.spoilage}    المصروفات التشغيلية: ${s.opex}\nصافي الربح: ${s.netProfit}    الرصيد النقدي النهائي: ${s.cash}\nسمعة المتجر: ${s.reputation} • تقييم غير مالي: ${s.reputationStars} / 4\nمحاكاة مبسطة: لا تشمل الضرائب أو تكاليف التمويل.`;
   }
   unlock(i) { if (this.state.terms.includes(i)) return; this.state.terms.push(i); (this.pendingTerms = this.pendingTerms || []).push(i); this.termWait = 0; }
-  showTerm(i) { this.pendingTerms = this.pendingTerms.filter(k => k !== i); this.ui.card3("مصطلح جديد: " + TERMS[i][0], TERMS[i][1], "good"); this.audio.play("crystal", 1.3, 0.5); }
+  showTerm(i) { this.pendingTerms = this.pendingTerms.filter(k => k !== i); this.ui.card3("مصطلح جديد: " + TERMS[i][0], TERM_CARDS[i], "good"); this.audio.play("crystal", 1.3, 0.5); }
   onLine(text) { for (const i of [...(this.pendingTerms || [])]) if (text.includes(TERM_WORDS[i])) this.showTerm(i); }
   glossary(page) {
     this.paused = true; const s = this.state, open = s.terms.includes(page);
@@ -437,7 +462,7 @@ export class Game {
     this.refresh();
   }
   async beginBrew(batch) {
-    this.batch = batch; this.brew = new RecipeProgress(); this.map.reset(this.recipe); this.filled = 0; this.bottleIn = null; this.fill = 0; this.pipe = 0; this.fastWarned = false;
+    this.batch = batch; this.brew = new RecipeProgress(); this.map.reset(this.recipe); this.grindLocked = false; this.grindLevelUsed = null; this.crushedItem = null; this.lastGrind = 0; this.filled = 0; this.bottleIn = null; this.fill = 0; this.pipe = 0; this.fastWarned = false;
     for (const it of this.items) if (!it.consumed && it.kind !== "potion" && !it.market) { this.scene.remove(it.obj); it.consumed = true; }
     const lb = this.recipe.labels;
     await new Item(this, "herb", lb.herb, 0).build(L.herbSpot); await new Item(this, "crystal", lb.crystal, 0).build(L.crystalSpot);
@@ -445,13 +470,15 @@ export class Game {
     await new Item(this, "spoon", "مجداف التحريك", 0).build(L.paddleSpot);
     for (let i = 0; i < (batch ? 3 : 1); i++) await new Item(this, "bottle", "قارورة فارغة", i).build(L.emptyBottle(i));
     await new Item(this, "pipette", "القطّارة", 0).build(L.pipetteSpot);
+    if (this.recipe.heat) this.dialogue.say("S3_HEAT");
     this.refresh();
   }
   brewObjective() {
     const b = this.brew;
-    this.ui.objective(!b.herbInMortar ? "ضع العشبة في الهاون" : !b.crushed ? "اسحق العشبة بالمدقة" : !b.readyToStir ? "أضف المسحوق والبلورة والماء إلى المرجل" : !b.readyToBottle ? "حرّك بهدوء ووجّه العلامة للدائرة الخضرا" : !this.bottleIn ? "ضع قارورة فارغة في حلقة التعبئة" : this.pipe > 0.02 ? "اعصر القطّارة فوق القارورة" : "اغمس القطّارة بالمرجل واعصرها");
-    this.ui.progress(b.herbInMortar && !b.crushed ? `السحق: ${b.strokes} / 5` : b.readyToStir && !b.readyToBottle ? `المزج: ${Math.round(b.stirring * 100)}%` : b.readyToBottle ? `القطّارة ${Math.round(this.pipe * 100)}% • القارورة ${Math.round(this.fill * 100)}% • ${this.filled} / ${this.batch ? 3 : 1}` : "");
-    if (b.herbInMortar && !b.crushed) this.ui.actions(C("مساعدة: ضربة سحق", () => this.crushStroke()));
+    const r = this.recipe, cold = r.heat && !b.crystal && !this.items.find(i => i.kind === "crystal" && !i.consumed && i.hot);
+    this.ui.objective(!b.herbInMortar ? "ضع العشبة في الهاون" : !b.crushed ? `اسحق العشبة • الطلب: ${GRIND[r.grind]}` : !b.herb && this.grindLevel < r.grind ? `كمّل سحق: الطلب ${GRIND[r.grind]}` : !b.readyToStir ? (cold ? "حمّي الجمرة عالموقد، وبعدين حطّ المكونات بالمرجل" : "أضف المسحوق والبلورة والماء إلى المرجل") : !b.readyToBottle ? "حرّك بهدوء ووجّه العلامة للدائرة الخضرا" : !this.bottleIn ? "ضع قارورة فارغة في حلقة التعبئة" : this.pipe > 0.02 ? "اعصر القطّارة فوق القارورة" : "اغمس القطّارة بالمرجل واعصرها");
+    this.ui.progress(b.herbInMortar && !b.herb ? `الطحن: ${b.crushed ? GRIND[this.grindLevel] : "لسّا"} • الطلب: ${GRIND[r.grind]}` : b.readyToStir && !b.readyToBottle ? `المزج: ${Math.round(b.stirring * 100)}%` : b.readyToBottle ? `القطّارة ${Math.round(this.pipe * 100)}% • القارورة ${Math.round(this.fill * 100)}% • ${this.filled} / ${this.batch ? 3 : 1}` : "");
+    if (b.herbInMortar && !this.grindLocked && !b.readyToStir) this.ui.actions(C("مساعدة: ضربة سحق", () => this.crushStroke()));
     else if (b.readyToStir && !b.readyToBottle) this.ui.actions(C("مساعدة: دورة تحريك", () => this.stir(0.25, 0)));
     else if (this.bottleIn) this.ui.actions(C("مساعدة التعبئة", () => this.pour(0.55)));
     else this.ui.actions();
@@ -519,7 +546,7 @@ export class Game {
       this.marketLabel && (this.marketLabel.visible = true); this.customer.arrive(this); this.dialogue.say("S2_C01", "S1_ASK", "S2_F02");
     } else {
       this.phase = P.Supplier; this.unlock(7); this.dialogue.say("S3_F01");
-      if (this.orderBoard) { this.scene.remove(this.orderBoard); this.orderBoard = sign(this.scene, ORDER3_TEXT, U(0, 2.3, -63.2), 2.4, 0.95, 0, 64); }
+      if (this.orderBoard) { this.scene.remove(this.orderBoard); this.orderBoard = sign(this.scene, ORDER3_TEXT, U(0, 3.55, -123.2), 2.4, 0.95, 0, 64); }
       if (this.recipeBoard) { this.recipeBoard.visible = false; sign(this.scene, RECIPES[1].board, U(-4.02, 1.36, 6.2), 1.05, 0.7, 90, 70); }
       for (const [si, sup] of [[0, Supplier.Cheap], [1, Supplier.Premium]]) {
         const s = L.stalls[si], it = new Item(this, "bundle", sup === Supplier.Cheap ? "صندوق اقتصادي • 45" : "صندوق ممتاز • 60", 0);
@@ -532,13 +559,27 @@ export class Game {
   }
 
   // ---------------------------------------------------------------- brewing mechanics
+  // Crushing: 3 strokes = coarse, 5 = medium, 8+ = fine powder. Keep grinding until the texture matches the order, then take the bowl.
+  get grindLevel() { const s = this.brew.strokes; return s >= 8 ? 2 : s >= 5 ? 1 : 0; }
   crushStroke() {
-    if (this.paused || !this.brew.herbInMortar || this.brew.crushed) return;
-    this.brew.crushStroke(); this.audio.play("grind", 0.85 + this.brew.strokes * 0.06); this.fx.bits(L.mortar.clone().setY(1.04), 0x9a2914, 5);
+    if (this.paused || !this.brew.herbInMortar || this.grindLocked || (this.crushedItem && this.crushedItem.pos.distanceTo(L.mortar.clone().setY(1.04)) > 0.3)) return;
+    const b = this.brew; b.strokes++; this.audio.play("grind", 0.85 + Math.min(b.strokes, 9) * 0.05); this.fx.bits(L.mortar.clone().setY(1.04), this.recipe.crushed, 5);
     if (this.mortarHerb) this.mortarHerb.scale.multiplyScalar(0.86);
-    if (this.brew.crushed) { this.fx.sparkle(L.mortar.clone().setY(1.0), 6); this.audio.play("chime", 0.8); if (this.mortarHerb) this.scene.remove(this.mortarHerb); new Item(this, "crushed", "عشبة مسحوقة", 0).build(L.mortar.clone().setY(1.04)); }
-    this.refresh();
+    if (!b.crushed && b.strokes >= 3) { b.crushed = true; this.fx.sparkle(L.mortar.clone().setY(1.0), 6); this.audio.play("chime", 0.8); if (this.mortarHerb) this.scene.remove(this.mortarHerb);
+      new Item(this, "crushed", "عشبة مسحوقة", 0).build(L.mortar.clone().setY(1.04)).then(it => { this.crushedItem = it; this.updateGrindLook(); });
+      if (!this.grindExplained) { this.grindExplained = true; this.dialogue.say(this.recipe.grind === 2 ? "S3_GRIND" : "S1_GRIND"); } }
+    else if (b.crushed) { this.updateGrindLook(); if (this.grindLevel === this.recipe.grind && this.lastGrind !== this.grindLevel) this.audio.play("chime", 1.1, 0.6); }
+    this.lastGrind = this.grindLevel; this.refresh();
   }
+  updateGrindLook() { const it = this.crushedItem; if (!it) return; const k = [1, 0.7, 0.42][this.grindLevel]; it.obj.children.forEach(m => { if (m.isMesh && m.geometry.type === "SphereGeometry") m.scale.setScalar(k); }); it.label = "عشبة مسحوقة • " + GRIND[this.grindLevel]; }
+  // The sun ember must glow before it goes in: hold it over the brazier.
+  updateHeat(dt) {
+    if (!this.recipe.heat || !this.brazier) return; const c = this.items.find(i => i.kind === "crystal" && !i.consumed); if (!c || c.hot) return;
+    const p = c.pos, b = this.brazier; if (Math.hypot(p.x - b.x, p.z - b.z) < 0.26 && p.y > b.y - 0.1 && p.y < b.y + 0.55) { c.heat = (c.heat || 0) + dt; if (Math.random() < dt * 6) this.fx.bits(p.clone(), 0xff9a3a, 1); }
+    if ((c.heat || 0) >= 1.6) { c.hot = true; c.glow.forEach(m => { if (m.emissive) { m.emissive.set(0xff6a10); m.emissiveIntensity = 1.4; } }); c.label = "جمرة الشمس • محمّاة"; this.fx.sparkle(p.clone(), 10, 0xffb040); this.audio.play("crystal", 0.9, 0.7); this.dialogue.say("S3_HOT"); this.refresh(); }
+  }
+  // How close the potion is to what the buyer asked for (map path + grind + heated ember).
+  get prepQuality() { return Math.max(1, Math.min(this.map.quality, 3 - Math.abs((this.grindLevelUsed ?? this.recipe.grind) - this.recipe.grind))); }
   stir(turns, dir) {
     if (this.paused || !this.brew.readyToStir || this.brew.readyToBottle) return;
     if (this.map.stir(turns, dir, this.stirSpeed || 0)) { this.audio.play("crystal", 1.2, 0.7); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
@@ -558,21 +599,22 @@ export class Game {
     this.lastAngle = a; this.lastStirT = now;
   }
   observePestle(p) {
-    const m = L.mortar; if (Math.hypot(p.x - m.x, p.z - m.z) > 0.26 || !this.brew.herbInMortar || this.brew.crushed) return;
+    const m = L.mortar; if (Math.hypot(p.x - m.x, p.z - m.z) > 0.26 || !this.brew.herbInMortar || this.grindLocked) return;
     if (p.y > m.y + 0.18) this.pestleArmed = true; if (this.pestleArmed && p.y < m.y + 0.1) { this.pestleArmed = false; this.crushStroke(); }
   }
   pour(dt) {
     const it = this.bottleIn; if (!it || this.paused) return;
     this.fill = Math.min(1, this.fill + dt / 1.8);
     const s = this.state, r = this.recipe, color = it.index === 2 && this.batch && s.herb === Herb.UseWilted ? new THREE.Color(0x665c45) : new THREE.Color(r.potion[this.batch && s.supplier === Supplier.Premium ? 1 : 0]);
-    color.lerp(new THREE.Color(0xffffff), 0.06 * (this.map.quality - 1));
+    color.lerp(new THREE.Color(0xffffff), 0.06 * (this.prepQuality - 1));
     it.fill(this.fill, color); this.pourT = 0.1; this.pourColor = color;
     this.ui.progress(`تعبئة القارورة: ${Math.round(this.fill * 100)}%`);
     if (this.fill >= 1) {
       it.kind = "potion"; it.label = this.recipe.name; it.filled = true; it.obj.position.copy(L.finishedBottle(this.filled)); it.home = it.obj.position.clone();
       if (this.batch) this.fin.craftBatchBottle(it.index);
       this.fx.sparkle(it.obj.position.clone().setY(1.0), 4 + this.map.quality * 4); this.audio.play("glass");
-      if (this.filled === 0) this.ui.toast("جرعة النشاط • " + this.map.qualityText);
+      if (this.filled === 0) { const q = this.prepQuality, r = this.recipe, used = this.grindLevelUsed ?? r.grind;
+        this.ui.card3(`${r.name} • الجودة ${q} / 3`, `مسار الخريطة: ${this.map.quality} / 3. الطحن: ${GRIND[used]}${used === r.grind ? " ✓ زي ما طلب" : ` (الطلب كان ${GRIND[r.grind]})`}.${r.heat ? " الجمرة محمّاة ✓." : ""} الجودة ما بتغيّر السعر هون، بس بتبني سمعة.`, q >= 2 ? "good" : "bad"); }
       this.bottleIn = null; this.filled++; this.bottleFinished();
     }
   }
@@ -583,7 +625,9 @@ export class Game {
     const p = it.pos, c = L.cauldron, overCauldron = Math.hypot(p.x - c.x, p.z - c.z) < L.innerRadius + 0.3 && p.y > 0.55 && p.y < 2.1;
     if (overCauldron && it.kind !== "spoon") {
       const ing = ["crushed", "crystal", "water"].includes(it.kind);
+      if (it.kind === "crystal" && this.recipe.heat && !it.hot) { this.dialogue.say("S3_COLD"); this.ui.toast("الجمرة باردة: حمّيها عالموقد أول"); this.bounceHome(it); return; }
       if (ing && (this.phase === P.Brew || this.phase === P.BatchBrew) && this.brew.add(it.kind)) {
+        if (it.kind === "crushed") { this.grindLocked = true; this.grindLevelUsed = this.grindLevel; }
         const col = it.kind === "crystal" ? 0x4d8cff : it.kind === "water" ? 0x66d9ff : 0xd9401f;
         this.fx.bits(L.liquid.clone().setY(0.92), col, 9); this.fx.sparkle(L.liquid.clone().setY(0.96), 8); this.map.add(it.kind); it.consume(); this.audio.play("splash", 0.9 + Math.random() * 0.2);
         if (this.brew.readyToStir && !this.mapExplained) { this.mapExplained = true; this.dialogue.say("S1_MAP"); }
@@ -896,6 +940,8 @@ export class Game {
   update(dt, t) {
     this.dialogue.update(dt);
     this.ui.setHold(this.dialogue.busy && !this.asking && !this.paused);
+    if (this.ui.cardOn && this.dialogue.busy) this.ui.cardOn.until = Math.max(this.ui.cardOn.until, performance.now() + 2500);
+    this.updateHeat(dt);
     if (this.pendingTerms?.length) { this.termWait = this.dialogue.busy ? 0 : (this.termWait || 0) + dt; if (this.termWait > 0.6) this.showTerm(this.pendingTerms[0]); }
     if (this.phase === P.Purchase && !this.welcomed && !this.dialogue.busy) { this.welcomed = true; this.refresh(); }
     if (this.phase === P.Intro && !this.doorOpened && this.fx.doorRot > 0.6) { this.doorOpened = true; this.refresh(); }
