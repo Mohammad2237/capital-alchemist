@@ -174,7 +174,25 @@ public static class CapitalBuilder
         var web=container.SettingsForBuildTarget(BuildTargetGroup.WebGL);
         if(web.Manager==null){var manager=ScriptableObject.CreateInstance<XRManagerSettings>();AssetDatabase.AddObjectToAsset(manager,path);web.Manager=manager;}
         web.InitManagerOnStart=true;
-        XRPackageMetadataStore.AssignLoader(web.Manager,"WebXR.WebXRLoader",BuildTargetGroup.WebGL);
+        // The WebXR package needs two assets its own menus normally create; without them the browser side has no
+        // settings and the "Enter VR" button cannot start a session. Create and register both explicitly.
+        System.IO.Directory.CreateDirectory("Assets/XR/Settings");System.IO.Directory.CreateDirectory("Assets/XR/Loaders");
+        var settingsType=Type.GetType("WebXR.WebXRSettings, WebXR");
+        var loaderType=Type.GetType("WebXR.WebXRLoader, WebXR");
+        if(settingsType==null||loaderType==null)throw new Exception("WebXR package types not found");
+        const string settingsPath="Assets/XR/Settings/WebXRSettings.asset",loaderPath="Assets/XR/Loaders/WebXRLoader.asset";
+        var webSettings=AssetDatabase.LoadAssetAtPath(settingsPath,settingsType) as ScriptableObject;
+        if(!webSettings){webSettings=ScriptableObject.CreateInstance(settingsType);AssetDatabase.CreateAsset(webSettings,settingsPath);}
+        var so=new SerializedObject(webSettings);
+        void Set(string field,Action<SerializedProperty> apply){var prop=so.FindProperty(field);if(prop!=null)apply(prop);}
+        Set("AutoLoadWebXRManager",pr=>pr.boolValue=true);Set("AutoLoadWebXRInputSystem",pr=>pr.boolValue=true);
+        Set("UseFramebufferScaleFactor",pr=>pr.boolValue=true);Set("FramebufferScaleFactor",pr=>pr.floatValue=.8f);
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorBuildSettings.AddConfigObject("WebXR.Settings",webSettings,true);
+        var loader=AssetDatabase.LoadAssetAtPath(loaderPath,loaderType) as XRLoader;
+        if(!loader){loader=(XRLoader)ScriptableObject.CreateInstance(loaderType);AssetDatabase.CreateAsset(loader,loaderPath);}
+        if(!web.Manager.activeLoaders.Contains(loader))web.Manager.TryAddLoader(loader);
+        EditorUtility.SetDirty(web.Manager);
         EditorUtility.SetDirty(container);AssetDatabase.SaveAssets();
     }
     [MenuItem("Capital/5 - Build Web (WebXR)")]
@@ -182,6 +200,8 @@ public static class CapitalBuilder
     {
         ConfigureWebXR();
         PlayerSettings.WebGL.template="PROJECT:WebXRFullView2020";
+        // No "Made with Unity" splash: the game opens straight onto our own Arabic loading screen.
+        PlayerSettings.SplashScreen.show=false;PlayerSettings.SplashScreen.showUnityLogo=false;
         // GitHub Pages can't send Content-Encoding headers, so the loader decompresses gzip itself.
         PlayerSettings.WebGL.compressionFormat=WebGLCompressionFormat.Gzip;
         PlayerSettings.WebGL.decompressionFallback=true;
@@ -191,6 +211,7 @@ public static class CapitalBuilder
         PlayerSettings.SetManagedStrippingLevel(UnityEditor.Build.NamedBuildTarget.WebGL,ManagedStrippingLevel.Low);
         PlayerSettings.runInBackground=true;
         Directory.CreateDirectory("Builds/Web");
+        if(!EditorBuildSettings.TryGetConfigObject<ScriptableObject>("WebXR.Settings",out var check)||!check)throw new Exception("WebXR settings missing");
         var report=BuildPipeline.BuildPlayer(EditorBuildSettings.scenes.Where(s=>s.enabled).Select(s=>s.path).ToArray(),
             "Builds/Web",BuildTarget.WebGL,BuildOptions.None);
         File.WriteAllText("Evidence/web-build.txt",report.summary.result+"\n"+report.summary.totalErrors+" errors\n"+report.summary.totalSize+" bytes\n"+DateTime.UtcNow.ToString("O"));

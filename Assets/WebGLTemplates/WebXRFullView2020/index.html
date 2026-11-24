@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>رأس المال: إرث الكيميائي</title>
     <meta name="description" content="لعبة واقع افتراضي تعليمية عن الإيرادات والأرباح">
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="TemplateData/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="TemplateData/style.css">
@@ -25,6 +25,7 @@
       </div>
       <div id="hud">
         <button id="entervr" disabled>ادخل الواقع الافتراضي 🥽</button>
+        <p id="vr-help" hidden></p>
         <button id="fullscreen" title="ملء الشاشة">⛶</button>
       </div>
     </div>
@@ -75,8 +76,19 @@
         enterVRButton.disabled = !event.detail.supported;
         enterVRButton.classList.toggle('ready', event.detail.supported);
       }, false);
+      var vrHelp = document.getElementById('vr-help');
+      function say(msg) { vrHelp.textContent = msg; vrHelp.hidden = false; setTimeout(() => { vrHelp.hidden = true; }, 6000); }
       enterVRButton.addEventListener('click', function () {
-        if (unityInstance) unityInstance.Module.WebXR.toggleVR();
+        if (!window.isSecureContext || !navigator.xr) { say("افتح الرابط في متصفح النظارة (يحتاج https)."); return; }
+        if (!unityInstance || !unityInstance.Module.WebXR) { say("انتظر حتى يكتمل التحميل ثم اضغط مجددًا."); return; }
+        var webXR = unityInstance.Module.WebXR;
+        // Safety net: the build ships its WebXR settings; if they did not arrive, use the same values here.
+        if (!webXR.Settings) {
+          webXR.Settings = { VRRequiredReferenceSpace: ["local-floor"], VROptionalFeatures: ["hand-tracking"],
+            ARRequiredReferenceSpace: ["local-floor"], AROptionalFeatures: ["hit-test"],
+            UseFramebufferScaleFactor: true, UseNativeResolution: false, FramebufferScaleFactor: 0.8 };
+        }
+        try { webXR.toggleVR(); } catch (e) { console.error(e); say("تعذّر بدء الواقع الافتراضي. أعد تحميل الصفحة وحاول مجددًا."); }
       }, false);
       document.getElementById('fullscreen').addEventListener('click', function () {
         if (unityInstance) unityInstance.SetFullscreen(1);

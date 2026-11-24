@@ -12,6 +12,7 @@ MATS = {}
 def mat(name, rgb, metal=0.0, rough=0.7, emit=None):
     if name in MATS: return MATS[name]
     m = bpy.data.materials.new(name); m.use_nodes = True
+    m.use_backface_culling = True  # glTF: single-sided, so the ink outline hull works on the web
     b = m.node_tree.nodes["Principled BSDF"]
     b.inputs["Base Color"].default_value = (*rgb, 1)
     b.inputs["Metallic"].default_value = metal
@@ -127,6 +128,11 @@ def export(name):
     bpy.ops.export_scene.fbx(filepath=path, use_selection=True, apply_scale_options='FBX_SCALE_UNITS',
                              axis_forward='-Z', axis_up='Y', bake_space_transform=True, object_types={'MESH'},
                              mesh_smooth_type='FACE', use_mesh_modifiers=True)
+    # Web (three.js) copy: binary glTF, modifiers applied, Y-up.
+    web = os.path.join(os.path.dirname(OUT), "..", "..", "..", "web", "assets", "custom")
+    os.makedirs(web, exist_ok=True)
+    bpy.ops.export_scene.gltf(filepath=os.path.abspath(os.path.join(web, name + ".glb")), export_format='GLB',
+                              use_selection=True, export_apply=True)
     print("EXPORTED", path)
 
 # ---------------- big cauldron (rim 0.95 m high, 1.3 m across), ornate ----------------

@@ -38,8 +38,10 @@ namespace Capital
         {
             if(HandInput.Web)
             {
+                yield return null; // scene HUD + desktop rig exist first
                 CapitalWeb.WebHands.Hook();
                 CapitalWeb.WebHands.VRChanged+=OnWebVR;
+                if(CapitalWeb.WebHands.InVR)EnterVR(); // scene loaded while already in the headset
                 yield break;
             }
             if(!System.Environment.GetCommandLineArgs().Contains("--vr"))yield break;
@@ -50,12 +52,13 @@ namespace Capital
             manager.StartSubsystems();
             EnterVR();
         }
-        void OnDestroy(){if(HandInput.Web)CapitalWeb.WebHands.VRChanged-=OnWebVR;}
+        bool ownsSession;
+        void OnDestroy(){if(HandInput.Web)CapitalWeb.WebHands.VRChanged-=OnWebVR;if(ownsSession)Active=false;}
         void OnWebVR(bool on){if(this==null)return;if(on)EnterVR();else ExitVR();}
 
         void EnterVR()
         {
-            if(Active)return;Active=true;
+            if(ownsSession)return;ownsSession=true;Active=true;
             var camera=GetComponent<Camera>();
             var desktop=GetComponent<DesktopInputController>();if(desktop)desktop.enabled=false;
             desktopRig=transform.parent;
@@ -89,7 +92,7 @@ namespace Capital
         // Browser only: leaving VR returns to desktop/touch play from the same spot.
         void ExitVR()
         {
-            if(!Active)return;Active=false;
+            if(!ownsSession)return;ownsSession=false;Active=false;
             Vector3 feet=transform.position;feet.y=0;float yaw=transform.eulerAngles.y;
             if(desktopRig)
             {
@@ -105,7 +108,7 @@ namespace Capital
         // WebXR feeds the headset pose through Unity's XR input; drive the camera from it directly.
         void Update()
         {
-            if(!Active || !HandInput.Web)return;
+            if(!ownsSession || !HandInput.Web)return;
             var head=InputDevices.GetDeviceAtXRNode(XRNode.CenterEye);
             if(head.TryGetFeatureValue(CommonUsages.centerEyePosition,out Vector3 p))transform.localPosition=p;
             else if(head.TryGetFeatureValue(CommonUsages.devicePosition,out p))transform.localPosition=p;
@@ -123,7 +126,7 @@ namespace Capital
     {
         public XRNode Node;
         XRDirectInteractor direct;XRRayInteractor ray;
-        bool lastMenu;
+        bool lastMenu,lastTrigger;
         void Start()
         {
             var sphere=gameObject.AddComponent<SphereCollider>();sphere.radius=.09f;sphere.isTrigger=true;
@@ -153,6 +156,11 @@ namespace Capital
             bool paused=GameManager.I && GameManager.I.InteractionPaused;
             direct.selectInput.QueueManualState(grip&&!paused,grip?1:0);
             ray.selectInput.QueueManualState(false,0);ray.uiPressInput.QueueManualState(trigger,trigger?1:0);
+            // Pointing at the shop door and pulling the trigger opens it (VR has no E key).
+            if(trigger && !lastTrigger && !paused && GameDirector.I && GameDirector.I.Phase==Phase.Intro &&
+                Physics.Raycast(transform.position,transform.forward,out var hit,3f,~0,QueryTriggerInteraction.Ignore) &&
+                hit.collider.name=="Shop door")GameDirector.I.OpenShopDoor();
+            lastTrigger=trigger;
             bool menu=HandInput.Primary(Node);
             if(Node==XRNode.LeftHand && menu&&!lastMenu)FindFirstObjectByType<GlossaryManager>().Toggle();lastMenu=menu;
             if(!paused && GameDirector.I)

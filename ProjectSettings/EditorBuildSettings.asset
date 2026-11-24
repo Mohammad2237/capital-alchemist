@@ -16,5 +16,6 @@ EditorBuildSettings:
     guid: fa173827a2eb47a4c9e9367731352e18
   m_configObjects:
     Unity.XR.Management.Settings: {fileID: 11400000, guid: 7b054306caa970840800f71dbca10910, type: 2}
+    WebXR.Settings: {fileID: 11400000, guid: de5d34f9200ca3f40abc01e518687389, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 7b054306caa970840800f71dbca10910, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 0754fef2fa14ca84687284176c791788, type: 2}
