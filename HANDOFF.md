@@ -167,6 +167,11 @@ Alchemy map (creative brewing):
 - Walking never sticks: you can always walk out of something you are inside; VR collision uses the head position.
 - Steam is soft sprites now (the purple 'bubble' was the old sphere steam).
 
+## 8e. Fourth headset round
+- VR HUD: small corner task card locked to the top-right of the view (`ui.corner`, `drawCorner`): scene, coins, task, one status line. The centre panel only appears for choices/modals.
+- Term cards wait until a character says the word (`TERM_WORDS`, `onLine`), fallback when talking stops.
+- No teleport buttons: no «ادخل», «افتح الباب», «ادخل البوابة», «انتقل إلى المحطة» (Q removed). Walk in, open the door, walk through the portal. Scene 2 starts when you open the door after the knock (`readyShut`).
+
 ## 9. Next steps
 
 1. **The user tests VR on the headset** at the live URL, then reports what breaks. Fix those issues first.

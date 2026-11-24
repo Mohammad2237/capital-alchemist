@@ -39,7 +39,6 @@ The earlier Unity version is preserved on the `unity-version` branch.
 | E or left-click: grab / drop / open door | Tap item to grab, tap a spot to drop | Grip: grab; move your hand to stir and crush. Trigger at a far item: it flies to your hand; release while pointing at the cauldron/mortar/bottle ring/counter tray and it flies there |
 | F or left mouse (hold) while holding the dropper: squeeze | «اضغط مطولًا للعصر» button | Trigger while holding the dropper: squeeze (dip in the cauldron, then over the bottle) |
 | E on the door: open/close; E on a character: ask questions | Tap | Grip the door handle and swing it; trigger at a character: ask questions |
-| Q / «انتقل إلى المحطة»: station view | same button | same button: blink-teleport to the floor ring |
 | Tab: encyclopedia, R: restart | «الموسوعة» button | X: encyclopedia, B: reset eye height (auto when the floor is missing) |
 
 Each step has a framed point of view on desktop (above the cauldron while stirring, over the mortar, at the

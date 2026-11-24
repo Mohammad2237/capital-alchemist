@@ -17,6 +17,7 @@ const TERMS = [["رأس المال", "الأموال أو الموارد الت�
   ["الإيرادات", "الأموال الناتجة عن بيع المنتجات قبل طرح التكاليف."], ["تكلفة البضاعة المباعة", "التكلفة المباشرة للمنتجات التي تم بيعها."],
   ["إجمالي الربح", "الإيرادات ناقص تكلفة البضاعة المباعة."], ["المخاطرة", "احتمال حدوث خسارة أو نتيجة غير متوقعة."],
   ["المصروفات التشغيلية", "تكاليف تشغيل المتجر غير الداخلة في تكلفة الجرعات مباشرة."], ["صافي الربح", "إجمالي الربح بعد طرح خسائر التلف والمصروفات التشغيلية في هذه المحاكاة."]];
+const TERM_WORDS = ["رأس مال", "الخام", "تكلفت", "سعر", "إيراد", "التكاليف", "الربح", "سعر", "مصروفات تشغيل", "صافي الربح"];
 const CARDS = [["المشهد ١ من ٣", "الإرث"], ["المشهد ٢ من ٣", "أول زبون"], ["المشهد ٣ من ٣", "الطلبية الكبرى"]];
 const MODELS = { herb: "herb_red", crystal: "crystal_blue", water: "water_flask", bottle: "potion_bottle", potion: "potion_bottle", pestle: "pestle", spoon: "stir_paddle" };
 const GRIP = { spoon: 0.95, pestle: 0.2, pipette: 0.24 };
@@ -105,7 +106,7 @@ class Dialogue {
     if (this.speaking) { this.left -= dt; if (this.left <= 0) { this.speaking = false; this.speaker = ""; this.g.ui.subtitle(""); this.g.audio.setSpeaking(false); this.gap = 0.25; } return; }
     if ((this.gap -= dt) > 0 || !this.queue.length) return;
     const id = this.queue.shift(), l = this.lines[id]; this.speaking = true; this.speaker = l.speaker; this.text = l.text; this.left = this.g.fast ? 0.05 : l.dur;
-    this.g.ui.subtitle(l.speaker + ": " + l.text); this.g.audio.setSpeaking(true);
+    this.g.ui.subtitle(l.speaker + ": " + l.text); this.g.audio.setSpeaking(true); this.g.onLine(l.text);
     if (!this.g.fast) this.g.audio.speak(id).then(d => { if (d && this.speaker === l.speaker) this.left = Math.max(this.left - (l.dur - d - 0.3), 0.3); });
   }
 }
@@ -194,7 +195,7 @@ export class Game {
     this.npcs = [this.trader, this.customer, this.merchant, this.seller].filter(Boolean); this.vendors = [this.trader, this.seller];
     for (const name of ["herb_red", "crystal_blue", "water_flask", "potion_bottle", "pestle", "stir_paddle"]) await load(`assets/custom/${name}.glb`);
     this.labels(); await this.setupMarket(); this.setupWorldMap();
-    this.ui.onBook = () => this.glossary(0); this.ui.onStation = () => this.goToStation(); this.ui.onClick = () => this.audio.play("paper", 1.1, 0.8);
+    this.ui.onBook = () => this.glossary(0); this.ui.onClick = () => this.audio.play("paper", 1.1, 0.8);
     this.setupDesktop(); this.setupTouch(); this.setupVR();
     this.ui.card(...CARDS[0], this.fast ? 0 : 1600);
     this.refresh();
@@ -372,14 +373,13 @@ export class Game {
     if (this.phase !== P.Brew && this.phase !== P.BatchBrew) ui.progress("");
     switch (this.phase) {
       case P.Intro:
-        if (!this.doorOpened) { ui.objective("افتح باب متجرك بإيدك"); ui.actions(C("افتح الباب", () => this.openShopDoor())); }
-        else { ui.objective("ادخل المتجر"); ui.actions(C("ادخل", () => this.enterShop())); } break;
+        ui.objective(!this.doorOpened ? "افتح باب متجرك" : "ادخل المتجر"); break;
       case P.Purchase: {
         const n = [0, 1, 2, 3].filter(i => s.has("ingredient-" + i)).length;
         ui.objective(!this.welcomed ? "اسمع فراس" : this.region() === "market" ? "السوق: حطّ مكونات الطلب بالسلّة" : "اطلع وادخل البوابة عالسوق"); if (this.welcomed) ui.progress(`بالسلّة: ${n} / 4`);
         ui.actions(C("شو الطلب؟", () => { ui.toast(ORDER_TEXT.replace(/\n/g, " • ")); ui.toastUntil = performance.now() + 6000; })); break; }
       case P.Brew: case P.BatchBrew: this.brewObjective(); break;
-      case P.Ready: ui.objective("جرعتك جاهزة! • التكلفة 25"); ui.actions(C("افتح الباب للزبون", () => this.nextChapter())); break;
+      case P.Ready: ui.objective("حدا بدقّ الباب: افتحله"); break;
       case P.Price: ui.objective("اختر سعرك");
         this.ask("P_PRICE", C("30 عملة", () => this.choosePrice(30)), C("50 عملة", () => this.choosePrice(50))); break;
       case P.Handoff: ui.objective("ضع الجرعة على الصينية"); break;
@@ -398,7 +398,7 @@ export class Game {
       case P.Report: ui.objective("تقرير المتجر");
         ui.modal("تقرير المتجر", this.report(), C("إعادة التجربة", () => location.reload()), C("الموسوعة المالية", () => this.glossary(0))); break;
     }
-    const st = this.stationName(); if ((st === "portal" || st === "portalBack") && !ui.st.talk && !ui.st.modal) ui.actions(C("ادخل البوابة ✦", () => this.travel()), ...ui.st.actions);
+    const st = this.stationName(); if (st === "portal" || st === "portalBack") ui.objective(this.phase === P.Purchase || this.phase === P.Supplier ? "امشِ عبر البوابة للسوق" : "امشِ عبر البوابة للمحل");
   }
   // A decision: the character says the line (voice = the same words you read), then the choices appear.
   ask(id, ...choices) {
@@ -410,7 +410,9 @@ export class Game {
     const s = this.state;
     return `رأس المال الأولي: 100    إيرادات المبيعات: ${s.revenue}\nتكلفة البضاعة المباعة: ${s.cogs}    إجمالي الربح: ${s.grossProfit}\nخسائر التلف: ${s.spoilage}    المصروفات التشغيلية: ${s.opex}\nصافي الربح: ${s.netProfit}    الرصيد النقدي النهائي: ${s.cash}\nسمعة المتجر: ${s.reputation} • تقييم غير مالي: ${s.reputationStars} / 4\nمحاكاة مبسطة: لا تشمل الضرائب أو تكاليف التمويل.`;
   }
-  unlock(i) { if (this.state.terms.includes(i)) return; this.state.terms.push(i); this.ui.card3("مصطلح جديد: " + TERMS[i][0], TERMS[i][1], "good"); this.audio.play("crystal", 1.3, 0.5); }
+  unlock(i) { if (this.state.terms.includes(i)) return; this.state.terms.push(i); (this.pendingTerms = this.pendingTerms || []).push(i); this.termWait = 0; }
+  showTerm(i) { this.pendingTerms = this.pendingTerms.filter(k => k !== i); this.ui.card3("مصطلح جديد: " + TERMS[i][0], TERMS[i][1], "good"); this.audio.play("crystal", 1.3, 0.5); }
+  onLine(text) { for (const i of [...(this.pendingTerms || [])]) if (text.includes(TERM_WORDS[i])) this.showTerm(i); }
   glossary(page) {
     this.paused = true; const s = this.state, open = s.terms.includes(page);
     this.ui.modal(`الموسوعة المالية   ${s.terms.length} / 10`, open ? `${TERMS[page][0]}\n\n${TERMS[page][1]}` : "مصطلح مغلق\nستكتشفه أثناء التجربة",
@@ -455,7 +457,7 @@ export class Game {
     else this.ui.actions();
   }
   bottleFinished() {
-    if (this.phase === P.Brew && this.fin.craftFirst()) { this.unlock(2); this.phase = P.Ready; this.dialogue.say("S1_F06", "S1_F07"); setTimeout(() => this.audio.play("knock"), 2500); }
+    if (this.phase === P.Brew && this.fin.craftFirst()) { this.unlock(2); this.phase = P.Ready; this.readyShut = false; this.dialogue.say("S1_F06", "S1_F07"); setTimeout(() => { if (this.phase !== P.Ready) return; this.audio.play("knock"); if (this.fx.doorGoal > 0.8) this.fx.openDoor(false); }, 2500); }
     else if (this.phase === P.BatchBrew && this.filled === 3) { this.phase = P.BatchHandoff; this.dialogue.say("S3_GIVE"); this.merchant.spot = L.customerSpot; this.merchant.arrive(this); }
     this.refresh();
   }
@@ -664,7 +666,7 @@ export class Game {
   setupDesktop() {
     const el = this.renderer.domElement;
     addEventListener("keydown", e => { this.keys[e.code] = true; this.audio.start();
-      if (e.code === "KeyE") this.act(); if (e.code === "KeyQ") this.goToStation(); if (e.code === "Tab") { e.preventDefault(); this.paused ? (this.paused = false, this.refresh()) : this.glossary(0); }
+      if (e.code === "KeyE") this.act(); if (e.code === "Tab") { e.preventDefault(); this.paused ? (this.paused = false, this.refresh()) : this.glossary(0); }
       if (e.code === "KeyR") this.ui.modal("إعادة التجربة؟", "ستبدأ مجددًا برصيد 100 عملة.", C("نعم، إعادة", () => location.reload()), C("متابعة", () => this.refresh())); });
     addEventListener("keyup", e => { this.keys[e.code] = false; });
     el.addEventListener("contextmenu", e => e.preventDefault());
@@ -793,7 +795,6 @@ export class Game {
       if (down(0)) {
         if (ui && ui.button) this.ui.click(ui.button);
         else if (far) this.vrGrab(h, far, true, gp);
-        else if (this.portals && this.ray.intersectObjects(this.portals.map(p => p.disc)).length) this.travel();
         else if (refs.door && this.ray.intersectObject(refs.door, true).length) this.toggleDoor();
         else { const ch = this.rayCharacter(this.ray.ray); if (ch) this.askMenu(ch.speaker); }
       }
@@ -895,8 +896,10 @@ export class Game {
   update(dt, t) {
     this.dialogue.update(dt);
     this.ui.setHold(this.dialogue.busy && !this.asking && !this.paused);
+    if (this.pendingTerms?.length) { this.termWait = this.dialogue.busy ? 0 : (this.termWait || 0) + dt; if (this.termWait > 0.6) this.showTerm(this.pendingTerms[0]); }
     if (this.phase === P.Purchase && !this.welcomed && !this.dialogue.busy) { this.welcomed = true; this.refresh(); }
     if (this.phase === P.Intro && !this.doorOpened && this.fx.doorRot > 0.6) { this.doorOpened = true; this.refresh(); }
+    if (this.phase === P.Ready && !this.changing) { if (this.fx.doorRot < 0.25) this.readyShut = true; else if (this.readyShut && this.fx.doorRot > 0.6) this.nextChapter(); }
     this.fx.low = this.inVR;
     const name = this.stationName();
     if (name !== this.lastStation) { const first = this.lastStation === undefined; this.lastStation = name; this.dropHeld(false); if (!this.inVR) { if (name && Stations[name].cam) this.focusOn(name); else if (this.focused) this.unfocus(); } if (!first) this.refresh(); }

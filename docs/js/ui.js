@@ -9,7 +9,7 @@ export class UI {
     this.st = { objective: "", cash: 100, subtitle: "", talk: null, modal: null, actions: [], toast: "", progress: "", hint: "" };
     this.toastUntil = 0; this.lastCash = 100; this.shownCash = 100;
     $("btn-book").onclick = () => this.onBook && this.onBook();
-    $("btn-station").onclick = () => this.onStation && this.onStation();
+    $("btn-station").hidden = true;
     // VR panel
     this.canvas = document.createElement("canvas"); this.canvas.width = 1024; this.canvas.height = 720;
     this.ctx = this.canvas.getContext("2d");
@@ -17,6 +17,10 @@ export class UI {
     this.panel = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 0.879), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: false }));
     this.panel.renderOrder = 10; this.panel.visible = false; scene.add(this.panel);
     this.hits = []; this.dirty = true; this.following = true; this.hold = false;
+    // VR corner task card: small, top-right of your view (task, scene, coins). Only choices use the middle.
+    this.kcv = document.createElement("canvas"); this.kcv.width = 768; this.kcv.height = 320; this.ktex = new THREE.CanvasTexture(this.kcv); this.ktex.colorSpace = THREE.SRGBColorSpace;
+    this.corner = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.108), new THREE.MeshBasicMaterial({ map: this.ktex, transparent: true, depthTest: false }));
+    this.corner.renderOrder = 20; this.corner.position.set(0.17, 0.115, -0.46); this.corner.rotation.y = -0.3; this.corner.visible = false; camera.add(this.corner);
     // VR speech bubble: the spoken line floats above whoever is talking (not in front of your eyes).
     this.bcv = document.createElement("canvas"); this.bcv.width = 1024; this.bcv.height = 320; this.btex = new THREE.CanvasTexture(this.bcv); this.btex.colorSpace = THREE.SRGBColorSpace;
     this.bubble = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.344), new THREE.MeshBasicMaterial({ map: this.btex, transparent: true, depthTest: false }));
@@ -46,7 +50,7 @@ export class UI {
     this.cardMesh.visible = !!this.cardOn && inVR;
     if (this.cardMesh.visible) {
       const head = new THREE.Vector3(), fwd = new THREE.Vector3(); this.camera.getWorldPosition(head); this.camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize();
-      const target = head.clone().addScaledVector(fwd, 1.1); target.y = head.y + 0.12;
+      const target = head.clone().addScaledVector(fwd, 1.15); target.y = head.y - 0.02;
       const to = this.cardMesh.position.clone().sub(head).setY(0);
       if (this.placeCard || to.angleTo(fwd) > 0.6) { this.cardMesh.position.lerp(target, this.placeCard ? 1 : Math.min(1, dt * 4)); this.placeCard = false; }
       this.cardMesh.lookAt(head);
@@ -115,8 +119,10 @@ export class UI {
     }
     if (this.st.toast && performance.now() > this.toastUntil) this.toast("");
     this.updateCards(dt, inVR);
+    const box = !!((this.st.talk && !this.hold) || this.st.modal);
+    if (inVR && box && !this.panel.visible) this.following = true;
+    this.panel.visible = inVR && box; this.corner.visible = inVR; if (!inVR) this.bubble.visible = false;
     if (inVR) this.updatePanel(dt);
-    this.panel.visible = inVR; if (!inVR) this.bubble.visible = false;
   }
 
   // ---------------------------------------------------------------- VR panel
@@ -126,29 +132,33 @@ export class UI {
     const to = this.panel.position.clone().sub(head); to.y = 0;
     if (to.angleTo(fwd) > 0.65 || to.length() > 2.4 || to.length() < 0.6) this.following = true;
     if (this.following) {
-      const target = head.clone().addScaledVector(fwd, 1.35); target.y = head.y - 0.2;
+      const target = head.clone().addScaledVector(fwd, 1.3); target.y = head.y - 0.22;
       this.panel.position.lerp(target, Math.min(1, dt * 3));
       this.panel.lookAt(head);
       if (this.panel.position.distanceTo(target) < 0.03) this.following = false;
     }
-    if (this.dirty) { this.draw(); this.dirty = false; }
+    if (this.dirty) { if (this.panel.visible) this.draw(); this.drawCorner(); this.dirty = false; }
+  }
+  drawCorner() {
+    const c = this.kcv.getContext("2d"), s = this.st, W = 768; c.clearRect(0, 0, W, 320);
+    c.fillStyle = "rgba(14,20,17,.78)"; c.strokeStyle = "rgba(194,135,58,.9)"; c.lineWidth = 4; c.beginPath(); c.roundRect(4, 4, W - 8, 312, 26); c.fill(); c.stroke();
+    c.direction = "rtl"; c.textBaseline = "middle";
+    c.textAlign = "right"; c.fillStyle = "#ffcf7a"; c.font = "bold 30px Amiri"; c.fillText(["المشهد ١/٣ • الإرث", "المشهد ٢/٣ • أول زبون", "المشهد ٣/٣ • الطلبية الكبرى"][this.chapter], W - 30, 44);
+    c.textAlign = "left"; c.fillStyle = "#e8b64a"; c.beginPath(); c.arc(46, 44, 17, 0, Math.PI * 2); c.fill(); c.fillStyle = "#ffe7b0"; c.font = "bold 36px Amiri"; c.fillText(String(s.cash), 74, 46);
+    c.textAlign = "center"; c.fillStyle = "#ffffff"; c.font = "bold 44px Amiri";
+    const lines = wrap(c, s.objective || "", 700).slice(0, 2); lines.forEach((l, i) => c.fillText(l, W / 2, (lines.length > 1 ? 122 : 146) + i * 52));
+    const extra = s.toast ? [s.toast, "#ffcf7a"] : s.progress ? [s.progress, "#7dffc0"] : s.subtitle && !this.bubbleOn ? [s.subtitle, "#d9cfb8"] : null;
+    if (extra) { c.fillStyle = extra[1]; c.font = "bold 30px Amiri"; c.fillText(fit(c, extra[0], 720), W / 2, 268); }
+    this.ktex.needsUpdate = true;
   }
   draw() {
     const c = this.ctx, W = 1024, H = 720, s = this.st; this.hits = [];
     c.clearRect(0, 0, W, H);
     const panel = (x, y, w, h, fill, stroke) => { c.fillStyle = fill; c.strokeStyle = stroke; c.lineWidth = 5; c.beginPath(); c.roundRect(x, y, w, h, 16); c.fill(); c.stroke(); };
     c.direction = "rtl"; c.textBaseline = "middle"; c.textAlign = "center";
-    // top: the one current step (big) + purse
-    if (s.objective) { panel(150, 6, 868, 92, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffe7b0"; c.font = "bold 50px Amiri"; c.fillText(fit(c, s.objective, 840), 584, 54); }
-    panel(6, 6, 136, 92, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffcf7a"; c.font = "bold 48px Amiri"; c.fillText(String(s.cash), 74, 54);
-    ["١ الإرث", "٢ أول زبون", "٣ الطلبية الكبرى"].forEach((n, i) => { const x = 820 - i * 300, now = i === this.chapter;
-      c.fillStyle = now ? "#1f5a44" : "rgba(20,27,23,.8)"; c.strokeStyle = now ? "#ffcf7a" : "#5c4320"; c.lineWidth = 3; c.beginPath(); c.roundRect(x - 125, 104, 250, 40, 20); c.fill(); c.stroke();
-      c.fillStyle = now ? "#ffe7b0" : i < this.chapter ? "#7dffc0" : "#b9a988"; c.font = (now ? "bold " : "") + "28px Amiri"; c.fillText(n, x, 125); });
-    if (s.toast) { c.fillStyle = "#ffcf7a"; c.font = "bold 40px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(fit(c, s.toast, 980), 512, 172); c.fillText(fit(c, s.toast, 980), 512, 172); }
-    if (s.progress) { c.fillStyle = "#7dffc0"; c.font = "bold 42px Amiri"; c.strokeStyle = "rgba(0,0,0,.8)"; c.lineWidth = 8; c.strokeText(s.progress, 512, 214); c.fillText(s.progress, 512, 214); }
     const talk = s.talk && !this.hold ? s.talk : null, box = talk || s.modal;
     if (box) {
-      const y0 = 262, h = 452, btnY = y0 + h - 114;
+      const y0 = 70, h = 600, btnY = y0 + h - 122;
       panel(16, y0, 992, h, "#ecd9ab", "#73501c");
       if (talk) { panel(352, y0 - 26, 320, 58, "#1f3a30", "#c2873a"); c.font = "bold 36px Amiri"; c.fillStyle = "#ffcf7a"; c.fillText(talk.speaker, 512, y0 + 3); }
       else { c.font = "bold 44px Amiri"; c.fillStyle = "#301e13"; c.fillText(s.modal.title, 512, y0 + 46); }
@@ -156,11 +166,6 @@ export class UI {
       const lines = wrap(c, talk ? talk.line : s.modal.body, 940), step = big ? 58 : 42, top = y0 + (big ? 80 : 100);
       lines.slice(0, big ? 5 : 7).forEach((l, i) => c.fillText(l, 512, top + i * step));
       this.drawButtons(box.choices, btnY);
-    } else if (s.actions.length) this.drawButtons(s.actions, 470);
-    if (s.subtitle && !box && !this.bubbleOn) {
-      c.font = "bold 40px Amiri"; const lines = wrap(c, s.subtitle, 950).slice(0, 2), hh = 30 + lines.length * 52;
-      panel(10, H - hh - 6, 1004, hh, "rgba(20,27,23,.94)", "#c2873a"); c.fillStyle = "#ffe7b0";
-      lines.forEach((l, i) => c.fillText(l, 512, H - hh - 6 + 41 + i * 52));
     }
     this.tex.needsUpdate = true;
   }
