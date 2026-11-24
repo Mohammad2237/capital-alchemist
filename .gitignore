@@ -20,7 +20,6 @@
 /[Bb]uild/
 # Bulky or machine-specific evidence
 /Evidence/*.log
-/Evidence/smoke/*.png
 .mcp.json
 *.slnx
 /Data/
