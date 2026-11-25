@@ -7,7 +7,7 @@ Paste this into the new chat:
 
 ---
 
-## 1. What the project is (current: banking edition, build r15)
+## 1. What the project is (current: banking edition, build r16)
 
 - An Arabic VR **financial-literacy + banking** game for a school competition; may also be shown to real banking people.
   - Title: «رأس المال: إرث الكيميائي» (must be **كيميائي**, never خيميائي).
@@ -225,6 +225,11 @@ No teleport/enter/station buttons (user asked): walk in, open the door, walk thr
 ## 8m. r15: the user's own Firas recordings
 - The user supplied 38 Firas recordings (chat-v3 (N).mp3 in Downloads\Voices) made from an OLD script. Transcribed locally with faster-whisper (venv312) and matched to DIALOGUE.csv: 18 installed as docs/assets/voice/<id>.mp3 (loudness normalised to rms 0.09), with the on-screen text changed to exactly what is said. 16 were unusable (they say جرعة/جمرة/مرجل/قارورة/الشمع/الشفاء), 3 were answers for the removed question menu, 1 duplicate.
 - Firas's other 36 lines still use the ar-JO-Taim neural voice; the exact texts to record are in `Tools/voices/FIRAS_LINES_TO_RECORD.txt` (file name = line id). When new files arrive: copy to docs/assets/voice/<id>.mp3, normalise, bump VOICE_VERSION.
+
+## 8n. r16
+- ONE build number now: `window.__BUILD` in docs/index.html. The import map pins every module to `?v=<build>`, and main.js label, VOICE_VERSION and DIALOGUE.csv all read it. A release = change "r16" in index.html (3 places in that file: __BUILD, import map entries, main.js?v=). This stops the headset mixing new and cached old scripts after a push.
+- No intro flyover; sky dome follows the camera (the market is 117 m from the origin, you saw past the dome's dark bottom); market meadow to the horizon, 70 far trees, 16 mountains, 14 cottages, all instanced (~43 draw calls in the market).
+- Pot: popping bubbles removed, steam lower and softer, zone sparkle once per brew. Shop sign board and text moved in front of the white wall block (they were 2 cm behind it), text bigger and bold.
 
 ## 9. Next steps
 

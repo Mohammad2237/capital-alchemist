@@ -36,7 +36,7 @@ export async function buildShop(scene) {
 
   // ---- walls
   J(P(D("wall_window_open"), -3, 0, 0, 0, { height: 3, collider: true }));
-  J(P(M("entrance_wall"), 0, 0, 0, 0, { scale: 1 }).then(o => { o && o.traverse(m => { if (m.name === "Lintel") { m.position.y -= 0.012; m.scale.z *= 1.04; m.scale.x *= 1.01; } if (m.name === "Over") { m.position.y += 0.01; m.scale.z *= 0.97; }
+  J(P(M("entrance_wall"), 0, 0, 0, 0, { scale: 1 }).then(o => { o && o.traverse(m => { if (/^Board/.test(m.name)) { const w = m.getWorldPosition(new THREE.Vector3()); w.z -= 0.1; m.parent.worldToLocal(w); m.position.copy(w); } /* the shop sign hangs in front of the wall, not inside it */ if (m.name === "Lintel") { m.position.y -= 0.012; m.scale.z *= 1.04; m.scale.x *= 1.01; } if (m.name === "Over") { m.position.y += 0.01; m.scale.z *= 0.97; }
     if (/^Post/.test(m.name)) { m.position.x += m.position.x > 0 ? -0.015 : 0.015; m.scale.z *= 1.03; } if (/^Jamb/.test(m.name)) m.scale.z *= 0.985; }); return o; }));
   blocker(U(-1.075, 1.5, 0), new THREE.Vector3(0.85, 3, 0.75)); blocker(U(1.075, 1.5, 0), new THREE.Vector3(0.85, 3, 0.75));
   J(P(D("wall"), 3, 0, 0, 0, { height: 3, collider: true }));

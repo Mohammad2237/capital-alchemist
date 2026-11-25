@@ -126,7 +126,7 @@ function tintAll(g, color, re) { g.traverse(o => { if (o.isMesh && re.test(o.nam
 class Dialogue {
   constructor(game) { this.g = game; this.lines = {}; this.queue = []; this.speaking = false; this.speaker = ""; }
   async load() {
-    const csv = await (await fetch("assets/DIALOGUE.csv")).text();
+    const csv = await (await fetch("assets/DIALOGUE.csv?v=" + (window.__BUILD || ""))).text();
     for (const raw of csv.split("\n")) { const c = raw.trim().split(","); if (c.length !== 8 || c[0] === "id") continue; this.lines[c[0]] = { speaker: c[1], text: c[4], dur: parseFloat(c[6]) }; }
     if (!this.g.fast) this.g.audio.preloadVoices(Object.keys(this.lines));
   }
@@ -270,7 +270,6 @@ export class Game {
     this.ui.onBook = () => this.glossary(0); this.ui.onClick = () => this.audio.play("paper", 1.1, 0.8);
     this.setupDesktop(); this.setupTouch(); this.setupVR();
     this.ui.card(...CARDS[0], this.fast ? 0 : 1600);
-    if (!this.fast) this.cine = { t: -1.6, dur: 7 };
     this.refresh();
   }
   get recipe() { return RECIPES[this.chapter >= 2 ? 1 : 0]; }
@@ -279,14 +278,14 @@ export class Game {
   labels() {
     const label = (text, pos, w, h, yawUnity, size = 64) => {
       const cv = document.createElement("canvas"); cv.width = 1024; cv.height = Math.round(1024 * h / w); const c = cv.getContext("2d");
-      c.fillStyle = "#e8d4a6"; c.fillRect(0, 0, cv.width, cv.height); c.fillStyle = "#301e13"; c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `${size}px Amiri`;
+      c.fillStyle = "#e8d4a6"; c.fillRect(0, 0, cv.width, cv.height); c.fillStyle = "#301e13"; c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.font = `bold ${size}px Amiri`;
       const lines = text.split("\n"); lines.forEach((l, i) => c.fillText(l, cv.width / 2, cv.height / 2 + (i - (lines.length - 1) / 2) * size * 1.3));
       const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: t, roughness: 0.9 }));
       m.position.copy(pos); m.rotation.y = Math.PI - yawUnity * Math.PI / 180 + Math.PI; this.scene.add(m); return m;
     };
     document.fonts.ready.then(() => {
-      label("إرث الكيميائي\nمحل أعشاب", U(0, 2.93, -0.545), 1.1, 0.5, 180, 90);
+      label("إرث الكيميائي\nمحل أعشاب", U(0, 2.92, -0.645), 1.1, 0.5, 180, 150);
       this.recipeBoard = label(RECIPES[0].board, U(-4.03, 1.36, 6.2), 1.05, 0.7, 90, 70);
       this.orderBoard = sign(this.scene, ORDER_TEXT, U(0, 3.55, -123.2), 2.4, 0.95, 0, 64);
       L.stalls.forEach((s, i) => sign(this.scene, STALL_INFO[i].sign, L.stallPos(s, 0, 2.24, 0), 1.5, 0.6, s.side * 90, 70));
@@ -480,7 +479,25 @@ export class Game {
     for (let i = 0; i < 7; i++) { const a = -0.4 - i * 0.55, r = 30 + (i % 3) * 5; dummy.position.set(Math.cos(a) * r, -2, C0.z + Math.sin(a) * r); dummy.scale.set(10 + i, 6 + (i % 3) * 2, 9); dummy.rotation.set(0, i, 0); dummy.updateMatrix(); hills.setMatrixAt(i, dummy.matrix); }
     const bushes = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.5, 0), new THREE.MeshLambertMaterial({ color: 0x55803f, flatShading: true }), 18);
     for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2, x = Math.cos(a) * 8.6, z = C0.z + Math.sin(a) * 7.6; dummy.position.set(x, 0.25, z); dummy.scale.setScalar(0.8 + (i % 3) * 0.3); dummy.rotation.set(0, i, 0); dummy.updateMatrix(); bushes.setMatrixAt(i, dummy.matrix); }
-    this.marketScenery = new THREE.Group(); this.marketScenery.add(crowns, trunks, hills, bushes); this.scene.add(this.marketScenery);
+    const meadow = new THREE.Mesh(new THREE.CircleGeometry(170, 48), new THREE.MeshLambertMaterial({ color: 0x46552c })); meadow.rotation.x = -Math.PI / 2; meadow.position.set(0, -0.12, C0.z);
+    const NF = 70, far = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 6), new THREE.MeshLambertMaterial({ color: 0x35542e, flatShading: true }), NF);
+    const farTr = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.15, 0.2, 1, 5), new THREE.MeshLambertMaterial({ color: 0x4a3020 }), NF);
+    for (let i = 0; i < NF; i++) { const a = (i / NF) * Math.PI * 2 + rnd() * 0.08, r = 24 + rnd() * 16, x = Math.cos(a) * r, z = C0.z + Math.sin(a) * r, h = 4 + rnd() * 4;
+      dummy.rotation.set(0, rnd() * 3, 0); dummy.position.set(x, h * 0.2, z); dummy.scale.set(1, h * 0.4, 1); dummy.updateMatrix(); farTr.setMatrixAt(i, dummy.matrix);
+      dummy.position.set(x, h * 0.4 + h * 0.4, z); dummy.scale.set(h * 0.3, h * 0.8, h * 0.3); dummy.updateMatrix(); far.setMatrixAt(i, dummy.matrix); }
+    const NM = 16, mounts = new THREE.InstancedMesh(new THREE.ConeGeometry(1, 1, 5), new THREE.MeshLambertMaterial({ color: 0x5b5a6e, flatShading: true }), NM);
+    for (let i = 0; i < NM; i++) { const a = (i / NM) * Math.PI * 2 + rnd() * 0.2, r = 95 + rnd() * 30, h = 18 + rnd() * 22;
+      dummy.position.set(Math.cos(a) * r, h * 0.45, C0.z + Math.sin(a) * r); dummy.scale.set(h * 1.3, h, h * 1.2); dummy.rotation.set(0, rnd() * 3, 0); dummy.updateMatrix(); mounts.setMatrixAt(i, dummy.matrix); }
+    // A ring of small village houses beyond the square (2 draw calls in total).
+    const NH = 14, walls = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshLambertMaterial({ color: 0xd8c29a }), NH);
+    const roofs = new THREE.InstancedMesh(new THREE.ConeGeometry(0.75, 1, 4), new THREE.MeshLambertMaterial({ color: 0x8e3b2a, flatShading: true }), NH);
+    for (let i = 0, k = 0; k < NH && i < 200; i++) { const a = rnd() * Math.PI * 2, r = 20 + rnd() * 3.5, x = Math.cos(a) * r, z = C0.z + Math.sin(a) * r * 0.9;
+      if (z > -104 || (Math.abs(x) < 12 && z < -126)) continue; const w = 2.2 + rnd() * 1.4, d = 2 + rnd() * 1.2, h = 2 + rnd() * 1.2, yaw = Math.atan2(x, z - C0.z);
+      dummy.rotation.set(0, yaw, 0); dummy.position.set(x, h / 2, z); dummy.scale.set(w, h, d); dummy.updateMatrix(); walls.setMatrixAt(k, dummy.matrix);
+      dummy.rotation.set(0, yaw + Math.PI / 4, 0); dummy.position.set(x, h + 0.55, z); dummy.scale.set(w * 1.05, 1.1 + rnd() * 0.4, d * 1.05); dummy.updateMatrix(); roofs.setMatrixAt(k, dummy.matrix); k++; }
+    for (const m of [walls, roofs]) m.matrixAutoUpdate = false;
+    for (const m of [meadow, far, farTr, mounts]) { m.matrixAutoUpdate = m === meadow; m.receiveShadow = false; m.castShadow = false; }
+    this.marketScenery = new THREE.Group(); this.marketScenery.add(crowns, trunks, hills, bushes, meadow, far, farTr, mounts, walls, roofs); this.scene.add(this.marketScenery);
     this.villageBackdrop = refs.root.children.filter(o => /mountain|hills_B|windmill|cloud_big/.test(o.name || ""));
   }
   // Through the portal: quick fade, whoosh, and you are on the other side.
@@ -667,7 +684,7 @@ export class Game {
     this.refresh();
   }
   async beginBrew(batch) {
-    this.batch = batch; this.brew = new RecipeProgress(); this.map.reset(this.recipe); this.usedEmberStage = null; this.grindLocked = false; this.grindLevelUsed = null; this.crushedItem = null; this.lastGrind = 0; this.filled = 0; this.bottleIn = null; this.fill = 0; this.pipe = 0; this.fastWarned = false;
+    this.batch = batch; this.zoneChimed = false; this.brew = new RecipeProgress(); this.map.reset(this.recipe); this.usedEmberStage = null; this.grindLocked = false; this.grindLevelUsed = null; this.crushedItem = null; this.lastGrind = 0; this.filled = 0; this.bottleIn = null; this.fill = 0; this.pipe = 0; this.fastWarned = false;
     for (const it of this.items) if (!it.consumed && it.kind !== "potion" && !it.market) { this.scene.remove(it.obj); it.consumed = true; }
     const lb = this.recipe.labels;
     await new Item(this, "herb", lb.herb, 0).build(L.herbSpot); await new Item(this, "crystal", lb.crystal, 0).build(L.crystalSpot);
@@ -824,7 +841,7 @@ export class Game {
   get prepQuality() { return Math.max(1, Math.min(this.map.quality, 3 - Math.abs((this.grindLevelUsed ?? this.recipe.grind) - this.recipe.grind), this.recipe.heat ? this.heatQuality : 3, this.goodQuality)); }
   stir(turns, dir) {
     if (this.paused || !this.brew.readyToStir || this.brew.readyToBottle) return;
-    if (this.map.stir(turns, dir, this.stirSpeed || 0)) { this.audio.play("crystal", 1.2, 0.7); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
+    if (this.map.stir(turns, dir, this.stirSpeed || 0) && !this.zoneChimed) { this.zoneChimed = true; this.audio.play("crystal", 1.2, 0.7); }
     this.brew.stir(this.map.inZone ? turns * 1.4 : turns * 0.3); this.map.progress = this.brew.stirring; this.stirAcc = (this.stirAcc || 0) + turns; if (this.stirAcc > 0.22) { this.stirAcc = 0; this.audio.play("swish", 0.9 + Math.random() * 0.2, 0.7); } this.swirl = Math.min(3, (this.swirl || 0) + turns * 9);
     if (this.brew.readyToBottle) { this.audio.play("chime", 1.25); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
     this.brewObjective();

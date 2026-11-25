@@ -21,9 +21,9 @@ scene.fog = new THREE.FogExp2(0x6b5248, 0.012);
 // Dusk sky dome: warm horizon, violet zenith.
 const sky = new THREE.Mesh(new THREE.SphereGeometry(200, 32, 16), new THREE.ShaderMaterial({
   side: THREE.BackSide, depthWrite: false, fog: false,
-  uniforms: { top: { value: new THREE.Color(0x3a3060) }, mid: { value: new THREE.Color(0xc77a52) }, low: { value: new THREE.Color(0x3b2c24) } },
+  uniforms: { top: { value: new THREE.Color(0x3a3060) }, mid: { value: new THREE.Color(0xc77a52) }, low: { value: new THREE.Color(0x5a4636) } },
   vertexShader: "varying vec3 p; void main(){ p = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
-  fragmentShader: "uniform vec3 top, mid, low; varying vec3 p; void main(){ float h = p.y; vec3 c = h > 0.0 ? mix(mid, top, pow(clamp(h*1.6,0.,1.),0.7)) : mix(mid, low, clamp(-h*4.,0.,1.)); gl_FragColor = vec4(c,1.0); }",
+  fragmentShader: "uniform vec3 top, mid, low; varying vec3 p; void main(){ float h = p.y; vec3 c = h > 0.0 ? mix(mid, top, pow(clamp(h*1.6,0.,1.),0.7)) : mix(mid, low, clamp(-h*2.5,0.,1.)); gl_FragColor = vec4(c,1.0); }",
 }));
 scene.add(sky);
 refs.hemi = new THREE.HemisphereLight(0x8a7fa0, 0x3a2a1c, 0.9); scene.add(refs.hemi);
@@ -66,10 +66,11 @@ let game;
     for (const f of refs.flickers) f.l.intensity = f.base * (0.86 + 0.24 * noise(f.seed, t * 2.2));
     for (const f of refs.flames) f.m.scale.copy(f.base).multiplyScalar(1 + Math.sin(t * 7 + f.seed * 3) * 0.08);
     game.update(dt, t);
+    camera.getWorldPosition(sky.position);
     renderer.render(scene, camera);
   });
   window.__capital = game; // handy for automated checks
-  const BUILD = "إصدار r15"; game.ui.build = BUILD; const k = document.getElementById("keys"); k.textContent += "  •  " + BUILD;
+  const BUILD = "إصدار " + (window.__BUILD || ""); game.ui.build = BUILD; const k = document.getElementById("keys"); k.textContent += "  •  " + BUILD;
   const sm = new URLSearchParams(location.search).get("smoke");
   if (sm !== null) import("./smoke.js").then(m => m.runSmoke(game, +sm)).catch(e => { window.__smoke = { failed: 1, log: ["FAIL " + e.message] }; document.title = "SMOKE FAIL"; console.error(e); });
 })();

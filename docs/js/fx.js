@@ -39,9 +39,9 @@ export class FX {
     const m = new THREE.Sprite(mat); const spin = Math.random() * Math.PI * 2, base = from.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.6, 0.06, (Math.random() - 0.5) * 0.6));
     const golden = this.golden, life = 3 + Math.random();
     this.add(m, life, p => {
-      const r = 0.05 + p * 0.22; m.position.set(base.x + Math.cos(spin + p * 3) * r, base.y + 0.16 + p * 1.2, base.z + Math.sin(spin + p * 3) * r);
+      const r = 0.05 + p * 0.22; m.position.set(base.x + Math.cos(spin + p * 3) * r, base.y + 0.12 + p * 0.55, base.z + Math.sin(spin + p * 3) * r);
       m.scale.setScalar(0.1 + p * 0.3); const near = this.eye ? THREE.MathUtils.clamp((this.eye.distanceTo(m.position) - 0.45) / 0.7, 0, 1) : 1;
-      mat.opacity = 0.2 * (1 - p) * Math.min(1, p / 0.25) * near;
+      mat.opacity = 0.12 * (1 - p) * Math.min(1, p / 0.35) * near;
     });
   }
   bubble() {
@@ -75,7 +75,7 @@ export class FX {
     }
     // Brew: steam always, bubbles while brewing; both tinted by what is in the cauldron.
     this.steamT -= dt; if (this.steamT <= 0) { this.steamT = ((this.golden ? 0.12 : 0.28) - this.activity * 0.12) * (this.low ? 2.6 : 1); this.steam(L.liquid); }
-    if (this.activity > 0 && Math.random() < this.activity * dt * (this.low ? 5 : 14)) this.bubble();
+    // (no popping bubbles: they read as flashing dots over the pot)
     this.audio.setBubbling(this.activity);
     // Door: swing inward, hold, close.
     if (this.swingBack !== null && this.doorRot > 1.6) { this.doorHold -= dt; if (this.doorHold <= 0) { this.doorGoal = this.swingBack; this.swingBack = null; if (this.doorGoal < 1) this.audio.play("creak", 0.9, 0.6); } }
