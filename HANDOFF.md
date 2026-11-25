@@ -7,7 +7,7 @@ Paste this into the new chat:
 
 ---
 
-## 1. What the project is (current: banking edition, build r12)
+## 1. What the project is (current: banking edition, build r13)
 
 - An Arabic VR **financial-literacy + banking** game for a school competition; may also be shown to real banking people.
   - Title: «رأس المال: إرث الكيميائي» (must be **كيميائي**, never خيميائي).
@@ -31,7 +31,7 @@ Paste this into the new chat:
 | Voice tool (Python 3.12 venv + Sofelia model) | `C:\Users\moham\AppData\Local\Temp\claude\90e7b197a6ef3cf5\d7d3c9e8-7602-4de2-b482-4af45783075c\scratchpad\sofelia` (venv312 + model; may be wiped — setup steps are in `Tools/voices/make_voices_sofelia.py`) |
 | Blender MCP launcher | `Tools/blender/blender_mcp_start.py` — run `"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --factory-startup --python Tools/blender/blender_mcp_start.py` (never call read_factory_settings inside it) |
 
-Last commit on `main`: `c5d53b1` (r12), live and verified.
+Current build on `main`: r13 (see git log), live and verified.
 
 ## 3. Engine and architecture (three.js r170 + WebXR, no build step)
 
@@ -204,6 +204,13 @@ No teleport/enter/station buttons (user asked): walk in, open the door, walk thr
 - Pot liquid: soft emissive (0.22×colour), glossy swirl texture turning with stirring, small coloured translucent bubbles (was a flat full-bright disc that looked like a lid/bubble).
 - Door frame flicker: posts/jambs/lintel/over no longer share faces (shop.js, after entrance_wall loads); camera near 0.08, far 300.
 - Term cards only between lines (after the line that said the word); dialogue pauses while a card is up; quiz feedback is the card only; the alchemy map hides under a card. In `?fast` mode cards last 30 ms.
+
+## 8k. r13 (25 Nov late): no overlaps + bug sweep
+- Desktop HUD: progress / mouse hint / item hint stack in one centre column (`#mid`); helper buttons (`#actions`) live under the encyclopedia button; toast moved under the timeline; term card below the toast; modal below the timeline (scrolls if tall). Body classes `talking`, `carding`, `modal`, `mapon` hide whatever would collide (menus wait while a term card is up; the stir map hides under a modal; the centre column shifts left beside the map).
+- VR: task card moved from the top corner to just below your gaze (`ui.corner` at (0,-0.17,-0.5), tilted to the eye), pulses when the task changes, hides while a choice box or term card shows. Point-at tag, speech bubble and the world stir map also hide under a card / choice box.
+- Stirring map rewritten: slow stirring (either direction) pulls the marker straight to the green circle; fast stirring (>~320°/s) adds drift. The brew only finishes quickly once the marker is inside the circle (outside it, slowly, at low quality); a gold ring shows progress; quality = distance at the end (bull's-eye = 3/3). Quality is cosmetic only (no money effect).
+- Scene 3: scene-1 price tags removed from the stalls; "الجمرة/البلورة" wording replaced with real ingredient names. Firas talks from ~30° to the side (not over your hands); bottling-station spot moved aside. Report lines separated with •.
+- Real-speed bot used for this sweep: `docs/js/_realplay.js` was a temporary file (deleted after use, not committed).
 
 ## 9. Next steps
 

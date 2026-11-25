@@ -88,7 +88,7 @@ function freeSpot(p) {
 }
 function frontSpot(eye, f) {
   const side = new THREE.Vector3(-f.z, 0, f.x);
-  for (const [d, s] of [[1.6, 0.55], [1.6, -0.55], [1.3, 0.8], [1.3, -0.8], [1.9, 0.9], [1.9, -0.9], [1.15, 0.35], [1.15, -0.35], [2.2, 0]]) {
+  for (const [d, s] of [[1.7, 0.95], [1.7, -0.95], [1.4, 0.85], [1.4, -0.85], [2.0, 1.1], [2.0, -1.1], [1.6, 0.55], [1.6, -0.55], [1.15, 0.35], [1.15, -0.35], [2.2, 0]]) { // to the side of what you're looking at, still in view
     const p = eye.clone().addScaledVector(f, d).addScaledVector(side, s); p.y = Math.max(0.15, eye.y - L.firasHeight - 0.05);
     if (L.isInside(eye) && !L.isInside(p)) continue;
     if (freeSpot(p)) return p;

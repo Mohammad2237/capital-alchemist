@@ -29,18 +29,22 @@ button.ui, #top button, #talk button, #modal button, #actions button {
   padding: 10px 20px; font-size: clamp(19px, 2.1vw, 28px); box-shadow: 0 4px 10px rgba(0, 0, 0, .45); transition: transform .12s, filter .12s; }
 #top button:hover, #talk button:hover, #modal button:hover, #actions button:hover { transform: scale(1.05); filter: brightness(1.25); }
 #top button:active, #talk button:active, #modal button:active, #actions button:active { transform: scale(.96); filter: brightness(1.6) sepia(.4); }
-#toast { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); color: #ffcf7a; font-size: clamp(22px, 2.4vw, 32px); text-shadow: 0 2px 6px #000; transition: opacity .5s; pointer-events: none; text-align: center; }
-#progress { position: absolute; top: 58%; left: 50%; transform: translateX(-50%); color: #ffcf7a; font-size: 28px; text-shadow: 0 2px 6px #000; pointer-events: none; }
-#hint { position: absolute; top: 66%; left: 50%; transform: translateX(-50%); font-size: 22px; text-shadow: 0 2px 6px #000; pointer-events: none; text-align: center; }
+#toast { position: absolute; top: 122px; max-width: min(900px, 92vw); left: 50%; transform: translateX(-50%); color: #ffcf7a; font-size: clamp(22px, 2.4vw, 32px); text-shadow: 0 2px 6px #000; transition: opacity .5s; pointer-events: none; text-align: center; }
+/* Centre column under the crosshair: progress, mouse hint and item hint stack (never on top of each other). */
+#mid { position: absolute; top: 57%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; width: min(900px, 92vw); }
+#mid > div:empty { display: none; }
+#progress { color: #ffcf7a; font-size: 28px; text-shadow: 0 2px 6px #000; pointer-events: none; }
+#hint { font-size: 22px; text-shadow: 0 2px 6px #000; pointer-events: none; text-align: center; }
 #talk { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); width: min(1100px, 92vw); background: #e8d4a6; color: var(--ink);
   border: 3px solid #73501c; border-radius: 12px; padding: 22px 22px 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, .6); }
 #talk .name { position: absolute; top: -22px; right: 24px; background: var(--green); color: #ffcf7a; border: 2px solid var(--gold); border-radius: 8px; padding: 2px 16px; font-size: 22px; }
 #talk .line { margin: 0 0 14px; font-size: clamp(24px, 2.7vw, 36px); font-weight: 700; }
 .choices { display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-start; }
 .choices button { flex: 1 1 180px; min-height: 56px; }
-#modal { position: absolute; top: 90px; right: 16px; width: min(560px, 92vw); background: #e8d4a6; color: var(--ink); border: 3px solid #73501c; border-radius: 12px; padding: 18px 22px; box-shadow: 0 10px 30px rgba(0, 0, 0, .6); }
+#modal { position: absolute; top: 118px; right: 16px; max-height: calc(100vh - 140px); overflow-y: auto; box-sizing: border-box; width: min(560px, 92vw); background: #e8d4a6; color: var(--ink); border: 3px solid #73501c; border-radius: 12px; padding: 18px 22px; box-shadow: 0 10px 30px rgba(0, 0, 0, .6); }
 #modal h3 { margin: 0 0 8px; font-size: 30px; } #modal .body { white-space: pre-line; font-size: 22px; line-height: 1.6; }
-#actions { position: absolute; bottom: 150px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; }
+#actions { display: flex; flex-direction: column; gap: 8px; pointer-events: auto; }
+#actions:empty { display: none; }
 #subtitle { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: min(1000px, 90vw); text-align: center; padding: 12px 20px;
   background: var(--panel); border: 2px solid #8c6123; border-radius: 10px; font-size: clamp(22px, 2.5vw, 34px); font-weight: 700; pointer-events: none; }
 #keys { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 18px; opacity: .7; direction: ltr; transition: opacity 2s; pointer-events: none; }
@@ -61,7 +65,7 @@ button.ui, #top button, #talk button, #modal button, #actions button {
 #timeline span { padding: 3px 12px; border-radius: 20px; font-size: clamp(14px, 1.5vw, 19px); background: rgba(20, 27, 23, .7); border: 1px solid #5c4320; color: #b9a988; }
 #timeline span.now { background: #1f5a44; border-color: #ffcf7a; color: #ffe7b0; font-weight: 700; }
 #timeline span.done { color: #7dffc0; }
-#termcard { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); width: min(640px, 86vw); z-index: 30; box-sizing: border-box; padding: 18px 26px; border-radius: 16px; text-align: center;
+#termcard { position: absolute; top: max(22%, 172px); left: 50%; transform: translateX(-50%); width: min(640px, 86vw); z-index: 30; box-sizing: border-box; padding: 18px 26px; border-radius: 16px; text-align: center;
   border: 3px solid #ffe08a; box-shadow: 0 10px 30px rgba(0, 0, 0, .55); pointer-events: none; animation: pop .35s ease-out; }
 #termcard.good { background: linear-gradient(#2f9a63, #1d6b45); color: #f2fff6; }
 #termcard.bad { background: linear-gradient(#c0563f, #8f3a2a); color: #fff3ee; }
@@ -73,7 +77,11 @@ button.ui, #top button, #talk button, #modal button, #actions button {
 #loading .copy { margin: 14px 0 0; font-size: 14px; opacity: .6; }
 
 #cross { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; border: 2px solid #ffe7b0; box-shadow: 0 0 6px #000; pointer-events: none; }
-#lockhint { position: absolute; left: 50%; bottom: 34px; transform: translateX(-50%); font-size: 18px; padding: 4px 14px; border-radius: 14px; background: rgba(14, 20, 17, .7); pointer-events: none; }
+#lockhint { font-size: 18px; padding: 4px 14px; border-radius: 14px; background: rgba(14, 20, 17, .7); pointer-events: none; }
 @media (pointer: coarse) { #lockhint { display: none; } }
 #keys { left: 16px !important; right: auto; top: 128px; bottom: auto !important; transform: none !important; max-width: 300px; font-size: 14px !important; line-height: 1.6; text-align: right; }
-#lockhint { bottom: auto !important; top: 62%; }
+#lockhint[hidden] { display: none; }
+#hud:has(#actions:not(:empty)) #keys { display: none; }
+body.mapon #mid { left: calc(50% - 170px); width: min(520px, 56vw); }
+body.talking #actions, body.talking #mid, body.carding #mid, body.carding #modal, body.carding #talk, body.carding #actions, body.modal #map { visibility: hidden; }
+@media (max-width: 700px) { #keys { display: none; } }

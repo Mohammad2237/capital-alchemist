@@ -18,10 +18,10 @@ export class UI {
     this.panel = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 0.879), new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthTest: false }));
     this.panel.renderOrder = 10; this.panel.visible = false; scene.add(this.panel);
     this.hits = []; this.dirty = true; this.following = true; this.hold = false;
-    // VR corner task card: small, top-right of your view (task, scene, coins). Only choices use the middle.
+    // VR task card: small, bottom-centre of your view (task, scene, coins). Only choices use the middle.
     this.kcv = document.createElement("canvas"); this.kcv.width = 768; this.kcv.height = 320; this.ktex = new THREE.CanvasTexture(this.kcv); this.ktex.colorSpace = THREE.SRGBColorSpace;
     this.corner = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.108), new THREE.MeshBasicMaterial({ map: this.ktex, transparent: true, depthTest: false }));
-    this.corner.renderOrder = 20; this.corner.position.set(0.17, 0.115, -0.46); this.corner.rotation.y = -0.3; this.corner.visible = false; camera.add(this.corner);
+    this.corner.renderOrder = 20; this.corner.position.set(0, -0.17, -0.5); this.corner.rotation.x = -0.33; this.corner.visible = false; camera.add(this.corner); // just below your gaze: a small glance down reads it
     // VR speech bubble: the spoken line floats above whoever is talking (not in front of your eyes).
     this.bcv = document.createElement("canvas"); this.bcv.width = 1024; this.bcv.height = 320; this.btex = new THREE.CanvasTexture(this.bcv); this.btex.colorSpace = THREE.SRGBColorSpace;
     this.bubble = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.344), new THREE.MeshBasicMaterial({ map: this.btex, transparent: true, depthTest: false }));
@@ -33,12 +33,13 @@ export class UI {
     this.cardMesh.renderOrder = 12; this.cardMesh.visible = false; scene.add(this.cardMesh);
   }
   // While someone is talking, decision boxes wait; they appear when the line is finished.
-  setHold(b) { this.holdReq = b; const h = b || !!this.cardOn || this.cards.length > 0; if (this.hold !== h) { this.hold = h; this.dirty = true; this.renderDom("talk"); } }
+  setHold(b) { this.holdReq = b; const h = b || !!this.cardOn || this.cards.length > 0; if (this.hold !== h) { this.hold = h; this.dirty = true; this.renderDom("talk"); }
+    const cb = !!this.cardOn; if (this.cardBusy !== cb) { this.cardBusy = cb; this.dirty = true; document.body.classList.toggle("carding", cb); this.renderDom("modal"); } }
   // Small floating label over the item you point at (VR): name, price, quality.
   setTag(text, pos) {
     if (!this.tag) { this.tcv = document.createElement("canvas"); this.tcv.width = 768; this.tcv.height = 110; this.ttex = new THREE.CanvasTexture(this.tcv); this.ttex.colorSpace = THREE.SRGBColorSpace;
       this.tag = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.06), new THREE.MeshBasicMaterial({ map: this.ttex, transparent: true, depthTest: false })); this.tag.renderOrder = 15; this.scene.add(this.tag); }
-    this.tag.visible = !!(text && pos); if (!this.tag.visible) return;
+    this.tag.visible = !!(text && pos) && !this.cardOn && !this.panel.visible; if (!this.tag.visible) return;
     if (this.tagText !== text) { this.tagText = text; const c = this.tcv.getContext("2d"); c.clearRect(0, 0, 768, 110); c.fillStyle = "rgba(14,20,17,.88)"; c.strokeStyle = "#c2873a"; c.lineWidth = 4; c.beginPath(); c.roundRect(4, 4, 760, 102, 22); c.fill(); c.stroke();
       c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#ffe7b0"; c.font = "bold 40px Amiri"; c.fillText(fit(c, text, 730), 384, 56); this.ttex.needsUpdate = true; }
     const cam = new THREE.Vector3(); this.camera.getWorldPosition(cam); this.tag.position.copy(pos); this.tag.lookAt(cam); this.tag.scale.setScalar(THREE.MathUtils.clamp(cam.distanceTo(pos) / 1.4, 0.8, 2.2));
@@ -67,7 +68,7 @@ export class UI {
     }
   }
   setBubble(speaker, text, head) {
-    const on = !!(text && head); if (on !== this.bubbleOn) { this.bubbleOn = on; this.dirty = true; } this.bubble.visible = on; if (!on) { this.bubbleText = null; return; }
+    const on = !!(text && head) && !this.cardOn && !this.panel.visible; if (on !== this.bubbleOn) { this.bubbleOn = on; this.dirty = true; } this.bubble.visible = on; if (!on) { this.bubbleText = null; return; }
     if (this.bubbleText !== text) {
       this.bubbleText = text; const c = this.bcv.getContext("2d"); c.clearRect(0, 0, 1024, 320); c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle";
       c.font = "bold 46px Amiri"; const lines = wrap(c, text, 940).slice(0, 3), h = 70 + lines.length * 60;
@@ -82,7 +83,7 @@ export class UI {
     this.bubble.scale.setScalar(THREE.MathUtils.clamp(cam.distanceTo(this.bubble.position) / 2.2, 0.7, 1.7));
   }
   set(k, v) { if (this.st[k] !== v) { this.st[k] = v; this.dirty = true; this.renderDom(k); } }
-  objective(s) { this.set("objective", s || ""); }
+  objective(s) { if ((s || "") !== this.st.objective && s) this.cornerPulse = 1.6; this.set("objective", s || ""); }
   progress(s) { this.set("progress", s || ""); }
   hint(s) { this.set("hint", s || ""); }
   subtitle(s) { this.set("subtitle", s || ""); }
@@ -106,8 +107,9 @@ export class UI {
       if (s.talk) { $("talk").querySelector(".name").textContent = s.talk.speaker; $("talk").querySelector(".line").textContent = s.talk.line; this.buttons($("talk").querySelector(".choices"), s.talk.choices); }
       $("subtitle").hidden = !s.subtitle || (!!s.talk && !this.hold);
     }
+    if (k === "talk" || k === "modal") document.body.classList.toggle("talking", !!((s.talk && !this.hold) || s.modal));
     if (k === "modal") {
-      $("modal").hidden = !s.modal;
+      $("modal").hidden = !s.modal; document.body.classList.toggle("modal", !!s.modal);
       if (s.modal) { $("modal").querySelector("h3").textContent = s.modal.title; $("modal").querySelector(".body").textContent = s.modal.body; this.buttons($("modal").querySelector(".choices"), s.modal.choices); }
     }
   }
@@ -129,9 +131,10 @@ export class UI {
     }
     if (this.st.toast && performance.now() > this.toastUntil) this.toast("");
     this.updateCards(dt, inVR);
-    const box = !!((this.st.talk && !this.hold) || this.st.modal);
+    const box = !!((this.st.talk && !this.hold) || (this.st.modal && !this.cardOn));
     if (inVR && box && !this.panel.visible) this.following = true;
-    this.panel.visible = inVR && box; this.corner.visible = inVR; if (!inVR) this.bubble.visible = false;
+    this.panel.visible = inVR && box; this.corner.visible = inVR && !this.panel.visible && !this.cardOn;
+    if (this.cornerPulse > 0) { this.cornerPulse = Math.max(0, this.cornerPulse - dt); this.corner.scale.setScalar(1 + 0.12 * Math.sin(this.cornerPulse * Math.PI / 1.6 * 3) ** 2); } if (!inVR) this.bubble.visible = false;
     if (inVR) this.updatePanel(dt);
   }
 
@@ -167,7 +170,7 @@ export class UI {
     c.clearRect(0, 0, W, H);
     const panel = (x, y, w, h, fill, stroke) => { c.fillStyle = fill; c.strokeStyle = stroke; c.lineWidth = 5; c.beginPath(); c.roundRect(x, y, w, h, 16); c.fill(); c.stroke(); };
     c.direction = "rtl"; c.textBaseline = "middle"; c.textAlign = "center";
-    const talk = s.talk && !this.hold ? s.talk : null, box = talk || s.modal;
+    const talk = s.talk && !this.hold ? s.talk : null, box = talk || (this.cardOn ? null : s.modal);
     if (box) {
       const y0 = 70, h = 600, btnY = y0 + h - 122;
       panel(16, y0, 992, h, "#ecd9ab", "#73501c");

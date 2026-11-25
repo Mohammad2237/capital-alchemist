@@ -50,7 +50,7 @@ export const Stations = {
   mortar: { cam: V(-1.45, 1.62, 3.45), look: V(-1.85, 0.92, 4.2), stand: V(-1.55, 0, 3.5), firas: V(-2.75, 0.8, 3.7) },
   mix: { cam: V(-1.05, 2.3, 4.55), look: V(-1.05, 0.9, 6.2), stand: V(-1.0, 0, 5.0), firas: V(-1.7, 0.8, 7.85) },
   cauldron: { cam: V(0, 2.45, C.z - 1.05), look: V(0, 0.86, C.z), stand: V(0, 0, C.z - 1.1), firas: V(1.85, 0.7, C.z + 0.55) },
-  bottling: { cam: V(1.2, 1.75, 5.4), look: V(2.1, 1.08, 6.45), stand: V(1.35, 0, 5.55), firas: V(3.35, 0.8, 6.75) },
+  bottling: { cam: V(1.2, 1.75, 5.4), look: V(2.1, 1.08, 6.45), stand: V(1.35, 0, 5.55), firas: V(3.3, 0.8, 5.95) },
   counter: { cam: V(2.45, 1.62, 3.4), look: V(2.5, 1.3, 1.35), stand: V(2.4, 0, 3.3), firas: V(1.05, 0.85, 2.5) },
   ending: { cam: V(-2.9, 2.35, 10.7), look: V(0.2, 1.0, 5.6), stand: V(-0.6, 0, 3.6), firas: L.firasSpot },
 };

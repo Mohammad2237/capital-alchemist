@@ -32,6 +32,7 @@
       <div class="left">
         <button id="btn-book">الموسوعة</button>
         <button id="btn-station">انتقل إلى المحطة</button>
+        <div id="actions"></div>
       </div>
       <div id="step"></div>
       <div id="purse"><span class="coin"></span><span id="cash">100</span><span id="delta"></span></div>
@@ -39,14 +40,11 @@
     <div id="timeline"><span>١ • الإرث</span><span>٢ • أول زبون</span><span>٣ • الطلبية الكبرى</span></div>
     <div id="termcard" hidden><b></b><p></p></div>
     <div id="cross" hidden></div>
-    <div id="lockhint">انقر على الشاشة للتحكم بالماوس</div>
     <div id="toast"></div>
-    <div id="progress"></div>
-    <div id="hint"></div>
-    <div id="map" hidden><canvas id="map-canvas" width="360" height="360"></canvas><p id="map-quality"></p><p class="small">مع عقارب الساعة: يمين • عكسها: يسار</p></div>
+    <div id="mid"><div id="progress"></div><div id="lockhint">انقر على الشاشة للتحكم بالماوس</div><div id="hint"></div></div>
+    <div id="map" hidden><canvas id="map-canvas" width="360" height="360"></canvas><p id="map-quality"></p><p class="small">حرّك ببطء: العلامة بتروح للدائرة الخضرا • السرعة بتفلّتها</p></div>
     <div id="talk" hidden><div class="name"></div><p class="line"></p><div class="choices"></div></div>
     <div id="modal" hidden><h3></h3><p class="body"></p><div class="choices"></div></div>
-    <div id="actions"></div>
     <div id="subtitle" hidden></div>
     <div id="keys">انقر للتحكم • WASD للمشي • E أو النقر للتفاعل • Esc لتحرير الماوس • Tab الموسوعة</div>
     <div id="stick" hidden><div id="knob"></div></div>
@@ -55,6 +53,6 @@
   <div id="fade"><div id="card-title"></div><div id="card-sub"></div></div>
   <button id="entervr" hidden>ادخل الواقع الافتراضي 🥽</button>
   <p id="vr-help" hidden></p>
-  <script type="module" src="js/main.js?v=r12"></script>
+  <script type="module" src="js/main.js?v=r13"></script>
 </body>
 </html>

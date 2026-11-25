@@ -211,8 +211,9 @@ class Item {
 // ------------------------------------------------------------------ alchemy map (creative brewing)
 class BrewMap {
   constructor() { this.reset(RECIPES[0]); }
-  reset(r = this.recipe) { this.recipe = r; this.zone = new THREE.Vector2(...r.zone); this.pos = new THREE.Vector2(); this.heading = 90; this.best = 9; this.any = false; this.trail = []; this.wobble = 0; }
-  get quality() { return this.best < 0.09 ? 3 : this.best < 0.18 ? 2 : 1; }
+  reset(r = this.recipe) { this.recipe = r; this.zone = new THREE.Vector2(...r.zone); this.pos = new THREE.Vector2(); this.heading = 90; this.best = 9; this.any = false; this.trail = []; this.wobble = 0; this.drift = new THREE.Vector2(); this.progress = 0; }
+  // Quality = how close the marker is to the centre of the green circle (it stops moving when the stirring is done).
+  get quality() { const d = this.pos.distanceTo(this.zone); return d < 0.05 ? 3 : d < 0.12 ? 2 : 1; }
   get inZone() { return this.pos.distanceTo(this.zone) < 0.13 * 0.7; }
   add(kind) {
     const push = this.recipe.push[kind]; if (!push) return;
@@ -222,20 +223,27 @@ class BrewMap {
   // speed = degrees per second of the paddle: slow and steady steers precisely, fast stirring wobbles the marker.
   stir(turns, dir, speed = 0) {
     if (!this.any || turns <= 0) return false; const wasIn = this.inZone;
-    this.wobble = THREE.MathUtils.clamp((speed - 260) / 300, 0, 1);
-    this.heading -= dir * 75 * turns + (Math.random() - 0.5) * 140 * this.wobble; const r = this.heading * Math.PI / 180;
-    this.pos.add(new THREE.Vector2(Math.cos(r), Math.sin(r)).multiplyScalar(0.34 * turns * (1 + 0.8 * this.wobble))); if (this.pos.length() > 0.95) this.pos.setLength(0.95);
+    // Slow stirring (either direction) pulls the marker straight to the centre of the green circle.
+    // Fast stirring pushes it off course (a drift that only calms down when you slow down again).
+    this.wobble = THREE.MathUtils.clamp((speed - 320) / 280, 0, 1);
+    const to = this.zone.clone().sub(this.pos), d = to.length(), step = 0.55 * turns;
+    if (d > 1e-4) this.pos.addScaledVector(to.divideScalar(d), Math.min(step * (1 - 0.6 * this.wobble), d));
+    if (this.wobble > 0.05) { const a = Math.random() * Math.PI * 2; this.drift.add(new THREE.Vector2(Math.cos(a), Math.sin(a)).multiplyScalar(step * 2.4 * this.wobble)); if (this.drift.length() > 0.3) this.drift.setLength(0.3); }
+    else this.drift.multiplyScalar(Math.max(0, 1 - turns * 6));
+    this.pos.add(this.drift.clone().multiplyScalar(Math.min(1, turns * 4))); if (this.pos.length() > 0.95) this.pos.setLength(0.95);
     if (Math.random() < 0.5) this.trail.push(this.pos.clone()); this.track(); return !wasIn && this.inZone;
   }
   track() { this.best = Math.min(this.best, this.pos.distanceTo(this.zone)); }
   get qualityText() { return "الجودة " + this.quality + " / 3" + (this.quality === 3 ? " — ممتازة!" : ""); }
   get tint() { if (!this.any) return new THREE.Color(0xd9e0dc); if (this.inZone) return new THREE.Color(0xffd973); const near = 1 - Math.min(1, this.pos.distanceTo(this.zone) / 0.8); return new THREE.Color(this.recipe.steam[0]).lerp(new THREE.Color(this.recipe.steam[1]), near); }
-  get speedText() { return this.wobble > 0.5 ? "التحريك سريع: العلامة بتفلت" : "التحريك هادئ: تحكّم دقيق"; }
+  get speedText() { return this.wobble > 0.3 ? "سريع كتير: العلامة بتفلت • خفّف" : this.inZone ? "ممتاز • كمّل تحريك هادي" : "هادي: العلامة رايحة للدائرة"; }
   draw(c, size) {
     const s = size / 2, P2 = v => [s + v.x * s, s - v.y * s];
     c.clearRect(0, 0, size, size); c.fillStyle = "#eedbb0"; c.beginPath(); c.arc(s, s, s - 2, 0, Math.PI * 2); c.fill();
     c.strokeStyle = "rgba(120,80,30,.25)"; for (let r = 1; r <= 3; r++) { c.beginPath(); c.arc(s, s, r * s / 3.4, 0, Math.PI * 2); c.stroke(); }
     const [zx, zy] = P2(this.zone); c.fillStyle = "rgba(40,170,110,.75)"; c.beginPath(); c.arc(zx, zy, 0.13 * s, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "rgba(255,255,255,.8)"; c.lineWidth = 2; c.beginPath(); c.arc(zx, zy, 0.05 * s, 0, Math.PI * 2); c.stroke(); // bull's-eye = best quality
+    if (this.progress > 0) { c.strokeStyle = "#ffd973"; c.lineWidth = 7; c.beginPath(); c.arc(zx, zy, 0.17 * s, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * this.progress); c.stroke(); }
     c.fillStyle = "rgba(110,70,25,.75)"; for (const p of this.trail.slice(-60)) { const [x, y] = P2(p); c.beginPath(); c.arc(x, y, 3, 0, Math.PI * 2); c.fill(); }
     const [mx, my] = P2(this.pos); c.fillStyle = "#c2873a"; c.strokeStyle = "#4a2d0e"; c.lineWidth = 3; c.beginPath(); c.arc(mx, my, 11, 0, Math.PI * 2); c.fill(); c.stroke();
   }
@@ -503,7 +511,7 @@ export class Game {
     c.save(); c.translate(16, 70); this.map.draw(c, 480); c.restore();
     c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#ffcf7a"; c.font = "bold 40px Amiri"; c.fillText("خريطة الخلطة", 256, 38);
     c.font = "bold 32px Amiri"; c.fillStyle = "#f1dcae"; c.fillText(this.map.any ? this.map.qualityText : "أضف المكونات", 256, 580);
-    c.font = "26px Amiri"; c.fillStyle = this.map.wobble > 0.5 ? "#ff8a70" : "#7dffc0"; c.fillText(this.map.any ? this.map.speedText : "وصّل العلامة للدائرة الخضرا", 256, 618);
+    c.font = "26px Amiri"; c.fillStyle = this.map.wobble > 0.3 ? "#ff8a70" : "#7dffc0"; c.fillText(this.map.any ? this.map.speedText : "وصّل العلامة للدائرة الخضرا", 256, 618);
     this.mapTex.needsUpdate = true;
   }
   marketDrop(it) {
@@ -634,7 +642,7 @@ export class Game {
   }
   report() {
     const s = this.state;
-    return `رصيد الحساب البنكي: ${this.bank.balance} (بدأ 100)    عمليات إلكترونية: ${this.bank.tx.length}\nرأس المال الأولي: 100    إيرادات المبيعات: ${s.revenue}\nتكلفة البضاعة المباعة: ${s.cogs}    إجمالي الربح: ${s.grossProfit}\nخسائر التلف: ${s.spoilage}    المصروفات التشغيلية: ${s.opex}\nصافي الربح: ${s.netProfit}    الرصيد النقدي النهائي: ${s.cash}\nسمعة المتجر: ${s.reputation} • تقييم غير مالي: ${s.reputationStars} / 4\nمحاكاة مبسطة: لا تشمل الضرائب أو تكاليف التمويل.`;
+    return `رصيد الحساب البنكي: ${this.bank.balance} (بدأ 100) • عمليات إلكترونية: ${this.bank.tx.length}\nرأس المال الأولي: 100 • إيرادات المبيعات: ${s.revenue}\nتكلفة البضاعة المباعة: ${s.cogs} • إجمالي الربح: ${s.grossProfit}\nخسائر التلف: ${s.spoilage} • المصروفات التشغيلية: ${s.opex}\nصافي الربح: ${s.netProfit} • الرصيد النقدي النهائي: ${s.cash}\nسمعة المتجر: ${s.reputation} • تقييم غير مالي: ${s.reputationStars} / 4\nمحاكاة مبسطة: لا تشمل الضرائب أو تكاليف التمويل.`;
   }
   unlock(i) { if (this.state.terms.includes(i)) return; this.state.terms.push(i); (this.pendingTerms = this.pendingTerms || []).push(i); this.termWait = 0; }
   showTerm(i) { this.pendingTerms = this.pendingTerms.filter(k => k !== i); this.ui.card3("مصطلح جديد: " + TERMS[i][0], TERM_CARDS[i], "good"); this.audio.play("crystal", 1.3, 0.5); }
@@ -679,7 +687,7 @@ export class Game {
     const b = this.brew;
     const r = this.recipe, cold = r.heat && !b.crystal && !this.items.find(i => i.kind === "crystal" && !i.consumed && i.hot);
     if (this.heatText && !b.crystal) this.ui.toast(this.heatText);
-    this.ui.objective(!b.herbInMortar ? "ضع العشبة في الهاون" : !b.crushed ? `اسحق العشبة • الطلب: ${GRIND[r.grind]}` : !b.herb && this.grindLevel < r.grind ? `كمّل سحق: الطلب ${GRIND[r.grind]}` : !b.readyToStir ? (cold ? "حمّي الجمرة عالموقد، وبعدين حطّ المكونات بالقدر" : "أضف المسحوق والبلورة والماء إلى القدر") : !b.readyToBottle ? "حرّك بهدوء ووجّه العلامة للدائرة الخضرا" : !this.bottleIn ? "ضع عبوة فارغة في حلقة التعبئة" : this.pipe > 0.02 ? "اعصر القطّارة فوق العبوة" : "اغمس القطّارة بالقدر واعصرها");
+    this.ui.objective(!b.herbInMortar ? "ضع العشبة في الهاون" : !b.crushed ? `اسحق العشبة • الطلب: ${GRIND[r.grind]}` : !b.herb && this.grindLevel < r.grind ? `كمّل سحق: الطلب ${GRIND[r.grind]}` : !b.readyToStir ? (cold ? "ذوّب اللبان عالموقد، وبعدين حطّ المكونات بالقدر" : `أضف ${r.labels.herb} المطحون و${r.labels.crystal} و${r.labels.water} للقدر`) : !b.readyToBottle ? "حرّك بهدوء ووجّه العلامة للدائرة الخضرا" : !this.bottleIn ? "ضع عبوة فارغة في حلقة التعبئة" : this.pipe > 0.02 ? "اعصر القطّارة فوق العبوة" : "اغمس القطّارة بالقدر واعصرها");
     this.ui.progress(b.herbInMortar && !b.herb ? `الطحن: ${b.crushed ? GRIND[this.grindLevel] : "لسّا"} • الطلب: ${GRIND[r.grind]}` : b.readyToStir && !b.readyToBottle ? `المزج: ${Math.round(b.stirring * 100)}%` : b.readyToBottle ? `القطّارة ${Math.round(this.pipe * 100)}% • العبوة ${Math.round(this.fill * 100)}% • ${this.filled} / ${this.batch ? 3 : 1}` : "");
     if (b.herbInMortar && !this.grindLocked && !b.readyToStir) this.ui.actions(C("مساعدة: ضربة سحق", () => this.crushStroke()));
     else if (b.readyToStir && !b.readyToBottle) this.ui.actions(C("مساعدة: دورة تحريك", () => this.stir(0.25, 0)));
@@ -760,6 +768,7 @@ export class Game {
       this.marketLabel && (this.marketLabel.visible = true); this.customer.arrive(this); this.dialogue.say("S2_C01", "S1_ASK", "S2_F02");
     } else {
       this.phase = P.Supplier; this.unlock(7); this.unlock(12); this.unlock(13); this.dialogue.say("S3_F01", "S3_CREDIT", "S3_COMPARE");
+      for (const d of MARKET) if (d.tagMesh) { this.scene.remove(d.tagMesh); d.tagMesh = null; }
       if (this.orderBoard) { this.scene.remove(this.orderBoard); this.orderBoard = sign(this.scene, ORDER3_TEXT, U(0, 3.55, -123.2), 2.4, 0.95, 0, 64); }
       if (this.recipeBoard) { this.recipeBoard.visible = false; sign(this.scene, RECIPES[1].board, U(-4.02, 1.36, 6.2), 1.05, 0.7, 90, 70); }
       // Trader: loose pieces, each with its own quality. Glass seller: one premium crate.
@@ -820,18 +829,18 @@ export class Game {
   stir(turns, dir) {
     if (this.paused || !this.brew.readyToStir || this.brew.readyToBottle) return;
     if (this.map.stir(turns, dir, this.stirSpeed || 0)) { this.audio.play("crystal", 1.2, 0.7); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
-    this.brew.stir(turns); this.stirAcc = (this.stirAcc || 0) + turns; if (this.stirAcc > 0.22) { this.stirAcc = 0; this.audio.play("swish", 0.9 + Math.random() * 0.2, 0.7); } this.swirl = Math.min(3, (this.swirl || 0) + turns * 9);
+    this.brew.stir(this.map.inZone ? turns * 1.4 : turns * 0.3); this.map.progress = this.brew.stirring; this.stirAcc = (this.stirAcc || 0) + turns; if (this.stirAcc > 0.22) { this.stirAcc = 0; this.audio.play("swish", 0.9 + Math.random() * 0.2, 0.7); } this.swirl = Math.min(3, (this.swirl || 0) + turns * 9);
     if (this.brew.readyToBottle) { this.audio.play("chime", 1.25); this.fx.sparkle(L.liquid.clone().setY(1.06), 14); }
     this.brewObjective();
   }
   observeStir(p) {
     const c = L.liquid, d = p.clone().sub(c), r = Math.hypot(d.x, d.z);
-    if (!this.brew.readyToStir || r < 0.06 || r > L.innerRadius || Math.abs(d.y) > 0.5) { this.lastAngle = null; return; }
+    if (!this.brew.readyToStir || r < 0.09 || r > L.innerRadius || Math.abs(d.y) > 0.5) { this.lastAngle = null; return; }
     const a = Math.atan2(d.z, d.x) * 180 / Math.PI;
     const now = performance.now();
     if (this.lastAngle != null) { let s = a - this.lastAngle; s = ((s + 540) % 360) - 180;
       const sp = Math.abs(s) / Math.max((now - this.lastStirT) / 1000, 0.008); this.stirSpeed = (this.stirSpeed || 0) * 0.8 + sp * 0.2;
-      if (this.stirSpeed > 560 && !this.fastWarned && !this.fast) { this.fastWarned = true; this.dialogue.say("S1_FAST"); }
+      if (this.stirSpeed > 480 && !this.fastWarned && !this.fast) { this.fastWarned = true; this.dialogue.say("S1_FAST"); }
       if (Math.abs(s) < 60) this.stir(Math.abs(s) / 360, s > 0 ? 1 : -1); }
     this.lastAngle = a; this.lastStirT = now;
   }
@@ -851,7 +860,7 @@ export class Game {
       if (this.batch) this.fin.craftBatchBottle(it.index);
       this.fx.sparkle(it.obj.position.clone().setY(1.0), 4 + this.map.quality * 4); this.audio.play("glass");
       if (this.filled === 0) { const q = this.prepQuality, r = this.recipe, used = this.grindLevelUsed ?? r.grind;
-        this.ui.card3(`${r.name} • الجودة ${q} / 3`, `مسار الخريطة: ${this.map.quality} / 3. الطحن: ${GRIND[used]}${used === r.grind ? " ✓" : ` (الطلب ${GRIND[r.grind]})`}.${r.heat ? ` الجمرة: ${Game.HEAT[this.usedEmberStage ?? 2][1]}.` : ""}${this.batch ? ` جودة المكونات: ${Math.round((this.batchGood ?? 0.95) * 100)}%. قيمتها بالسوق: ${[26, 34, 40][q - 1]} للعبوة (التاجر ملتزم بسعر ثابت ${this.state.merchantPrice}).` : " الجودة بتبني سمعة."}`, q >= 2 ? "good" : "bad"); }
+        this.ui.card3(`${r.name} • الجودة ${q} / 3`, `مسار الخريطة: ${this.map.quality} / 3. الطحن: ${GRIND[used]}${used === r.grind ? " ✓" : ` (الطلب ${GRIND[r.grind]})`}.${r.heat ? ` اللبان: ${Game.HEAT[this.usedEmberStage ?? 2][1]}.` : ""}${this.batch ? ` جودة المكونات: ${Math.round((this.batchGood ?? 0.95) * 100)}%. قيمتها بالسوق: ${[26, 34, 40][q - 1]} للعبوة (التاجر ملتزم بسعر ثابت ${this.state.merchantPrice}).` : " الجودة بتبني سمعة."}`, q >= 2 ? "good" : "bad"); }
       this.bottleIn = null; this.filled++; this.bottleFinished();
     }
   }
@@ -863,7 +872,7 @@ export class Game {
     const p = it.pos, c = L.cauldron, overCauldron = Math.hypot(p.x - c.x, p.z - c.z) < L.innerRadius + 0.3 && p.y > 0.55 && p.y < 2.1;
     if (overCauldron && it.kind !== "spoon") {
       const ing = ["crushed", "crystal", "water"].includes(it.kind);
-      if (it.kind === "crystal" && this.recipe.heat && !it.hot && this.heatStage(it.heat || 0) < 2) { this.dialogue.say("S3_COLD"); this.ui.toast("الجمرة باردة: حمّيها عالموقد أول"); this.bounceHome(it); return; }
+      if (it.kind === "crystal" && this.recipe.heat && !it.hot && this.heatStage(it.heat || 0) < 2) { this.dialogue.say("S3_COLD"); this.ui.toast("اللبان لسّا جامد: ذوّبه عالموقد أول"); this.bounceHome(it); return; }
       if (ing && (this.phase === P.Brew || this.phase === P.BatchBrew) && this.brew.add(it.kind)) {
         if (it.kind === "crushed") { this.grindLocked = true; this.grindLevelUsed = this.grindLevel; }
         if (it.kind === "crystal" && this.recipe.heat) this.usedEmberStage = this.heatStage(it.heat || 0);
@@ -1275,8 +1284,8 @@ export class Game {
     this.ui.update(dt, this.bank.balance, this.inVR);
     // Alchemy map panel (desktop/phone) while mixing or stirring.
     const showMap = (name === "mix" || name === "cauldron") && (this.phase === P.Brew || this.phase === P.BatchBrew);
-    const mapEl = document.getElementById("map"); mapEl.hidden = !showMap || this.inVR;
-    this.mapMesh.visible = showMap && this.inVR; if (this.mapMesh.visible && (this.mapT = (this.mapT || 0) - dt) <= 0) { this.mapT = 0.1; this.drawWorldMap(); }
+    const mapEl = document.getElementById("map"); mapEl.hidden = !showMap || this.inVR; document.body.classList.toggle("mapon", !mapEl.hidden);
+    this.mapMesh.visible = showMap && this.inVR && !this.ui.cardOn && !this.ui.panel.visible; if (this.mapMesh.visible && (this.mapT = (this.mapT || 0) - dt) <= 0) { this.mapT = 0.1; this.drawWorldMap(); }
     if (showMap) { this.map.draw(document.getElementById("map-canvas").getContext("2d"), 360); document.getElementById("map-quality").textContent = this.map.any ? this.map.qualityText : "أضف المكونات"; }
     if (this.warm) { this.sun.intensity = Math.min(3.0, this.sun.intensity + dt * 0.3); }
   }
