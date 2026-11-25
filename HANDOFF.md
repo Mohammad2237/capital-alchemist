@@ -7,7 +7,7 @@ Paste this into the new chat:
 
 ---
 
-## 1. What the project is (current: banking edition, build r14)
+## 1. What the project is (current: banking edition, build r15)
 
 - An Arabic VR **financial-literacy + banking** game for a school competition; may also be shown to real banking people.
   - Title: «رأس المال: إرث الكيميائي» (must be **كيميائي**, never خيميائي).
@@ -221,6 +221,10 @@ No teleport/enter/station buttons (user asked): walk in, open the door, walk thr
 - Asking characters questions (point + E / trigger) removed entirely (user didn't like it).
 - Cauldron: matte liquid (roughness 0.65), slow faint swirls, no sparks riding the steam (the recorded "glitchy particles").
 - Voices: the game now plays the Microsoft neural Levantine voices (mp3, `Tools/voices/make_voices.py`: Firas ar-JO-Taim, trader ar-SY-Laith, customer ar-LB-Rami, merchant Laith −8Hz, glass-seller ar-LB-Layla) because the user found the Sofelia/WORLD voices sloppy. `audio.js` sets `ogg = false`; the .ogg files are unused leftovers.
+
+## 8m. r15: the user's own Firas recordings
+- The user supplied 38 Firas recordings (chat-v3 (N).mp3 in Downloads\Voices) made from an OLD script. Transcribed locally with faster-whisper (venv312) and matched to DIALOGUE.csv: 18 installed as docs/assets/voice/<id>.mp3 (loudness normalised to rms 0.09), with the on-screen text changed to exactly what is said. 16 were unusable (they say جرعة/جمرة/مرجل/قارورة/الشمع/الشفاء), 3 were answers for the removed question menu, 1 duplicate.
+- Firas's other 36 lines still use the ar-JO-Taim neural voice; the exact texts to record are in `Tools/voices/FIRAS_LINES_TO_RECORD.txt` (file name = line id). When new files arrive: copy to docs/assets/voice/<id>.mp3, normalise, bump VOICE_VERSION.
 
 ## 9. Next steps
 
