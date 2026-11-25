@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // Automated playthrough of one financial branch through the live game code (no shortcuts on the money).
 // Open index.html?fast&smoke=N (N = 0..5). Results land in window.__smoke and the page title.
 import { L } from "./layout.js";
@@ -33,7 +34,8 @@ export async function runSmoke(g, branch) {
   ck(g.trader.arrived && g.items.filter(i => i.market).length === 8, "market stall: vendor + 8 ingredients");
   await until(() => g.welcomed);
   const decoy = g.items.find(i => i.market && i.market.key === "m_mush"); drop(decoy, L.basket); ck(g.state.cash === 100 && !decoy.consumed, "wrong ingredient refused, no charge");
-  const herb0 = g.items.find(i => i.market && i.market.buy === 0); drop(herb0, L.basket); ck(g.state.cash === 90 && herb0.consumed, "right ingredient bought from the basket");
+  const herb0 = g.items.find(i => i.market && i.market.buy === 0); drop(herb0, L.basket); ck(g.state.cash === 100 && !!g.pay && g.pay.amount === 10, "terminal asks for 10");
+  g.tapPay(g.pay.pos); ck(g.state.cash === 90 && g.bank.tx.length === 1 && g.bank.tx[0].method === "بطاقة خصم", "tap to pay: debit card, bank statement line");
   for (let i = 0; i < 4; i++) { g.purchase(i); g.purchase(i); }
   ck(g.state.cash === 75 && g.state.inventoryValue === 25, "purchase posted once (100->75)");
   await brew(false); ck(g.phase === 3, "first bottle ready");
@@ -50,7 +52,7 @@ export async function runSmoke(g, branch) {
   g.payExpenses(); g.payExpenses();
   ck(g.state.cash === cash && g.state.netProfit === net && g.state.opex === 10, `branch ${branch} final cash ${g.state.cash}, net ${g.state.netProfit}`);
   ck(g.state.netProfit !== g.state.grossProfit, "quiz answers distinct");
-  g.finalAnswer(false); g.finalAnswer(true); ck(g.state.finished && g.state.terms.length === 10, "report + 10 terms");
+  g.finalAnswer(false); g.finalAnswer(true); ck(g.state.finished && g.state.terms.length === 18, "report + 18 terms"); ck(g.bank.balance === cash && g.bank.tx.length >= 7, "bank balance = final cash, statement filled");
   g.fin.assertReconciles();
   const failed = log.filter(l => l.startsWith("FAIL")).length;
   window.__smoke = { branch, failed, log }; document.title = failed ? `SMOKE FAIL ${branch}` : `SMOKE PASS ${branch}`;

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // The whole shop + village lane, ported from the Unity set-dressing (same models, same positions).
 import * as THREE from "three";
 import { place, box, blocker, material, colliders, box3 } from "./assets.js";

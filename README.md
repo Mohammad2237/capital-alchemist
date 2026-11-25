@@ -3,11 +3,22 @@
 **Play in the browser (desktop, phone, or a VR headset's browser):** https://mohammad2237.github.io/capital-alchemist/
 In a headset (e.g. Meta Quest Browser) press **«ادخل الواقع الافتراضي»**.
 
-A short Arabic VR financial-literacy game: you inherit a potion shop, step through a portal to the market square and pick the right
-ingredients for the customer's order from two sellers (four decoys look close), crush, mix, stir (slow, steady stirring is more precise on the alchemy map) and
-fill bottles with a squeeze dropper in a big central cauldron, sell it, take a bulk order, face a supplier
-risk, pay the shop's bills — and learn the difference between **revenue, gross profit, net profit and cash**
-by doing it. Six financial outcomes, all exact to the competition spec.
+**Why this game exists:** schools and universities rarely teach young people how money really works — how to manage
+it, what a bank account, a debit card or a credit card actually does, how digital payments move money, or the
+difference between revenue, profit and the balance in your account. CAPITAL teaches it by living it.
+
+You inherit a **herbal remedy shop** (محل أعشاب طبية). Your 100 coins of capital sit in a **bank account**, and you
+carry a **debit card**. You step through a portal to the market, pick the ingredients a customer ordered, and **tap
+your card on the seller's terminal**. You prepare an energy herbal blend (grind to the right texture, steer the mix on
+the alchemy map, fill bottles with a dropper). Your first customer pays with a **Visa credit card** on your counter
+terminal. A merchant orders three healing oils and pays by **bank transfer**. You choose a supplier — loose pieces you
+inspect one by one, or a premium crate you can pay by **debit or credit card** (repaid the same evening, so no
+**interest**). You pay the shop's bills from the **bank app**, then read your **bank statement**. Every coin is a
+real transaction with a method, an amount and a running balance.
+
+18 terms (capital, bank account, debit card, digital payment, raw materials, production cost, selling price, credit
+card, revenue, cost of goods sold, gross profit, bank transfer, risk, interest, operating expenses, net profit, bank
+statement, money management) unlock the moment a character says them. Six financial outcomes, exact to the spec.
 
 ## Engine
 
@@ -51,6 +62,12 @@ Start 100 coins. First potion costs 25 (herb 10, crystal 8, water 5, bottle 2). 
 or 50 (merchant pays 30). Batch of 3: cheap 45 (wilted herb: replace +5, or use it and lose one potion = 15 spoilage)
 or premium 60. Operating expenses 10. Final cash: 156 / 124 / 146 / 155 / 130 / 145. Taxes and financing are
 excluded and labelled as such in the report.
+
+## Copyright
+
+© 2026 CAPITAL Team. **All rights reserved.** This is proprietary software, not open source — see [`LICENSE`](LICENSE).
+You may not copy, re-host, modify, redistribute or submit any part of it as your own work without written permission.
+Third-party parts (three.js MIT, KayKit CC0, Amiri OFL, Sofelia-TTS Apache-2.0) keep their own licences.
 
 ## Credits
 

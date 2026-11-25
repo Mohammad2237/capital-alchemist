@@ -184,6 +184,15 @@ Alchemy map (creative brewing):
 - Term cards: 6–9 s, stay where they appeared (no follow).
 - Version label «إصدار r8» in the desktop key hint and the VR corner card, to confirm the browser loaded the latest build.
 
+## 8h. Banking edition (25 Nov)
+- Theme: herbal remedy shop (خلطة النشاط العشبية in scene 1, زيت الشفاء العشبي in scene 3). Title kept.
+- `Bank` class in game.js: every finance posting is recorded as a transaction (label, method, amount, balance). Methods: بطاقة خصم، فيزا • بطاقة ائتمان الزبون، تحويل بنكي، بطاقة ائتمان، تطبيق البنك. Finance engine untouched, so the six outcomes are exact; `bank.balance` = cash + credit owed.
+- `POS` terminals at both stalls and the counter; `setPay(i, amount, label, onPaid)` + `tapPay(pos)` (VR: hand near terminal or trigger; desktop: E/click). Scene 1 buys per stall basket; scene 3 loose cart (9 pieces) or premium crate with debit/credit choice (`chooseMethod`). Credit is repaid with the evening bills (`bank.payCredit`).
+- Bank-app tablet on the counter (`drawTablet`), VR debit card in the left hand, report has a «كشف الحساب» page.
+- 18 terms (TERMS / TERM_CARDS / TERM_WORDS), unlock indices changed — see `unlock(` calls.
+- Desktop: pointer-lock mouse look + crosshair, no automatic camera jumps; non-skippable opening flyover (`this.cine`).
+- Copyright: LICENSE (proprietary), headers in every js file, notice on the loading screen; GitHub main branch protected (no force-push/deletion, admins included).
+
 ## 9. Next steps
 
 1. **The user tests VR on the headset** at the live URL, then reports what breaks. Fix those issues first.

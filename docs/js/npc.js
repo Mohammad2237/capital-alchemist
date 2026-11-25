@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // Animated characters (KayKit rigs + clips) and Firas the hologram guide.
 import * as THREE from "three";
 import { character, colliders } from "./assets.js";

@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // Game director: story phases, brewing, NPC trading, alchemy map, station camera, and all controls
 // (desktop mouse+keyboard, phone touch, VR headset). Port of the Unity GameDirector & co.
 import * as THREE from "three";
@@ -12,25 +13,38 @@ import { NPC, Firas } from "./npc.js";
 import { XRControllerModelFactory } from "three/addons/webxr/XRControllerModelFactory.js";
 
 const P = { Intro: 0, Purchase: 1, Brew: 2, Ready: 3, Price: 4, Handoff: 5, RevenueQuiz: 6, Offer: 7, Supplier: 8, Wilt: 9, BatchBrew: 10, BatchHandoff: 11, Expenses: 12, FinalQuiz: 13, Report: 14 };
-const TERMS = [["رأس المال", "الأموال أو الموارد التي يبدأ بها صاحب المشروع نشاطه."], ["المواد الخام", "المواد المستخدمة لصناعة المنتج."],
-  ["تكلفة الإنتاج", "مجموع التكاليف المباشرة اللازمة لصناعة المنتج في هذه المحاكاة."], ["سعر البيع", "المبلغ الذي يدفعه الزبون مقابل المنتج."],
+const TERMS = [
+  ["رأس المال", "الأموال أو الموارد التي يبدأ بها صاحب المشروع نشاطه."], ["الحساب البنكي", "حساب لدى البنك تُحفظ فيه أموالك وتُسجَّل فيه كل عملية إيداع أو سحب."],
+  ["بطاقة الخصم", "بطاقة تدفع بها من رصيدك مباشرة؛ يُخصم المبلغ فورًا من حسابك."], ["الدفع الإلكتروني", "الدفع بالبطاقة أو الهاتف دون نقود ورقية، ويُسجَّل تلقائيًا في الحساب."],
+  ["المواد الخام", "المواد المستخدمة لصناعة المنتج."], ["تكلفة الإنتاج", "مجموع التكاليف المباشرة اللازمة لصناعة المنتج."],
+  ["سعر البيع", "المبلغ الذي يدفعه الزبون مقابل المنتج."], ["بطاقة الائتمان", "بطاقة يدفع بها البنك عنك الآن وتسدّد له لاحقًا؛ التأخير يعني فائدة."],
   ["الإيرادات", "الأموال الناتجة عن بيع المنتجات قبل طرح التكاليف."], ["تكلفة البضاعة المباعة", "التكلفة المباشرة للمنتجات التي تم بيعها."],
-  ["إجمالي الربح", "الإيرادات ناقص تكلفة البضاعة المباعة."], ["المخاطرة", "احتمال حدوث خسارة أو نتيجة غير متوقعة."],
-  ["المصروفات التشغيلية", "تكاليف تشغيل المتجر غير الداخلة في تكلفة الجرعات مباشرة."], ["صافي الربح", "إجمالي الربح بعد طرح خسائر التلف والمصروفات التشغيلية في هذه المحاكاة."]];
+  ["إجمالي الربح", "الإيرادات ناقص تكلفة البضاعة المباعة."], ["التحويل البنكي", "نقل المال من حساب إلى حساب إلكترونيًا."],
+  ["المخاطرة", "احتمال حدوث خسارة أو نتيجة غير متوقعة."], ["الفائدة", "ثمن اقتراض المال؛ مبلغ إضافي يُدفع إذا تأخر السداد."],
+  ["المصروفات التشغيلية", "تكاليف تشغيل المحل غير الداخلة في تكلفة المنتج مباشرة."], ["صافي الربح", "إجمالي الربح بعد طرح خسائر التلف والمصروفات التشغيلية."],
+  ["كشف الحساب", "قائمة بكل العمليات التي دخلت حسابك أو خرجت منه، مع الرصيد بعد كل عملية."], ["إدارة الأموال", "تخطيط الدخل والمصاريف والادخار ومراقبتها لتتخذ قرارات مالية صحيحة."]];
 const TERM_CARDS = [
-  "المال أو الموارد اللي بتبدأ فيها مشروعك. إنت بلّشت بـ100 عملة، ومنها رح تشتري كل إشي. الهدف إنه يكبر مع الوقت، مش يصغر.",
-  "الأشياء اللي بتصنع منها المنتج: العشبة والبلورة والماء والقارورة. كل مادة إلها سعر، ومجموع أسعارها بيصير تكلفة الجرعة.",
-  "مجموع تكاليف صناعة المنتج. جرعتك كلّفت 10 + 8 + 5 + 2 = 25 عملة. إذا بعتها بأقل من 25، بتخسر.",
-  "المبلغ اللي بيدفعه الزبون. السعر العالي بيعطيك ربح أكبر بالجرعة، بس ممكن يزعّل الزبون ويأثّر على سمعة محلّك.",
-  "كل المال اللي بيدخل من البيع قبل ما تطرح أي تكلفة. إذا بعت الجرعة بـ30، إيرادك 30، مش ربحك.",
-  "تكلفة المنتجات اللي بعتها فعلًا. بعت جرعة كلّفتك 25، فتكلفة البضاعة المباعة = 25.",
-  "الإيرادات ناقص تكلفة البضاعة المباعة. مثال: 30 − 25 = 5. هاد ربح قبل باقي المصاريف.",
-  "احتمال يصير إشي ما بتتوقعه ويكلّفك مال. المورد الرخيص ممكن يجيب عشبة ذابلة، والممتاز أغلى بس أضمن.",
-  "مصاريف تشغيل المحل نفسه، مثل الإيجار والشمع والحطب. مش جزء من تكلفة الجرعة، بس لازم تندفع كل يوم.",
-  "اللي بيضل معك فعلًا بعد كل إشي: إجمالي الربح ناقص خسائر التلف والمصروفات التشغيلية. هاد ربحك الحقيقي.",
+  "المال اللي بتبدأ فيه مشروعك. إنت بلّشت بـ100 عملة بحسابك البنكي. الهدف إنها تكبر.",
+  "مكان آمن لمصاريك بالبنك. كل عملية بتدخل أو بتطلع بتنسجّل فيه، فبتعرف وين راحت كل عملة.",
+  "بتدفع فيها من رصيدك أنت. المبلغ بينخصم فورًا، فما بتصرف أكتر من اللي معك.",
+  "دفع بالبطاقة أو التلفون بدون كاش. أسرع وأأمن، وكل عملية بتظهر بكشف حسابك.",
+  "الأشياء اللي بتصنع منها المنتج: الأعشاب والبلّور والماء والعبوة. مجموع أسعارها = تكلفة الخلطة.",
+  "مجموع تكاليف صناعة المنتج: 10 + 8 + 5 + 2 = 25 عملة. إذا بعت بأقل، بتخسر.",
+  "اللي بيدفعه الزبون. السعر العالي بيرفع ربحك، بس ممكن يزعّل الزبون ويأثّر على سمعتك.",
+  "البنك بيدفع عنك هلّأ وإنت بتسدّد بعدين. إذا سدّدت بالوقت ما في فائدة. فيزا وماستركارد شبكات بتوصل البنوك ببعض.",
+  "كل المال اللي دخل حسابك من البيع، قبل ما تطرح أي تكلفة. بعت بـ30؟ إيرادك 30، مش ربحك.",
+  "تكلفة المنتجات اللي بعتها فعلًا. بعت خلطة كلّفتك 25، فتكلفة البضاعة المباعة = 25.",
+  "الإيرادات ناقص تكلفة البضاعة المباعة: 30 − 25 = 5. هاد ربح قبل باقي المصاريف.",
+  "مصاري بتنتقل من حساب لحساب إلكترونيًا. التاجر بيحوّلك حقّك على حسابك مباشرة.",
+  "احتمال يصير إشي ما بتتوقعه ويكلّفك. الرخيص ممكن يجيب ورقة ذابلة، والممتاز أغلى بس أضمن.",
+  "ثمن استلاف المصاري. ادفع فاتورة البطاقة الائتمانية بالوقت، وما بتدفع ولا عملة فائدة.",
+  "مصاريف تشغيل المحل: الإيجار والكهربا والحطب. مش من تكلفة الخلطة، بس لازم تندفع.",
+  "اللي بيضل فعلًا: إجمالي الربح ناقص التلف والمصروفات. هاد ربحك الحقيقي.",
+  "قائمة بكل عملية دخلت أو طلعت من حسابك، والرصيد بعد كل وحدة. اقراه دايمًا.",
+  "خطّط لمصاريك قبل ما تصرف، وراقب حسابك، ووفّر جزء للطوارئ. هيك بتكبر مصاريك.",
 ];
 const GRIND = ["خشن", "متوسط", "ناعم كالبودرة"];
-const TERM_WORDS = ["رأس مال", "الخام", "تكلفت", "سعر", "إيراد", "التكاليف", "الربح", "سعر", "مصروفات تشغيل", "صافي الربح"];
+const TERM_WORDS = ["رأس مال", "حسابك البنكي", "بطاقة الخصم", "الدفع الإلكتروني", "الخام", "تكلفتها", "سعر", "ائتمان", "إيراد", "التكاليف", "الربح", "بحوّلك", "عالسعر", "فائدة", "مصروفات تشغيل", "صافي الربح", "كشف حسابك", "بتدير أموالك"];
 const CARDS = [["المشهد ١ من ٣", "الإرث"], ["المشهد ٢ من ٣", "أول زبون"], ["المشهد ٣ من ٣", "الطلبية الكبرى"]];
 const MODELS = { herb: "herb_red", crystal: "crystal_blue", water: "water_flask", bottle: "potion_bottle", potion: "potion_bottle", pestle: "pestle", spoon: "stir_paddle" };
 const GRIP = { spoon: 0.95, pestle: 0.2, pipette: 0.24 };
@@ -42,35 +56,35 @@ const MARKET = [
   { key: "m_honey", stall: 0, name: "عسل القمر", price: 7, tag: "للحلاوة", line: "T1_NO_HONEY" },
   { key: "m_crystal", stall: 1, name: "بلورة زرقاء", price: 8, tag: "لصفاء الذهن", buy: 1, model: "crystal_blue", scale: 1.3 },
   { key: "m_purple", stall: 1, name: "بلورة بنفسجية", price: 9, tag: "للأحلام", line: "B_NO_PURPLE", model: "crystal_blue", scale: 1.15, tint: 0xa05cff },
-  { key: "m_bottle", stall: 1, name: "قارورة", price: 2, tag: "للتعبئة", buy: 3, model: "potion_bottle", scale: 1 },
+  { key: "m_bottle", stall: 1, name: "عبوة", price: 2, tag: "للتعبئة", buy: 3, model: "potion_bottle", scale: 1 },
   { key: "m_salt", stall: 1, name: "ملح أسود", price: 4, tag: "للحفظ", line: "B_NO_SALT" },
 ];
 const STALL_INFO = [
   { sign: "التاجر المتجول\nأعشاب • سوائل", hello: "T1_HELLO", deal: "T1_DEAL", offer: "T3_OFFER" },
   { sign: "تاجرة البلّور\nبلّور • قناني", hello: "B_HELLO", deal: "B_DEAL", offer: "B3_OFFER" },
 ];
-const ORDER_TEXT = "طلب الزبون: جرعة نشاط\nإشي أحمر للطاقة • إشي أزرق لصفاء الذهن\nماء سحري للمزج • قارورة • طحن متوسط";
+const ORDER_TEXT = "طلب الزبون: خلطة نشاط\nإشي أحمر للطاقة • إشي أزرق لصفاء الذهن\nماء سحري للمزج • قارورة • طحن متوسط";
 // Trader sells single pieces (pick 3 of each; 7 + 5 + 3 = 15 per potion, 45 for three). Each piece shows its quality.
 const LOOSE = [
   { kind: "herb", name: "ورقة فضية", price: 7, notes: ["طرية", "عادية", "يابسة شوي", "طازة"], good: [0.82, 0.66, 0.48, 0.9] },
   { kind: "crystal", name: "جمرة الشمس", price: 5, notes: ["لامعة", "فيها شقّ", "عادية", "صغيرة"], good: [0.86, 0.45, 0.68, 0.6] },
   { kind: "water", name: "ندى الفجر", price: 3, notes: ["صافي", "عكر شوي", "عادي", "صافي جدًا"], good: [0.8, 0.5, 0.65, 0.92] },
 ];
-const ORDER3_TEXT = "طلب التاجر: 3 جرعات شفاء\nورقة ناعمة كالبودرة • جمرة شمس محمّاة • ندى الفجر\nاختار مورّد: اقتصادي ولا ممتاز؟";
+const ORDER3_TEXT = "طلب التاجر: 3 عبوات زيت شفاء\nورقة ناعمة كالبودرة • جمرة شمس محمّاة • ندى الفجر\nاختار مورّد: اقتصادي ولا ممتاز؟";
 // Scene 1 and scene 3 brew different potions: new ingredients, colours and a different target on the alchemy map.
 const RECIPES = [
-  { name: "جرعة النشاط", grind: 1, heat: false, labels: { herb: "العشبة الحمراء", crystal: "البلورة الزرقاء", water: "الماء السحري" }, tint: {}, crushed: 0x8a2b10,
-    zone: [0.42, 0.62], push: { crushed: [-0.05, 0.36], crystal: [0.3, 0.08], water: [-0.08, 0.1] }, potion: [0x1ab866, 0x29d98f], steam: [0xc2cec6, 0x8dffc0], board: "جرعة النشاط\nعشبة 10 • بلورة 8 • ماء 5 • قارورة 2\nالطحن: متوسط" },
-  { name: "جرعة الشفاء", grind: 2, heat: true, labels: { herb: "الورقة الفضية", crystal: "جمرة الشمس", water: "ندى الفجر" }, tint: { herb: 0xc4e8de, crystal: 0xff7a1a, water: 0xff8fc4 }, crushed: 0x9fc8c0,
-    zone: [-0.45, 0.58], push: { crushed: [0.06, 0.34], crystal: [-0.32, 0.1], water: [0.06, 0.1] }, potion: [0xf0b030, 0xffd24a], steam: [0xd2c8b8, 0xffcf80], board: "جرعة الشفاء\nورقة فضية • جمرة الشمس • ندى الفجر\nالطحن: ناعم كالبودرة • الجمرة محمّاة" },
+  { name: "خلطة النشاط", grind: 1, heat: false, labels: { herb: "العشبة الحمراء", crystal: "البلورة الزرقاء", water: "الماء السحري" }, tint: {}, crushed: 0x8a2b10,
+    zone: [0.42, 0.62], push: { crushed: [-0.05, 0.36], crystal: [0.3, 0.08], water: [-0.08, 0.1] }, potion: [0x1ab866, 0x29d98f], steam: [0xc2cec6, 0x8dffc0], board: "خلطة النشاط\nعشبة 10 • بلورة 8 • ماء 5 • قارورة 2\nالطحن: متوسط" },
+  { name: "زيت الشفاء", grind: 2, heat: true, labels: { herb: "الورقة الفضية", crystal: "جمرة الشمس", water: "ندى الفجر" }, tint: { herb: 0xc4e8de, crystal: 0xff7a1a, water: 0xff8fc4 }, crushed: 0x9fc8c0,
+    zone: [-0.45, 0.58], push: { crushed: [0.06, 0.34], crystal: [-0.32, 0.1], water: [0.06, 0.1] }, potion: [0xf0b030, 0xffd24a], steam: [0xd2c8b8, 0xffcf80], board: "زيت الشفاء\nورقة فضية • جمرة الشمس • ندى الفجر\nالطحن: ناعم كالبودرة • الجمرة محمّاة" },
 ];
 // Questions you can ask each character (point at them and press trigger / E).
 const QUESTIONS = {
   "فراس": [["شو يعني هامش الربح؟", "A_MARGIN"], ["المصاري اللي معي كلها ربح؟", "A_CASH"], ["ليش الجودة مهمة؟", "A_QUALITY"], ["شو يعني ميزانية؟", "A_BUDGET"]],
   "التاجر المتجول": [["ليش الأسعار مختلفة؟", "A_T_PRICE"], ["في خصم إذا اشتريت كتير؟", "A_T_BULK"]],
-  "الزبون": [["شو بهمّك بالجرعة؟", "A_C_WHY"], ["قدّيش سعرها عادة؟", "A_C_PRICE"]],
-  "التاجر": [["ليش بدك كمية كبيرة؟", "A_M_ORDER"], ["شو بتفحص بالجرعة؟", "A_M_CHECK"]],
-  "تاجرة البلّور": [["ليش القارورة المنيحة أغلى؟", "A_B_GLASS"], ["شو يعني سمعة المحل؟", "A_B_TRUST"]],
+  "الزبون": [["شو بهمّك بالخلطة؟", "A_C_WHY"], ["قدّيش سعرها عادة؟", "A_C_PRICE"]],
+  "التاجر": [["ليش بدك كمية كبيرة؟", "A_M_ORDER"], ["شو بتفحص بالخلطة؟", "A_M_CHECK"]],
+  "تاجرة البلّور": [["ليش العبوة المنيحة أغلى؟", "A_B_GLASS"], ["شو يعني سمعة المحل؟", "A_B_TRUST"]],
 };
 // Canvas sign in the world (Arabic shaped by the browser). yawUnity uses the Unity heading convention.
 function sign(scene, text, pos, w, h, yawUnity, size = 64, bg = "#e8d4a6", ink = "#301e13") {
@@ -127,6 +141,39 @@ class Dialogue {
     const id = this.queue.shift(), l = this.lines[id]; this.speaking = true; this.speaker = l.speaker; this.text = l.text; this.left = this.g.fast ? 0.05 : l.dur;
     this.g.ui.subtitle(l.speaker + ": " + l.text); this.g.audio.setSpeaking(true); this.g.onLine(l.text);
     if (!this.g.fast) this.g.audio.speak(id).then(d => { if (d && this.speaker === l.speaker) this.left = Math.max(this.left - (l.dur - d - 0.3), 0.3); });
+  }
+}
+
+// ------------------------------------------------------------------ the bank
+// Every change of the balance becomes a bank transaction (label, method, amount, balance after). Money itself is still
+// posted by the finance engine, so the six outcomes stay exact; the bank is how the player sees and moves it.
+class Bank {
+  constructor(g) { this.g = g; this.tx = []; this.last = 100; this.credit = 0; }
+  record(label, method) {
+    const cash = this.g.state.cash, d = cash - this.last; if (!d) return; this.last = cash;
+    if (method === "بطاقة ائتمان") this.credit += -d;
+    const tx = { label, method, amount: d, balance: cash + this.credit }; this.tx.push(tx); this.g.onBankTx(tx);
+  }
+  payCredit() { if (!this.credit) return; const tx = { label: "سداد بطاقة الائتمان", method: "تطبيق البنك", amount: -this.credit, balance: this.g.state.cash }; this.credit = 0; this.tx.push(tx); this.g.onBankTx(tx); }
+  get balance() { return this.g.state.cash + this.credit; }
+}
+// A card-payment terminal (POS): small screen that shows "ready / pay X / approved".
+class POS {
+  constructor(scene, pos, yaw) {
+    this.g = new THREE.Group(); this.g.position.copy(pos); this.g.rotation.y = yaw; scene.add(this.g);
+    const base = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.16), MAT(0x23272b, { roughness: 0.4 })); base.position.y = 0.025; this.g.add(base);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.02), MAT(0x2d3237, { roughness: 0.4 })); head.position.set(0, 0.11, -0.05); head.rotation.x = -0.35; this.g.add(head);
+    this.cv = document.createElement("canvas"); this.cv.width = 256; this.cv.height = 288; this.tex = new THREE.CanvasTexture(this.cv); this.tex.colorSpace = THREE.SRGBColorSpace;
+    this.screen = new THREE.Mesh(new THREE.PlaneGeometry(0.085, 0.096), new THREE.MeshBasicMaterial({ map: this.tex })); this.screen.position.set(0, 0.112, -0.038); this.screen.rotation.x = -0.35; this.g.add(this.screen);
+    const pad = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.05), new THREE.MeshBasicMaterial({ color: 0x40c8ff, transparent: true, opacity: 0.5 })); pad.rotation.x = -Math.PI / 2; pad.position.set(0, 0.052, 0.04); this.g.add(pad); this.pad = pad;
+    this.show("جاهز", "#9fb4c2");
+  }
+  get at() { return this.g.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.08, 0)); }
+  show(text, color = "#ffffff", sub = "") {
+    const c = this.cv.getContext("2d"); c.fillStyle = "#0d1a22"; c.fillRect(0, 0, 256, 288); c.fillStyle = "#1e3a4c"; c.fillRect(0, 0, 256, 44);
+    c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#cfe8ff"; c.font = "bold 26px Amiri"; c.fillText("دفع بالبطاقة", 128, 24);
+    c.fillStyle = color; c.font = "bold 46px Amiri"; c.fillText(text, 128, 130); if (sub) { c.fillStyle = "#9fb4c2"; c.font = "26px Amiri"; c.fillText(sub, 128, 190); }
+    c.fillStyle = "#40c8ff"; c.font = "30px Amiri"; c.fillText("))) ▭", 128, 250); this.tex.needsUpdate = true; this.state = text;
   }
 }
 
@@ -205,7 +252,7 @@ export class Game {
   }
   async init() {
     this.ui = new UI(this.scene, this.camera); this.audio = new Audio(); this.fx = new FX(this.scene, this.audio);
-    this.dialogue = new Dialogue(this); await this.dialogue.load();
+    this.dialogue = new Dialogue(this); await this.dialogue.load(); this.bank = new Bank(this);
     this.firas = await Firas.create(this.scene);
     this.trader = await NPC.create(this.scene, "assets/kaykit/Characters/Barbarian.glb", 1.78, "Trader", "التاجر المتجول", L.customerSpot);
     this.customer = await NPC.create(this.scene, "assets/kaykit/Characters/Rogue_Hooded.glb", 1.72, "Customer", "الزبون", L.customerSpot);
@@ -213,10 +260,11 @@ export class Game {
     this.seller = await NPC.create(this.scene, "assets/kaykit/Characters/Rogue.glb", 1.7, "Seller", "تاجرة البلّور", L.customerSpot);
     this.npcs = [this.trader, this.customer, this.merchant, this.seller].filter(Boolean); this.vendors = [this.trader, this.seller];
     for (const name of ["herb_red", "crystal_blue", "water_flask", "potion_bottle", "pestle", "stir_paddle"]) await load(`assets/custom/${name}.glb`);
-    this.labels(); await this.setupMarket(); this.setupWorldMap();
+    this.labels(); await this.setupMarket(); this.setupWorldMap(); this.setupBank();
     this.ui.onBook = () => this.glossary(0); this.ui.onClick = () => this.audio.play("paper", 1.1, 0.8);
     this.setupDesktop(); this.setupTouch(); this.setupVR();
     this.ui.card(...CARDS[0], this.fast ? 0 : 1600);
+    if (!this.fast) this.cine = { t: -1.6, dur: 7 };
     this.refresh();
   }
   get recipe() { return RECIPES[this.chapter >= 2 ? 1 : 0]; }
@@ -232,14 +280,14 @@ export class Game {
       m.position.copy(pos); m.rotation.y = Math.PI - yawUnity * Math.PI / 180 + Math.PI; this.scene.add(m); return m;
     };
     document.fonts.ready.then(() => {
-      label("إرث الكيميائي\nمتجر الجرعات", U(0, 2.93, -0.545), 1.1, 0.5, 180, 90);
+      label("إرث الكيميائي\nأعشاب طبية", U(0, 2.93, -0.545), 1.1, 0.5, 180, 90);
       this.recipeBoard = label(RECIPES[0].board, U(-4.03, 1.36, 6.2), 1.05, 0.7, 90, 70);
       this.orderBoard = sign(this.scene, ORDER_TEXT, U(0, 3.55, -123.2), 2.4, 0.95, 0, 64);
       L.stalls.forEach((s, i) => sign(this.scene, STALL_INFO[i].sign, L.stallPos(s, 0, 2.24, 0), 1.5, 0.6, s.side * 90, 70));
       sign(this.scene, "✦ إلى السوق ✦", L.portalShop.clone().setY(3.55), 1.3, 0.34, 0, 80, "#2a1c3a", "#ffe7b0");
       sign(this.scene, "✦ إلى المحل ✦", L.portalMarket.clone().setY(3.55), 1.3, 0.34, 180, 80, "#2a1c3a", "#ffe7b0");
       sign(this.scene, "سوق القرية", U(0, 4.4, -123.25), 1.6, 0.4, 0, 90, "#7a2a1c", "#ffe7b0");
-      this.marketLabel = label("لوحة السوق\nجرعات الجيران: نحو 40 عملة", U(4.03, 1.36, 1.15), 0.76, 0.5, -90, 64); this.marketLabel.visible = false;
+      this.marketLabel = label("لوحة السوق\nخلطات الجيران: نحو 40 عملة", U(4.03, 1.36, 1.15), 0.76, 0.5, -90, 64); this.marketLabel.visible = false;
     });
   }
 
@@ -307,6 +355,39 @@ export class Game {
     // Little wooden holder for the dropper at the bottling table.
     const hold = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.08), MAT(0x5a3418)); hold.position.copy(L.pipetteSpot).setY(0.925); this.scene.add(hold);
   }
+  // ---------------------------------------------------------------- bank props: card terminals and the bank-app tablet
+  setupBank() {
+    this.pos = L.stalls.map(s => new POS(this.scene, L.stallPos(s, 0.55, 0.9, 0.62), -s.side * Math.PI / 2 + Math.PI));
+    this.pos.push(new POS(this.scene, U(2.12, 1.04, 1.8), Math.PI)); this.counterPOS = this.pos[2];
+    this.tabCv = document.createElement("canvas"); this.tabCv.width = 512; this.tabCv.height = 360; this.tabTex = new THREE.CanvasTexture(this.tabCv); this.tabTex.colorSpace = THREE.SRGBColorSpace;
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.25, 0.015), MAT(0x1a1d20)); frame.position.copy(U(3.05, 1.2, 2.05)); frame.rotation.set(-0.35, Math.PI, 0); this.scene.add(frame);
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.225), new THREE.MeshBasicMaterial({ map: this.tabTex })); scr.position.set(0, 0, -0.009); scr.rotation.y = Math.PI; frame.add(scr);
+    const stand = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.16, 0.04), MAT(0x1a1d20)); stand.position.copy(U(3.05, 1.1, 2.12)); this.scene.add(stand);
+    this.drawTablet();
+  }
+  drawTablet() {
+    const c = this.tabCv.getContext("2d"), b = this.bank; c.fillStyle = "#f4f7f9"; c.fillRect(0, 0, 512, 360);
+    c.fillStyle = "#14507a"; c.fillRect(0, 0, 512, 64); c.direction = "rtl"; c.textBaseline = "middle"; c.textAlign = "right"; c.fillStyle = "#fff"; c.font = "bold 30px Amiri"; c.fillText("🏦 تطبيق البنك • حساب المحل", 490, 33);
+    c.fillStyle = "#14507a"; c.font = "bold 46px Amiri"; c.textAlign = "center"; c.fillText(`${b.balance} عملة`, 256, 108); c.fillStyle = "#6a7a86"; c.font = "22px Amiri"; c.fillText(b.credit ? `الرصيد • دين البطاقة الائتمانية ${b.credit}` : "الرصيد المتاح", 256, 146);
+    b.tx.slice(-4).reverse().forEach((x, i) => { const y = 192 + i * 42; c.fillStyle = i % 2 ? "#eef2f5" : "#ffffff"; c.fillRect(16, y - 19, 480, 38);
+      c.textAlign = "right"; c.fillStyle = "#24323c"; c.font = "22px Amiri"; c.fillText(`${x.label} • ${x.method}`, 486, y); c.textAlign = "left"; c.fillStyle = x.amount > 0 ? "#1f8a4c" : "#b3412e"; c.font = "bold 24px Amiri"; c.fillText((x.amount > 0 ? "+" : "−") + Math.abs(x.amount), 26, y); });
+    this.tabTex.needsUpdate = true;
+  }
+  onBankTx(x) {
+    this.audio.play("chime", 1.5, 0.5); setTimeout(() => this.audio.play("chime", 1.9, 0.4), 120);
+    this.ui.toast(`🏦 ${x.amount > 0 ? "+" : "−"}${Math.abs(x.amount)} • ${x.label} • ${x.method}`); this.ui.toastUntil = performance.now() + 3500;
+    this.drawTablet();
+  }
+  // Tap to pay: bring your card (VR hand / desktop E on the terminal) to a terminal that is asking for money.
+  setPay(posIndex, amount, label, onPaid, sub = "") { const pos = this.pos?.[posIndex]; if (!pos) { onPaid(); return; } (this.pays = this.pays || {})[posIndex] = { i: posIndex, pos, amount, label, onPaid }; pos.show(`ادفع ${amount}`, "#ffd76a", sub || label); if (!this.payExplained) { this.payExplained = true; this.dialogue.say("S1_PAY"); } }
+  get pending() { return Object.values(this.pays || {}).filter(Boolean); }
+  get pay() { return this.pending[0] || null; }
+  payNear(ray, r = 0.13, far = 4) { return this.pending.find(p => ray.distanceToPoint(p.pos.at) < r && ray.origin.distanceTo(p.pos.at) < far) || null; }
+  tapPay(pos) {
+    const p = this.pending.find(x => !pos || x.pos === pos); if (!p) return false; this.pays[p.i] = null;
+    this.audio.play("glass", 2.2, 0.6); p.pos.show("تمّت ✓", "#6dffa8", `${p.amount} عملة`); setTimeout(() => p.pos.show("جاهز", "#9fb4c2"), 2500);
+    p.onPaid(); return true;
+  }
   // Through the portal: quick fade, whoosh, and you are on the other side.
   travel() {
     if (this.traveling || this.changing) return; this.traveling = true; const toMarket = this.region() === "village";
@@ -331,24 +412,34 @@ export class Game {
     const c = this.mapCv.getContext("2d"); c.clearRect(0, 0, 512, 640);
     c.fillStyle = "rgba(20,27,23,.9)"; c.beginPath(); c.roundRect(0, 0, 512, 640, 30); c.fill();
     c.save(); c.translate(16, 70); this.map.draw(c, 480); c.restore();
-    c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#ffcf7a"; c.font = "bold 40px Amiri"; c.fillText("خريطة الجرعة", 256, 38);
+    c.direction = "rtl"; c.textAlign = "center"; c.textBaseline = "middle"; c.fillStyle = "#ffcf7a"; c.font = "bold 40px Amiri"; c.fillText("خريطة الخلطة", 256, 38);
     c.font = "bold 32px Amiri"; c.fillStyle = "#f1dcae"; c.fillText(this.map.any ? this.map.qualityText : "أضف المكونات", 256, 580);
     c.font = "26px Amiri"; c.fillStyle = this.map.wobble > 0.5 ? "#ff8a70" : "#7dffc0"; c.fillText(this.map.any ? this.map.speedText : "وصّل العلامة للدائرة الخضرا", 256, 618);
     this.mapTex.needsUpdate = true;
   }
   marketDrop(it) {
     const d = it.market;
-    if (d.bundle !== undefined) { if (this.phase === P.Supplier) this.buyBatch(d.bundle); else this.bounceHome(it); return; }
+    if (d.bundle !== undefined) {
+      if (this.phase !== P.Supplier) { this.bounceHome(it); return; }
+      this.intoBasket(it, 1, 0); it.consumed = true; this.audio.play("pop", 1.1, 0.6);
+      this.ui.talk("تاجرة البلّور", this.dialogue.lines.P_METHOD.text, C("بطاقة الخصم", () => this.chooseMethod("debit")), C("بطاقة الائتمان", () => this.chooseMethod("credit"))); this.dialogue.say("P_METHOD"); return;
+    }
     if (d.loose) {
       if (this.phase !== P.Supplier) { this.bounceHome(it); return; }
       if (this.cart.filter(c => c.market.loose === d.loose).length >= 3) { this.dialogue.say("T3_FULL"); this.ui.toast("عندك 3 من هاد النوع"); this.bounceHome(it); return; }
       this.cart.push(it); this.intoBasket(it, 0, this.cart.length - 1); it.obj.position.y += Math.floor((this.cart.length - 1) / 4) * 0.05; this.audio.play("pop", 1.1, 0.6);
-      if (this.cart.length === 9) this.buyBatch(Supplier.Cheap); else this.refresh(); return;
+      const sum = this.cart.reduce((a, c) => a + c.market.price, 0);
+      this.setPay(0, sum, this.cart.length === 9 ? "3 من كل نوع" : `كمّل 3 من كل نوع (${this.cart.length}/9)`, () => { if (this.cart.length === 9) this.buyBatch(Supplier.Cheap); else { this.ui.toast("كمّل 3 من كل نوع قبل الدفع"); this.setPay(0, sum, `${this.cart.length}/9`, () => {}); } }, "بطاقة الخصم");
+      this.refresh(); return;
     }
     if (this.phase !== P.Purchase) { this.bounceHome(it); return; }
     if (d.buy === undefined) { this.dialogue.say(d.line); this.audio.play("reject", 1.3, 0.4); this.ui.toast(`${d.name} ${d.tag}، مش من الطلب`); this.bounceHome(it); return; }
-    this.purchase(d.buy);
+    // Into this stall's basket; the stall's terminal asks for the total, you tap your debit card to pay.
+    this.cart1 = this.cart1 || [[], []]; const cart = this.cart1[d.stall]; cart.push(it); this.intoBasket(it, d.stall, cart.length - 1); it.consumed = true; this.audio.play("pop", 1.1, 0.6);
+    const total = cart.reduce((a, x) => a + x.market.price, 0), names = cart.map(x => x.market.name).join(" + ");
+    this.setPay(d.stall, total, names, () => { for (const x of cart.splice(0)) this.purchase(x.market.buy); }, "بطاقة الخصم");
   }
+  chooseMethod(m) { this.payMethod = m; this.ui.close(); this.setPay(1, 60, m === "credit" ? "بطاقة الائتمان • تسدّد آخر اليوم" : "بطاقة الخصم", () => this.buyBatch(Supplier.Premium), m === "credit" ? "ائتمان" : "خصم"); this.refresh(); }
   intoBasket(it, stall, k) { it.consumed = true; it.held = false; it.flying = false; it.obj.scale.setScalar(0.7); it.obj.quaternion.identity(); it.obj.position.copy(this.baskets[stall]).add(new THREE.Vector3((k % 2 - 0.5) * 0.11, 0.03, (Math.floor(k / 2) % 2 - 0.5) * 0.11)); }
   // Ask a character questions: more money words, told in conversation.
   askMenu(speaker) {
@@ -417,7 +508,7 @@ export class Game {
       case P.Ready: ui.objective("حدا بدقّ الباب: افتحله"); break;
       case P.Price: ui.objective("اختر سعرك");
         this.ask("P_PRICE", C("30 عملة", () => this.choosePrice(30)), C("50 عملة", () => this.choosePrice(50))); break;
-      case P.Handoff: ui.objective("ضع الجرعة على الصينية"); break;
+      case P.Handoff: ui.objective("ضع الخلطة على الصينية"); break;
       case P.RevenueQuiz: ui.objective(`إيراد ولا ربح؟ البيع ${s.revenue} • التكلفة ${s.cogs}`);
         this.ask("P_REVQ", C("إيراد", () => this.revenueAnswer(true)), C("ربح", () => this.revenueAnswer(false))); break;
       case P.Offer: ui.objective("طلبية كبيرة");
@@ -428,12 +519,13 @@ export class Game {
         if (this.cart?.length) ui.progress(`ورق ${n("herb")}/3 • جمر ${n("crystal")}/3 • ندى ${n("water")}/3 • ${sum} عملة`); break; }
       case P.Wilt: ui.objective("عشبة ذابلة!");
         this.ask("P_WILT", C("استبدلها • +5", () => this.decideHerb(Herb.Replace)), C("استخدمها", () => this.decideHerb(Herb.UseWilted))); break;
-      case P.BatchHandoff: ui.objective("سلّم القوارير للتاجر"); break;
-      case P.Expenses: ui.objective("فاتورة اليوم: 10 عملات"); this.ask("S3_OPEX", C("ادفع 10", () => this.payExpenses())); break;
+      case P.BatchHandoff: ui.objective("سلّم العبوات للتاجر"); break;
+      case P.Expenses: ui.objective("ادفع فواتير اليوم من تطبيق البنك");
+        this.ask("S3_OPEX", C(this.bank.credit ? `ادفع 10 + سدّد البطاقة ${this.bank.credit}` : "ادفع 10 من التطبيق", () => this.payExpenses())); break;
       case P.FinalQuiz: { ui.objective("السؤال الأخير"); const a = C(s.netProfit + " عملة", () => this.finalAnswer(true)), b = C(s.grossProfit + " عملة", () => this.finalAnswer(false));
         this.ask("P_FINAL", ...(this.correctLeft ? [a, b] : [b, a])); break; }
       case P.Report: ui.objective("تقرير المتجر");
-        ui.modal("تقرير المتجر", this.report(), C("إعادة التجربة", () => location.reload()), C("الموسوعة المالية", () => this.glossary(0))); break;
+        ui.modal("تقرير المحل", this.report(), C("كشف الحساب", () => this.statement()), C("الموسوعة المالية", () => this.glossary(0)), C("إعادة التجربة", () => location.reload())); break;
     }
     const st = this.stationName(); if (st === "portal" || st === "portalBack") ui.objective(this.phase === P.Purchase || this.phase === P.Supplier ? "امشِ عبر البوابة للسوق" : "امشِ عبر البوابة للمحل");
   }
@@ -441,21 +533,25 @@ export class Game {
   ask(id, ...choices) {
     const l = this.dialogue.lines[id], key = this.phase + ":" + id; if (!l) return;
     if (this.askKey !== key) { this.askKey = key; this.dialogue.say(id); }
-    const s = this.state, facts = this.phase === P.RevenueQuiz ? `\nبعت الجرعة بـ${s.revenue} • كلّفتك ${s.cogs}`
+    const s = this.state, facts = this.phase === P.RevenueQuiz ? `\nبعت الخلطة بـ${s.revenue} • كلّفتك ${s.cogs}`
       : this.phase === P.FinalQuiz ? `\nتذكّر أرقام يومك:\nالإيرادات ${s.revenue} • تكلفة البضاعة المباعة ${s.cogs} • إجمالي الربح ${s.grossProfit}\nخسائر التلف ${s.spoilage} • المصروفات التشغيلية ${s.opex}` : "";
     this.ui.talk(l.speaker, l.text + facts, ...choices);
   }
+  statement() {
+    this.paused = true; const rows = this.bank.tx.map(x => `${x.amount > 0 ? "+" : "−"}${Math.abs(x.amount)}   ${x.label} • ${x.method}   ← ${x.balance}`);
+    this.ui.modal("كشف الحساب البنكي", `الرصيد الافتتاحي: 100\n${rows.slice(-9).join("\n")}\nالرصيد الختامي: ${this.bank.balance}`, C("عودة للتقرير", () => { this.paused = false; this.refresh(); }));
+  }
   report() {
     const s = this.state;
-    return `رأس المال الأولي: 100    إيرادات المبيعات: ${s.revenue}\nتكلفة البضاعة المباعة: ${s.cogs}    إجمالي الربح: ${s.grossProfit}\nخسائر التلف: ${s.spoilage}    المصروفات التشغيلية: ${s.opex}\nصافي الربح: ${s.netProfit}    الرصيد النقدي النهائي: ${s.cash}\nسمعة المتجر: ${s.reputation} • تقييم غير مالي: ${s.reputationStars} / 4\nمحاكاة مبسطة: لا تشمل الضرائب أو تكاليف التمويل.`;
+    return `رصيد الحساب البنكي: ${this.bank.balance} (بدأ 100)    عمليات إلكترونية: ${this.bank.tx.length}\nرأس المال الأولي: 100    إيرادات المبيعات: ${s.revenue}\nتكلفة البضاعة المباعة: ${s.cogs}    إجمالي الربح: ${s.grossProfit}\nخسائر التلف: ${s.spoilage}    المصروفات التشغيلية: ${s.opex}\nصافي الربح: ${s.netProfit}    الرصيد النقدي النهائي: ${s.cash}\nسمعة المتجر: ${s.reputation} • تقييم غير مالي: ${s.reputationStars} / 4\nمحاكاة مبسطة: لا تشمل الضرائب أو تكاليف التمويل.`;
   }
   unlock(i) { if (this.state.terms.includes(i)) return; this.state.terms.push(i); (this.pendingTerms = this.pendingTerms || []).push(i); this.termWait = 0; }
   showTerm(i) { this.pendingTerms = this.pendingTerms.filter(k => k !== i); this.ui.card3("مصطلح جديد: " + TERMS[i][0], TERM_CARDS[i], "good"); this.audio.play("crystal", 1.3, 0.5); }
   onLine(text) { for (const i of [...(this.pendingTerms || [])]) if (text.includes(TERM_WORDS[i])) this.showTerm(i); }
   glossary(page) {
-    this.paused = true; const s = this.state, open = s.terms.includes(page);
-    this.ui.modal(`الموسوعة المالية   ${s.terms.length} / 10`, open ? `${TERMS[page][0]}\n\n${TERMS[page][1]}` : "مصطلح مغلق\nستكتشفه أثناء التجربة",
-      C("السابق", () => this.glossary((page + 9) % 10)), C("التالي", () => this.glossary((page + 1) % 10)), C("عودة", () => { this.paused = false; this.refresh(); }));
+    this.paused = true; const s = this.state, open = s.terms.includes(page), N = TERMS.length;
+    this.ui.modal(`الموسوعة المالية   ${s.terms.length} / ${N}`, open ? `${TERMS[page][0]}\n\n${TERMS[page][1]}` : "مصطلح مغلق\nستكتشفه أثناء التجربة",
+      C("السابق", () => this.glossary((page + N - 1) % N)), C("التالي", () => this.glossary((page + 1) % N)), C("عودة", () => { this.paused = false; this.refresh(); }));
   }
   openShopDoor() { if (this.fx.doorGoal > 0.8) return; this.fx.openDoor(true); }
   enterShop() {
@@ -463,14 +559,15 @@ export class Game {
     if (!this.doorOpened) { this.doorOpened = true; this.fx.openDoor(true); }
     const p = new THREE.Vector3(); this.camera.getWorldPosition(p);
     if (!L.isInside(p)) this.teleport(L.insideStart, L.insideYaw);
-    this.phase = P.Purchase; this.unlock(0); this.firas.show(this); this.welcomed = false; this.dialogue.say("S1_F01", "S1_F03", "S1_ORDER"); this.refresh();
+    this.phase = P.Purchase; this.unlock(0); this.unlock(1); this.unlock(2); this.firas.show(this); this.welcomed = false; this.dialogue.say("S1_F01", "S1_F03", "S1_BANK", "S1_ORDER"); this.refresh();
   }
   purchase(i) {
     if (this.phase !== P.Purchase || !this.fin.purchaseFirst(i)) return;
     const mi = this.items.find(x => x.market && x.market.buy === i), stall = mi ? mi.market.stall : 0;
-    this.audio.play("coins", 0.8, 0.5); this.vendors[stall].receive(); this.fx.sparkle(this.baskets[stall].clone().setY(1.05), 6);
-    if (mi) this.intoBasket(mi, stall, i);
-    if (!this.state.terms.includes(1)) { this.unlock(1); this.dialogue.say("S1_F04"); }
+    this.bank.record(MARKET.find(x => x.buy === i).name, "بطاقة خصم"); this.unlock(3);
+    this.vendors[stall].receive(); this.fx.sparkle(this.baskets[stall].clone().setY(1.05), 6);
+    if (mi && !mi.consumed) this.intoBasket(mi, stall, i);
+    if (!this.state.terms.includes(4)) { this.unlock(4); this.dialogue.say("S1_F04"); }
     if ([0, 1, 2, 3].every(k => this.state.has("ingredient-" + k))) { this.phase = P.Brew; this.beginBrew(false); this.dialogue.say("T1_BYE", "S1_BACK", "S1_F05"); }
     else this.dialogue.say(STALL_INFO[stall].deal);
     this.refresh();
@@ -482,7 +579,7 @@ export class Game {
     await new Item(this, "herb", lb.herb, 0).build(L.herbSpot); await new Item(this, "crystal", lb.crystal, 0).build(L.crystalSpot);
     await new Item(this, "water", lb.water, 0).build(L.waterSpot); await new Item(this, "pestle", "المدقة", 0).build(L.pestleSpot);
     await new Item(this, "spoon", "مجداف التحريك", 0).build(L.paddleSpot);
-    for (let i = 0; i < (batch ? 3 : 1); i++) await new Item(this, "bottle", "قارورة فارغة", i).build(L.emptyBottle(i));
+    for (let i = 0; i < (batch ? 3 : 1); i++) await new Item(this, "bottle", "عبوة فارغة", i).build(L.emptyBottle(i));
     await new Item(this, "pipette", "القطّارة", 0).build(L.pipetteSpot);
     if (this.recipe.heat) this.dialogue.say("S3_HEAT");
     this.refresh();
@@ -491,15 +588,15 @@ export class Game {
     const b = this.brew;
     const r = this.recipe, cold = r.heat && !b.crystal && !this.items.find(i => i.kind === "crystal" && !i.consumed && i.hot);
     if (this.heatText && !b.crystal) this.ui.toast(this.heatText);
-    this.ui.objective(!b.herbInMortar ? "ضع العشبة في الهاون" : !b.crushed ? `اسحق العشبة • الطلب: ${GRIND[r.grind]}` : !b.herb && this.grindLevel < r.grind ? `كمّل سحق: الطلب ${GRIND[r.grind]}` : !b.readyToStir ? (cold ? "حمّي الجمرة عالموقد، وبعدين حطّ المكونات بالمرجل" : "أضف المسحوق والبلورة والماء إلى المرجل") : !b.readyToBottle ? "حرّك بهدوء ووجّه العلامة للدائرة الخضرا" : !this.bottleIn ? "ضع قارورة فارغة في حلقة التعبئة" : this.pipe > 0.02 ? "اعصر القطّارة فوق القارورة" : "اغمس القطّارة بالمرجل واعصرها");
-    this.ui.progress(b.herbInMortar && !b.herb ? `الطحن: ${b.crushed ? GRIND[this.grindLevel] : "لسّا"} • الطلب: ${GRIND[r.grind]}` : b.readyToStir && !b.readyToBottle ? `المزج: ${Math.round(b.stirring * 100)}%` : b.readyToBottle ? `القطّارة ${Math.round(this.pipe * 100)}% • القارورة ${Math.round(this.fill * 100)}% • ${this.filled} / ${this.batch ? 3 : 1}` : "");
+    this.ui.objective(!b.herbInMortar ? "ضع العشبة في الهاون" : !b.crushed ? `اسحق العشبة • الطلب: ${GRIND[r.grind]}` : !b.herb && this.grindLevel < r.grind ? `كمّل سحق: الطلب ${GRIND[r.grind]}` : !b.readyToStir ? (cold ? "حمّي الجمرة عالموقد، وبعدين حطّ المكونات بالقدر" : "أضف المسحوق والبلورة والماء إلى القدر") : !b.readyToBottle ? "حرّك بهدوء ووجّه العلامة للدائرة الخضرا" : !this.bottleIn ? "ضع عبوة فارغة في حلقة التعبئة" : this.pipe > 0.02 ? "اعصر القطّارة فوق العبوة" : "اغمس القطّارة بالقدر واعصرها");
+    this.ui.progress(b.herbInMortar && !b.herb ? `الطحن: ${b.crushed ? GRIND[this.grindLevel] : "لسّا"} • الطلب: ${GRIND[r.grind]}` : b.readyToStir && !b.readyToBottle ? `المزج: ${Math.round(b.stirring * 100)}%` : b.readyToBottle ? `القطّارة ${Math.round(this.pipe * 100)}% • العبوة ${Math.round(this.fill * 100)}% • ${this.filled} / ${this.batch ? 3 : 1}` : "");
     if (b.herbInMortar && !this.grindLocked && !b.readyToStir) this.ui.actions(C("مساعدة: ضربة سحق", () => this.crushStroke()));
     else if (b.readyToStir && !b.readyToBottle) this.ui.actions(C("مساعدة: دورة تحريك", () => this.stir(0.25, 0)));
     else if (this.bottleIn) this.ui.actions(C("مساعدة التعبئة", () => this.pour(0.55)));
     else this.ui.actions();
   }
   bottleFinished() {
-    if (this.phase === P.Brew && this.fin.craftFirst()) { this.unlock(2); this.phase = P.Ready; this.readyShut = false; this.dialogue.say("S1_F06", "S1_F07"); setTimeout(() => { if (this.phase !== P.Ready) return; this.audio.play("knock"); if (this.fx.doorGoal > 0.8) this.fx.openDoor(false); }, 2500); }
+    if (this.phase === P.Brew && this.fin.craftFirst()) { this.unlock(5); this.phase = P.Ready; this.readyShut = false; this.dialogue.say("S1_F06", "S1_F07"); setTimeout(() => { if (this.phase !== P.Ready) return; this.audio.play("knock"); if (this.fx.doorGoal > 0.8) this.fx.openDoor(false); }, 2500); }
     else if (this.phase === P.BatchBrew && this.filled === 3) { this.phase = P.BatchHandoff; this.dialogue.say("S3_GIVE"); this.merchant.spot = L.customerSpot; this.merchant.arrive(this); }
     this.refresh();
   }
@@ -507,12 +604,14 @@ export class Game {
   deliver(index) {
     const s = this.state;
     if (this.phase === P.Handoff && this.fin.sellFirst()) {
-      this.customer.receive(); this.phase = P.RevenueQuiz; this.quizTries = 0; this.fx.coinsTo(s.firstPrice, L.handoff.clone().setY(1.14));
-      for (const t of [4, 5, 6]) this.unlock(t); this.dialogue.say(s.firstPrice === 30 ? "S2_FA" : "S2_FB");
+      this.customer.receive(); this.phase = P.RevenueQuiz; this.quizTries = 0;
+      this.counterPOS?.show(`فيزا ✓`, "#6dffa8", `+${s.firstPrice} عملة`); setTimeout(() => this.counterPOS?.show("جاهز", "#9fb4c2"), 4000); this.audio.play("glass", 2.2, 0.6);
+      this.bank.record("بيع خلطة النشاط", "فيزا • بطاقة ائتمان الزبون"); this.unlock(7);
+      for (const t of [8, 9, 10]) this.unlock(t); this.dialogue.say("S2_CARD", "S2_TAP", s.firstPrice === 30 ? "S2_FA" : "S2_FB");
     } else if (this.phase === P.BatchHandoff && this.fin.deliverBatchBottle(index)) {
       const reject = index === 2 && s.herb === Herb.UseWilted; this.merchant.react(!reject);
-      if (reject) { this.audio.play("reject"); this.dialogue.say("S3_M_REJECT", "S3_SPOIL"); } else this.fx.coinsTo(s.merchantPrice, L.handoff.clone().setY(1.14));
-      if (s.inventoryValue === 0) { this.phase = P.Expenses; this.unlock(8); this.dialogue.say("S3_M_OK"); if (s.supplier === Supplier.Premium) this.dialogue.say("S3_FB"); }
+      if (reject) { this.audio.play("reject"); this.dialogue.say("S3_M_REJECT", "S3_SPOIL"); } else { this.bank.record(`تحويل من التاجر • عبوة ${index + 1}`, "تحويل بنكي"); this.unlock(11); }
+      if (s.inventoryValue === 0) { this.phase = P.Expenses; this.unlock(14); this.dialogue.say("S3_M_OK"); if (s.supplier === Supplier.Premium) this.dialogue.say("S3_FB"); }
     } else return false;
     this.refresh(); return true;
   }
@@ -533,15 +632,17 @@ export class Game {
       this.batchGood = this.cart.reduce((a, c) => a + c.market.good, 0) / Math.max(1, this.cart.length);
     } else { for (const c of this.cart || []) { c.consumed = false; c.returnHome(); c.obj.scale.setScalar(1); } this.batchGood = 0.95; }
     for (const x of this.items.filter(x => x.market && (x.market.loose || x.market.bundle !== undefined))) { if (x.market.bundle === sup) this.intoBasket(x, stall, 0); else x.consumed = true; }
+    this.bank.record(sup === Supplier.Cheap ? "مكونات زيت الشفاء • بالحبّة" : "صندوق زيت الشفاء الممتاز", sup === Supplier.Premium && this.payMethod === "credit" ? "بطاقة ائتمان" : "بطاقة خصم");
     this.dialogue.say(sup === Supplier.Cheap ? "T3_CHEAP" : "B3_THANKS");
     if (sup === Supplier.Cheap) { this.phase = P.Wilt; this.showWilted(); this.dialogue.say("S3_FA_RISK"); } else { this.phase = P.BatchBrew; this.beginBrew(true); this.dialogue.say("S3_BACK"); }
     this.refresh();
   }
   async showWilted() { const w = await place(this.scene, "assets/custom/herb_red.glb", L.wiltedSpot, { scale: 1.55 }); w.rotation.z = 1.2; w.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.color.set(0x5c3d14); } }); this.wilted = w; this.fx.sparkle(L.wiltedSpot.clone().setY(1), 6); }
-  decideHerb(c) { if (this.phase !== P.Wilt || !this.fin.decideHerb(c)) return; if (c === Herb.Replace) this.dialogue.say("S3_FA_FIX"); this.dialogue.say("S3_BACK"); if (this.wilted) this.scene.remove(this.wilted); this.phase = P.BatchBrew; this.beginBrew(true); this.refresh(); }
+  decideHerb(c) { if (this.phase !== P.Wilt || !this.fin.decideHerb(c)) return; this.bank.record("ورقة فضية بديلة", "بطاقة خصم"); if (c === Herb.Replace) this.dialogue.say("S3_FA_FIX"); this.dialogue.say("S3_BACK"); if (this.wilted) this.scene.remove(this.wilted); this.phase = P.BatchBrew; this.beginBrew(true); this.refresh(); }
   payExpenses() {
     if (this.phase !== P.Expenses || !this.fin.payOperatingExpenses()) return;
-    this.fx.payOut(U(0, 1.2, -0.5)); this.unlock(9); this.phase = P.FinalQuiz; this.quizTries = 0; this.correctLeft = Math.random() > 0.5; this.dialogue.say("S3_NET"); this.refresh();
+    this.bank.record("فواتير التشغيل: إيجار وكهربا وحطب", "تطبيق البنك"); if (this.bank.credit) { this.dialogue.say("S3_BILL"); this.bank.payCredit(); }
+    this.unlock(15); this.phase = P.FinalQuiz; this.quizTries = 0; this.correctLeft = Math.random() > 0.5; this.dialogue.say("S3_NET"); this.refresh();
   }
   finalAnswer(ok) {
     if (this.phase !== P.FinalQuiz) return; this.dialogue.say(ok ? "S3_Q_OK" : "S3_Q_NO");
@@ -549,7 +650,7 @@ export class Game {
     if (ok) this.ui.card3("صح عليك! هاد صافي الربح", `إجمالي الربح ${s.grossProfit} ناقص ${sub} = ${s.netProfit}. هاد اللي ربحته فعلًا اليوم.`, "good");
     else this.ui.card3("هاد إجمالي الربح، مش الصافي", `إجمالي الربح ${s.grossProfit} صح، بس لسّا لازم تطرح ${sub}، فبيطلع الصافي أقل.`, "bad");
     if (!ok && this.quizTries++ === 0) return;
-    this.phase = P.Report; this.state.finished = true; this.dialogue.say("S3_END1", "S3_END2"); this.warm = 1; this.fx.sparkle(L.liquid.clone().setY(1.1), 18); this.audio.play("crystal", 1.1); this.refresh();
+    this.phase = P.Report; this.state.finished = true; this.unlock(16); this.unlock(17); this.dialogue.say("S3_STATEMENT", "S3_END1", "S3_END2"); this.warm = 1; this.fx.sparkle(L.liquid.clone().setY(1.1), 18); this.audio.play("crystal", 1.1); this.refresh();
   }
   async nextChapter() {
     if (this.changing) return; this.changing = true; this.dropHeld(false);
@@ -562,10 +663,10 @@ export class Game {
     this.firas.resetTo(L.firasSpot); this.skipGlide = true; // everyone back to their own place for the new scene
     for (const n of [this.customer, this.merchant]) n.reset();
     if (next === 1) {
-      this.phase = P.Price; await new Item(this, "potion", "جرعة النشاط", 0).build(L.saleBottle); this.unlock(3);
+      this.phase = P.Price; await new Item(this, "potion", "خلطة النشاط", 0).build(L.saleBottle); this.unlock(6);
       this.marketLabel && (this.marketLabel.visible = true); this.customer.arrive(this); this.dialogue.say("S2_C01", "S1_ASK", "S2_F02");
     } else {
-      this.phase = P.Supplier; this.unlock(7); this.dialogue.say("S3_F01");
+      this.phase = P.Supplier; this.unlock(12); this.unlock(13); this.dialogue.say("S3_F01", "S3_CREDIT");
       if (this.orderBoard) { this.scene.remove(this.orderBoard); this.orderBoard = sign(this.scene, ORDER3_TEXT, U(0, 3.55, -123.2), 2.4, 0.95, 0, 64); }
       if (this.recipeBoard) { this.recipeBoard.visible = false; sign(this.scene, RECIPES[1].board, U(-4.02, 1.36, 6.2), 1.05, 0.7, 90, 70); }
       // Trader: loose pieces, each with its own quality. Glass seller: one premium crate.
@@ -580,7 +681,7 @@ export class Game {
       sign(this.scene, "بالحبّة: ورقة 7 • جمرة 5 • ندى 3\nاختار 3 من كل نوع • شوف الجودة", L.stallPos(s0, 0.93, 0.8, -0.2), 0.6, 0.2, s0.side * 90, 80, "#f3e3bb");
       const crate = new Item(this, "bundle", "صندوق ممتاز • 60 عملة • الجودة 95% لكل المكونات", 0); crate.market = { key: "bundle", bundle: Supplier.Premium, stall: 1, good: 0.95 };
       await crate.build(L.stallPos(s1, 0.54, 0.9, -0.2));
-      sign(this.scene, "صندوق كامل لـ3 جرعات • 60\nجودة 95% مضمونة", L.stallPos(s1, 0.93, 0.8, -0.2), 0.5, 0.2, s1.side * 90, 90, "#ffe9a8");
+      sign(this.scene, "صندوق كامل لـ3 عبوات • 60\nجودة 95% مضمونة", L.stallPos(s1, 0.93, 0.8, -0.2), 0.5, 0.2, s1.side * 90, 90, "#ffe9a8");
     }
     document.getElementById("card-title").textContent = ""; document.getElementById("card-sub").textContent = "";
     await this.ui.fade(false, 900); this.changing = false; this.refresh();
@@ -651,7 +752,7 @@ export class Game {
     const s = this.state, r = this.recipe, color = it.index === 2 && this.batch && s.herb === Herb.UseWilted ? new THREE.Color(0x665c45) : new THREE.Color(r.potion[this.batch && s.supplier === Supplier.Premium ? 1 : 0]);
     color.lerp(new THREE.Color(0xffffff), 0.06 * (this.prepQuality - 1));
     it.fill(this.fill, color); this.pourT = 0.1; this.pourColor = color;
-    this.ui.progress(`تعبئة القارورة: ${Math.round(this.fill * 100)}%`);
+    this.ui.progress(`تعبئة العبوة: ${Math.round(this.fill * 100)}%`);
     if (this.fill >= 1) {
       it.kind = "potion"; it.label = this.recipe.name; it.filled = true; it.obj.position.copy(L.finishedBottle(this.filled)); it.home = it.obj.position.clone();
       if (this.batch) this.fin.craftBatchBottle(it.index);
@@ -678,7 +779,7 @@ export class Game {
         if (this.brew.readyToStir && !this.mapExplained) { this.mapExplained = true; this.dialogue.say("S1_MAP"); }
         this.refresh(); return;
       }
-      this.ui.toast(it.kind === "herb" ? "اسحق العشبة في الهاون أولًا" : ing ? (this.brew.readyToStir ? "المرجل ممتلئ — حرّك الآن" : "ليس الآن") : "هذا لا يوضع في المرجل");
+      this.ui.toast(it.kind === "herb" ? "اسحق العشبة في الهاون أولًا" : ing ? (this.brew.readyToStir ? "القدر ممتلئ — حرّك الآن" : "ليس الآن") : "هذا لا يوضع في القدر");
       this.bounceHome(it); return;
     }
     const near = (t, h, v) => Math.hypot(p.x - t.x, p.z - t.z) < h && Math.abs(p.y - t.y) < v;
@@ -687,7 +788,7 @@ export class Game {
       place(this.scene, "assets/custom/herb_red.glb", L.mortar.clone().setY(1.0), { scale: 0.9 }).then(h => this.mortarHerb = h); this.refresh();
     } else if (it.kind === "bottle" && near(L.bottleSocket, 0.32, 0.6)) {
       if (!this.brew.readyToBottle) { this.ui.toast("أكمل الخلط أولًا"); this.bounceHome(it); return; }
-      if (this.bottleIn && this.bottleIn !== it) { this.ui.toast("انتظر حتى تمتلئ القارورة الحالية"); this.bounceHome(it); return; }
+      if (this.bottleIn && this.bottleIn !== it) { this.ui.toast("انتظر حتى تمتلئ العبوة الحالية"); this.bounceHome(it); return; }
       this.bottleIn = it; this.fill = 0; it.obj.position.copy(L.bottleSocket); it.obj.quaternion.identity(); it.fill(0, new THREE.Color(0x1ab866)); this.audio.play("glass", 1.1, 0.7);
       if (!this.pipeExplained) { this.pipeExplained = true; this.dialogue.say("S1_PIPE"); } this.refresh();
     } else if (it.kind === "potion" && near(L.handoff, 0.45, 0.5)) {
@@ -743,6 +844,14 @@ export class Game {
   }
   applyDesktopPose(dt) {
     this.rig.rotation.set(0, 0, 0); this.rig.updateMatrixWorld(true);
+    if (this.cine) {
+      const c = this.cine; c.t += dt; const k = THREE.MathUtils.clamp(c.t / c.dur, 0, 1), e = k * k * (3 - 2 * k);
+      const from = U(-6, 9, -26), to = this.rig.position.clone().add(new THREE.Vector3(0, 1.62, 0)), pos = from.clone().lerp(to, e);
+      pos.x += Math.sin(e * Math.PI) * 3; const look = U(0, 1.6 + (1 - e) * 0.8, 0.2);
+      this.camera.position.copy(pos.sub(this.rig.position)); this.camera.lookAt(look);
+      if (k >= 1) { this.cine = null; this.yaw = L.outsideYaw; this.pitch = 0.12; this.glide = 1; this.fromPos = null; }
+      return;
+    }
     const freePos = this.rig.position.clone().add(new THREE.Vector3(0, 1.62, 0)), freeQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(this.pitch, this.yaw, 0, "YXZ"));
     let tp = freePos, tq = freeQ;
     if (this.focused) { const v = Stations[this.focused]; tp = v.cam; tq = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(v.cam, v.look, new THREE.Vector3(0, 1, 0))); }
@@ -759,12 +868,23 @@ export class Game {
       if (e.code === "KeyR") this.ui.modal("إعادة التجربة؟", "ستبدأ مجددًا برصيد 100 عملة.", C("نعم، إعادة", () => location.reload()), C("متابعة", () => this.refresh())); });
     addEventListener("keyup", e => { this.keys[e.code] = false; });
     el.addEventListener("contextmenu", e => e.preventDefault());
+    // Click the 3D view once: the mouse now looks around (first-person), a crosshair shows what you will interact with. Esc frees the mouse.
+    el.addEventListener("click", () => { if (!this.inVR && !this.touchUsed && !this.cine && !document.pointerLockElement && !this.ui.st.modal && !(this.ui.st.talk && !this.ui.hold)) el.requestPointerLock?.(); });
+    document.addEventListener("pointerlockchange", () => { this.locked = document.pointerLockElement === el; document.getElementById("cross").hidden = !this.locked; document.getElementById("lockhint").hidden = this.locked || this.touchUsed; });
+    el.addEventListener("mousemove", e => {
+      if (!this.locked || this.cine) return; this.pointer.set(0, 0);
+      if ((e.buttons & 1) && this.held?.kind === "pestle") { this.pestleDy = (this.pestleDy || 0) + e.movementY; return; }
+      this.yaw -= e.movementX * 0.0022; this.pitch = THREE.MathUtils.clamp(this.pitch - e.movementY * 0.0022, -1.3, 1.3); if (this.focused) this.unfocus();
+    });
     el.addEventListener("pointermove", e => {
+      if (this.locked) return;
       this.pointer.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
       if (e.pointerType === "mouse" && (e.buttons & 2) && !this.focused) { this.yaw -= e.movementX * 0.0025; this.pitch = THREE.MathUtils.clamp(this.pitch - e.movementY * 0.002, -1.2, 1.3); }
       if (e.pointerType === "mouse" && (e.buttons & 1) && this.held?.kind === "pestle") this.pestleDy = (this.pestleDy || 0) + e.movementY;
     });
-    el.addEventListener("pointerdown", e => { if (e.pointerType === "mouse" && e.button === 0) { this.mouseDown = true; if (!this.held && (this.hover || this.hoverDoor || this.hoverChar || this.hoverPortal)) this.act(); } });
+    el.addEventListener("pointerdown", e => { if (e.pointerType === "mouse" && e.button === 0) { this.mouseDown = true;
+      if (!this.held && (this.hover || this.hoverDoor || this.hoverChar || this.hoverPortal || this.hoverPOS)) this.act();
+      else if (this.locked && this.held && !["pestle", "pipette"].includes(this.held.kind)) this.act(); } });
     addEventListener("pointerup", e => { if (e.button === 0) this.mouseDown = false; });
   }
   setupTouch() {
@@ -798,12 +918,14 @@ export class Game {
     const hits = this.ray.intersectObjects(objs.concat(refs.door ? [refs.door] : []), true);
     this.hover = null; this.hoverDoor = false; this.hoverChar = null; this.hoverPortal = false;
     if (!hits.length && this.portals) { this.ray.far = 6; this.hoverPortal = this.ray.intersectObjects(this.portals.map(p => p.disc)).length > 0; }
+    this.hoverPOS = !this.held ? this.payNear(this.ray.ray, 0.14, 4) : null;
     if (hits.length) { let o = hits[0].object; while (o && !this.items.find(i => i.obj === o) && o !== refs.door) o = o.parent;
       if (o === refs.door) this.hoverDoor = true; else this.hover = this.items.find(i => i.obj === o); }
     if (!this.hover && !this.held) { this.ray.far = 7; this.hoverChar = this.rayCharacter(this.ray.ray); }
   }
   act() {
     if (this.paused || this.inVR) return; this.audio.start();
+    if (this.hoverPOS && !this.held) { this.tapPay(this.hoverPOS.pos); return; }
     if (this.held) { const it = this.held; this.held = null; it.held = false; this.tryDrop(it); return; }
     if (this.hover && !this.hover.consumed && this.hover !== this.bottleIn) { this.held = this.hover; this.held.held = true; this.audio.play("pop", 1, 0.8); }
     else if (this.hoverDoor) this.toggleDoor();
@@ -841,7 +963,7 @@ export class Game {
         await this.renderer.xr.setSession(session);
       } catch (e) { console.error(e); say("تعذّر بدء الواقع الافتراضي: " + e.message); }
     };
-    this.renderer.xr.addEventListener("sessionstart", () => {
+    this.renderer.xr.addEventListener("sessionstart", () => { this.cine = null;
       this.inVR = true; this.dropHeld(false); this.focused = false; this.vrLift = 0; this.calibrateIn = 1.5; this.renderer.shadowMap.autoUpdate = false; this.renderer.shadowMap.needsUpdate = true; for (const n of this.npcs) n.holder.traverse(o => o.castShadow = false);
       const p = this.rig.position.clone(); this.camera.position.set(0, 0, 0); this.camera.quaternion.identity(); this.rig.position.copy(p); this.rig.rotation.y = this.yaw;
       btn.textContent = "اخرج من الواقع الافتراضي"; this.ui.dirty = true;
@@ -863,6 +985,12 @@ export class Game {
       ray.addEventListener("disconnected", () => { h.source = null; });
       return h;
     });
+    // Your bank card, held in the left hand: tap it on a terminal to pay.
+    const card = new THREE.Group(), body = new THREE.Mesh(new THREE.BoxGeometry(0.054, 0.003, 0.085), MAT(0x1c4f9c, { metalness: 0.3, roughness: 0.35 }));
+    const chip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.004, 0.01), MAT(0xd4b04a, { metalness: 0.8 })); chip.position.set(0.012, 0.001, -0.02);
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.054, 0.0035, 0.008), MAT(0xe8eef4)); stripe.position.set(0, 0.001, 0.025); card.add(body, chip, stripe);
+    card.position.set(0, 0.02, -0.06); card.rotation.x = -0.6; this.cardMesh = card;
+    for (const h of this.hands) h.ray.addEventListener("connected", e => { if (e.data.handedness === "left") h.grip.add(card); });
     this.arc = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x4dffd0 })); this.arc.visible = false; this.scene.add(this.arc);
     this.arcMark = new THREE.Mesh(new THREE.RingGeometry(0.2, 0.26, 32), new THREE.MeshBasicMaterial({ color: 0x4dffd0, side: THREE.DoubleSide })); this.arcMark.rotation.x = -Math.PI / 2; this.arcMark.visible = false; this.scene.add(this.arcMark);
   }
@@ -884,6 +1012,7 @@ export class Game {
       if (down(0)) {
         if (ui && ui.button) this.ui.click(ui.button);
         else if (far) this.vrGrab(h, far, true, gp);
+        else if (this.payNear(this.ray.ray, 0.12, 6)) this.tapPay(this.payNear(this.ray.ray, 0.12, 6).pos);
         else if (refs.door && this.ray.intersectObject(refs.door, true).length) this.toggleDoor();
         else { const ch = this.rayCharacter(this.ray.ray); if (ch) this.askMenu(ch.speaker); }
       }
@@ -916,6 +1045,7 @@ export class Game {
         if (h.byTrigger ? !trigger : !squeeze) { h.held = null; it.held = false; it.obj.quaternion.identity(); this.vrRelease(it, zone, gripPos); }
       }
       if (h.hand === "right" && down(5)) this.calibrate(true);
+      for (const pp of this.pending) if (gripPos.distanceTo(pp.pos.at) < 0.16) { gp.hapticActuators?.[0]?.pulse?.(0.5, 80); this.tapPay(pp.pos); }
       if (h.hand === "left" && down(4)) this.paused ? (this.paused = false, this.refresh()) : this.glossary(0);
       // Locomotion: left stick walks (head-relative), right stick snap-turns or aims a teleport arc.
       if (h.hand === "left" && stick.lengthSq() > 0.04 && !this.paused) {
@@ -985,6 +1115,7 @@ export class Game {
   update(dt, t) {
     this.dialogue.update(dt);
     this.ui.setHold(this.dialogue.busy && !this.asking && !this.paused);
+    if (this.locked && (this.ui.st.modal || (this.ui.st.talk && !this.ui.hold))) document.exitPointerLock();
     this.updateHeat(dt);
     if (this.pendingTerms?.length) { this.termWait = this.dialogue.busy ? 0 : (this.termWait || 0) + dt; if (this.termWait > 0.6) this.showTerm(this.pendingTerms[0]); }
     if (this.phase === P.Purchase && !this.welcomed && !this.dialogue.busy) { this.welcomed = true; this.refresh(); }
@@ -992,12 +1123,12 @@ export class Game {
     if (this.phase === P.Ready && !this.changing) { if (this.fx.doorRot < 0.25) this.readyShut = true; else if (this.readyShut && this.fx.doorRot > 0.6) this.nextChapter(); }
     this.fx.low = this.inVR;
     const name = this.stationName();
-    if (name !== this.lastStation) { const first = this.lastStation === undefined; this.lastStation = name; this.dropHeld(false); if (!this.inVR) { if (name && Stations[name].cam) this.focusOn(name); else if (this.focused) this.unfocus(); } if (!first) this.refresh(); }
+    if (name !== this.lastStation) { const first = this.lastStation === undefined; this.lastStation = name; this.dropHeld(false); if (!this.inVR && this.focused) this.unfocus(); if (!first) this.refresh(); }
     if (this.inVR) this.updateVR(dt);
     else {
       const k = this.keys, mv = new THREE.Vector2((k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0), (k.KeyW || k.ArrowUp ? 1 : 0) - (k.KeyS || k.ArrowDown ? 1 : 0));
       if (this.touchMove && this.touchMove.lengthSq() > 0.01) mv.copy(this.touchMove);
-      if (mv.lengthSq() && !this.paused) {
+      if (mv.lengthSq() && !this.paused && !this.cine) {
         if (this.focused) this.unfocus();
         const f = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw)), r = new THREE.Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
         this.walk(f.multiplyScalar(mv.y).add(r.multiplyScalar(mv.x)).normalize().multiplyScalar(k.ShiftLeft ? 3.3 : 1.9), dt);
@@ -1010,8 +1141,8 @@ export class Game {
           it.obj.quaternion.slerp(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), up), Math.min(1, dt * 8)); this.observeStir(it.pos); }
         if (it.kind === "pestle") this.observePestle(it.pos);
         if (it.kind === "pipette") { it.obj.quaternion.identity(); this.usePipette(it, !!(this.keys.KeyF || this.pourHeld || this.mouseDown), dt); }
-        this.ui.hint(it.label + " • E للإفلات" + (it.kind === "pestle" ? " • اضغط الزر الأيسر وحرّك الفأرة للأعلى والأسفل" : it.kind === "spoon" ? " • حرّك المؤشر دائريًا ببطء داخل المرجل" : it.kind === "pipette" ? " • اضغط F أو الزر الأيسر مطولًا للعصر" : it.market ? " • حطّه بالسلّة" : ""));
-      } else this.ui.hint(this.hover && !this.hover.consumed ? this.hover.label + " • E للإمساك" : this.hoverDoor ? (this.fx.doorGoal > 0.8 ? "الباب • E للإغلاق" : "الباب • E للفتح") : this.hoverChar ? this.hoverChar.speaker + " • E لتسأل" : this.hoverPortal ? "البوابة • E للعبور" : "");
+        this.ui.hint(it.label + " • E للإفلات" + (it.kind === "pestle" ? " • اضغط الزر الأيسر وحرّك الفأرة للأعلى والأسفل" : it.kind === "spoon" ? " • حرّك المؤشر دائريًا ببطء داخل القدر" : it.kind === "pipette" ? " • اضغط F أو الزر الأيسر مطولًا للعصر" : it.market ? " • حطّه بالسلّة" : ""));
+      } else this.ui.hint(this.hover && !this.hover.consumed ? this.hover.label + " • E للإمساك" : this.hoverDoor ? (this.fx.doorGoal > 0.8 ? "الباب • E للإغلاق" : "الباب • E للفتح") : this.hoverChar ? this.hoverChar.speaker + " • E لتسأل" : this.hoverPortal ? "البوابة • E للعبور" : this.hoverPOS ? `جهاز الدفع • E لتدفع ${this.hoverPOS.amount} بالبطاقة` : "");
       if (this.phase === P.Intro && this.doorOpened && L.isInside(this.rig.position)) this.enterShop();
     }
     const eye = this.camera.getWorldPosition(new THREE.Vector3()), shopping = (this.phase === P.Purchase && this.welcomed) || this.phase === P.Supplier;
@@ -1044,7 +1175,7 @@ export class Game {
     this.fx.update(dt, t, this);
     const eyeNow = this.camera.getWorldPosition(new THREE.Vector3()); for (const n of this.npcs) n.update(dt, t, this.dialogue, eyeNow, this);
     if (this.firas) this.firas.update(dt, t, this, (Stations[name] && name !== "ending" ? Stations[name].firas : L.firasSpot));
-    this.ui.update(dt, this.state.cash, this.inVR);
+    this.ui.update(dt, this.bank.balance, this.inVR);
     // Alchemy map panel (desktop/phone) while mixing or stirring.
     const showMap = (name === "mix" || name === "cauldron") && (this.phase === P.Brew || this.phase === P.BatchBrew);
     const mapEl = document.getElementById("map"); mapEl.hidden = !showMap || this.inVR;

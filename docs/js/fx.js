@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // Visual effects: steam, bubbles, sparkles, coins, door swing, crush bits, station ring, speaker marker.
 import * as THREE from "three";
 import { L } from "./layout.js";

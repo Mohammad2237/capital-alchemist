@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // HUD: one state, two views. HTML on desktop/phone (native Arabic shaping); a floating parchment panel in VR
 // (canvas texture) that follows the head lazily and is clicked with the controller ray.
 import * as THREE from "three";

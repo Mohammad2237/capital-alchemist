@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // Floor plan (metres, Y up, +Z = into the shop). Same plan as the Unity version.
 // Interior x in [-4.5, 4.5], z in [0, 12]; entrance in the south wall at x = 0.
 import * as THREE from "three";

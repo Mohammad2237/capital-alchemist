@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // CAPITAL: The Alchemist's Legacy — three.js + WebXR edition (no Unity).
 import * as THREE from "three";
 import { setProgress } from "./assets.js";
@@ -68,7 +69,7 @@ let game;
     renderer.render(scene, camera);
   });
   window.__capital = game; // handy for automated checks
-  const BUILD = "إصدار r9"; game.ui.build = BUILD; const k = document.getElementById("keys"); k.textContent += "  •  " + BUILD;
+  const BUILD = "إصدار r10"; game.ui.build = BUILD; const k = document.getElementById("keys"); k.textContent += "  •  " + BUILD;
   const sm = new URLSearchParams(location.search).get("smoke");
   if (sm !== null) import("./smoke.js").then(m => m.runSmoke(game, +sm)).catch(e => { window.__smoke = { failed: 1, log: ["FAIL " + e.message] }; document.title = "SMOKE FAIL"; console.error(e); });
 })();

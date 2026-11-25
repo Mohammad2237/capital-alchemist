@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // Model loading + placement by measured bounds (base-centre on the target point, scaled to a real-world size),
 // so every KayKit/Blender model lands exactly where the floor plan says regardless of its pivot or units.
 import * as THREE from "three";

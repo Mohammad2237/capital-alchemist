@@ -1,3 +1,4 @@
+// Copyright (c) 2026 CAPITAL Team. All rights reserved. Proprietary — see LICENSE. Unauthorized copying or redistribution is prohibited.
 // Transaction ledger — a line-for-line port of the tested C# domain (Assets/Capital/Domain).
 // Every posting has a stable id, so repeated triggers can never double-post.
 export const Supplier = { None: 0, Cheap: 1, Premium: 2 };

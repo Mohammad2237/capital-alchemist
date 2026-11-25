@@ -1,0 +1,33 @@
+CAPITAL: The Alchemist's Legacy — رأس المال: إرث الكيميائي
+Copyright (c) 2026 CAPITAL Team (فريق CAPITAL). All rights reserved.
+
+PROPRIETARY SOFTWARE — NOT OPEN SOURCE.
+
+This repository, the game, and everything the CAPITAL Team created for it — including but not limited to
+the source code, game design, story, dialogue, characters' scripts, the financial and banking simulation,
+level layouts, project-made 3D models, generated voice recordings, sound design, user-interface design,
+text and documentation — are the exclusive property of the CAPITAL Team and are protected by copyright
+law and international treaties.
+
+Viewing this repository or playing the published game does NOT grant any licence. Without the prior
+written permission of the CAPITAL Team you may NOT:
+  1. copy, reproduce, mirror or re-host the game or any part of its code or content;
+  2. modify, translate, adapt, or create derivative works;
+  3. distribute, publish, sell, rent, sublicense or otherwise make it available to others;
+  4. submit it, or any part of it, to any competition, course, or evaluation as your own work;
+  5. use it, or any part of it, for training machine-learning models;
+  6. remove or alter any copyright notice.
+
+Forking on GitHub is permitted only to the extent required by GitHub's Terms of Service and grants no
+rights beyond viewing.
+
+Third-party components keep their own licences and are NOT covered by this notice:
+  - three.js (MIT) — docs/vendor/three (its LICENSE is kept in that folder)
+  - KayKit asset packs by Kay Lousberg (CC0)
+  - Amiri font (SIL Open Font License), loaded from Google Fonts
+  - Sofelia-TTS-82M voice model (Apache-2.0), used offline to generate the voice files
+See ASSET_LICENSES.md.
+
+For permissions, contact the CAPITAL Team through the repository owner on GitHub.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
