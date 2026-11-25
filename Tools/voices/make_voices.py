@@ -7,11 +7,12 @@ ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "docs", "assets")
 CSV = os.path.join(ROOT, "DIALOGUE.csv")
 OUT = os.path.join(ROOT, "voice")
 VOICES = {  # speaker -> (voice, rate, pitch)
-    "فراس": ("ar-JO-TaimNeural", "+4%", "+6Hz"),
-    "التاجر المتجول": ("ar-SY-LaithNeural", "+0%", "-6Hz"),
-    "الزبون": ("ar-LB-RamiNeural", "+2%", "+0Hz"),
-    "التاجر": ("ar-SY-LaithNeural", "-6%", "-22Hz"),
-    "تاجرة البلّور": ("ar-JO-SanaNeural", "+2%", "+0Hz"),
+    # Natural voices, tiny adjustments only (big pitch shifts make neural voices sound processed).
+    "فراس": ("ar-JO-TaimNeural", "-3%", "+0Hz"),
+    "التاجر المتجول": ("ar-SY-LaithNeural", "-4%", "+0Hz"),
+    "الزبون": ("ar-LB-RamiNeural", "-2%", "+0Hz"),
+    "التاجر": ("ar-SY-LaithNeural", "-8%", "-8Hz"),
+    "تاجرة البلّور": ("ar-LB-LaylaNeural", "-3%", "+0Hz"),
 }
 
 async def one(row):

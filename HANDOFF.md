@@ -7,12 +7,12 @@ Paste this into the new chat:
 
 ---
 
-## 1. What the project is (current: banking edition, build r13)
+## 1. What the project is (current: banking edition, build r14)
 
 - An Arabic VR **financial-literacy + banking** game for a school competition; may also be shown to real banking people.
   - Title: «رأس المال: إرث الكيميائي» (must be **كيميائي**, never خيميائي).
   - Mission (loading screen + README): schools/universities rarely teach money management, banks and digital payments; you learn by living it.
-  - You inherit a **herbal remedy shop** (no fantasy wording). Scene 1–2 product: «شاي الأعشاب المنشّط» (كركديه، نعناع، ماء معدني، عبوة). Scene 3 product: «زيت الميرمية العلاجي» (ميرمية، راتنج لبان melted on a brazier، زيت زيتون).
+  - You inherit a **herbal remedy shop** (no fantasy wording). Scene 1–2 product: «شاي الكركديه بالنعناع» (كركديه، نعناع، ماء معدني، عبوة). Scene 3 product: «زيت الميرمية» (ميرمية، راتنج لبان melted on a brazier، زيت زيتون).
   - Flow: open the shop door by hand → Firas (hologram guide) welcomes you, explains capital, bank account and the debit/credit cards → walk through a stone-arch **portal** to a far **market square** with 2 sellers → put the ordered herbs in a stall basket → **tap-to-pay** at the stall's card terminal (choose debit or credit; card appears in hand, beeps, then vanishes) → back through the portal → grind to the ordered texture, add to the pot, stir on the alchemy map, fill bottles with a squeeze dropper → scene 2: customer knocks, you open the door, set the price, customer pays by Visa credit or debit on your counter terminal, revenue quiz, merchant offers 3 bottles (pays by bank transfer) → scene 3: market again, compare cheap loose pieces (15/bottle, variable quality) vs premium crate (20/bottle, 95%), maybe a wilted leaf, brew 3 oils (frankincense must be melted, not burnt), hand over, pay bills + credit card from the bank app, net-profit quiz, report + bank statement.
   - 18 terms unlock as green cards right after a character says the word.
 - **Deadline:** Thursday 26 Nov 2026. Must run from the GitHub Pages URL and in a VR headset browser (user has a Quest-type headset); desktop + phone too.
@@ -211,6 +211,16 @@ No teleport/enter/station buttons (user asked): walk in, open the door, walk thr
 - Stirring map rewritten: slow stirring (either direction) pulls the marker straight to the green circle; fast stirring (>~320°/s) adds drift. The brew only finishes quickly once the marker is inside the circle (outside it, slowly, at low quality); a gold ring shows progress; quality = distance at the end (bull's-eye = 3/3). Quality is cosmetic only (no money effect).
 - Scene 3: scene-1 price tags removed from the stalls; "الجمرة/البلورة" wording replaced with real ingredient names. Firas talks from ~30° to the side (not over your hands); bottling-station spot moved aside. Report lines separated with •.
 - Real-speed bot used for this sweep: `docs/js/_realplay.js` was a temporary file (deleted after use, not committed).
+
+## 8l. r14 (25 Nov late): plain wording + paced terms
+- User: no hype/claim words. Removed منشّط/النشاط/للطاقة/لصفاء الذهن/للاسترخاء/للنوم/علاجي/طبية everywhere (products are «شاي الكركديه بالنعناع» and «زيت الميرمية», shop sign «محل أعشاب», price tags are plain descriptions like «زهر ناشف»). Never add health/benefit claims back. 9 voice lines regenerated (ogg + mp3).
+- Term cards: 8–12 s on screen, at least 12 s of play between two cards (`termGap`); a term waiting 30+ s goes first, otherwise the one just said, and terms are tied to the action that teaches them: debit card when a stall terminal first asks you to pay, credit card when you first pay by credit, cost of goods sold during the revenue quiz, gross profit after the right answer, risk when you buy the scene-3 ingredients.
+
+- Scene-3 market: BOTH sellers sell single pieces in rows (one row per ingredient, 4 pieces each). Trader 7/5/3 with mixed quality, glass-seller 9/7/4 at ~95%. Point at a piece to see price + quality. Fill 3 sage + 3 frankincense + 3 oil from either seller (mixing allowed); each seller's terminal then asks for their part. Finance: `purchasePart(stall, cost)` per seller, then `finishBatch(sup, allPremium)` turns the parts into the 3 bottle lots (exact, remainder on the last). Supplier = Cheap if any sage came from the trader (wilted-leaf event), else Premium. The crate is gone. `buyBatch(sup)` still exists as a one-seller shortcut.
+- Smoke now buys scene 3 the way a player does (pieces into baskets, tap each terminal) and has a 7th branch `smoke=6`: mixed basket (cheap sage 21 + premium frankincense 21 + premium oil 12 = 54) → final cash 147, net 47.
+- Asking characters questions (point + E / trigger) removed entirely (user didn't like it).
+- Cauldron: matte liquid (roughness 0.65), slow faint swirls, no sparks riding the steam (the recorded "glitchy particles").
+- Voices: the game now plays the Microsoft neural Levantine voices (mp3, `Tools/voices/make_voices.py`: Firas ar-JO-Taim, trader ar-SY-Laith, customer ar-LB-Rami, merchant Laith −8Hz, glass-seller ar-LB-Layla) because the user found the Sofelia/WORLD voices sloppy. `audio.js` sets `ogg = false`; the .ogg files are unused leftovers.
 
 ## 9. Next steps
 

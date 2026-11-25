@@ -2,7 +2,7 @@
 // Procedural sound (Web Audio) + recorded character voices. No clicks: every buffer has a soft attack and
 // release, and the looping beds crossfade their seam so nothing pops when a loop restarts.
 const RATE = 44100;
-const VOICE_VERSION = "r13"; // bump when voices are regenerated so headsets never replay cached old files
+const VOICE_VERSION = "r14b"; // bump when voices are regenerated so headsets never replay cached old files
 export class Audio {
   constructor() {
     this.ctx = null; this.buffers = {}; this.last = {}; this.voiceData = {}; this.voices = {};
@@ -70,7 +70,7 @@ export class Audio {
   // ---------------------------------------------------------------- character voices (Levantine dialect)
   async preloadVoices(ids) {
     // Palestinian voices are Ogg Vorbis; older Safari can't decode Ogg, so it falls back to the MP3 set.
-    const ogg = !!document.createElement("audio").canPlayType('audio/ogg; codecs="vorbis"');
+    const ogg = false; // the natural Levantine neural voices (mp3) are the main set now
     await Promise.all(ids.map(async id => { try { let r = await fetch(`assets/voice/${id}.${ogg ? "ogg" : "mp3"}?v=${VOICE_VERSION}`); if (!r.ok && ogg) r = await fetch(`assets/voice/${id}.mp3?v=${VOICE_VERSION}`); if (r.ok) { this.voiceData[id] = await r.arrayBuffer(); if (this.ctx) this.decodeVoice(id); } } catch (e) {} }));
   }
   decodeVoice(id) { const data = this.voiceData[id]; if (!data || this.voices[id]) return; this.voices[id] = this.ctx.decodeAudioData(data.slice(0)).catch(() => null); }

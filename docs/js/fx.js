@@ -42,12 +42,11 @@ export class FX {
       const r = 0.05 + p * 0.22; m.position.set(base.x + Math.cos(spin + p * 3) * r, base.y + 0.16 + p * 1.2, base.z + Math.sin(spin + p * 3) * r);
       m.scale.setScalar(0.1 + p * 0.3); const near = this.eye ? THREE.MathUtils.clamp((this.eye.distanceTo(m.position) - 0.45) / 0.7, 0, 1) : 1;
       mat.opacity = 0.2 * (1 - p) * Math.min(1, p / 0.25) * near;
-      if (golden && !this.low && Math.random() < 0.015) this.sparkle(m.position, 1);
     });
   }
   bubble() {
     const base = refs.liquid ? refs.liquid.material.color.clone().lerp(new THREE.Color(0xffffff), 0.3) : this.tint.clone();
-    const mat = new THREE.MeshStandardMaterial({ color: base, roughness: 0.1, transparent: true, opacity: 0.75 }), m = new THREE.Mesh(sphere, mat);
+    const mat = new THREE.MeshStandardMaterial({ color: base, roughness: 0.5, transparent: true, opacity: 0.6 }), m = new THREE.Mesh(sphere, mat);
     const r = Math.sqrt(Math.random()) * 0.4, a = Math.random() * Math.PI * 2; m.position.copy(L.liquid).add(new THREE.Vector3(Math.cos(a) * r, 0.004, Math.sin(a) * r));
     const s = 0.006 + Math.random() * 0.008; this.add(m, 0.7, p => { m.scale.set(s * (1 + p), s * (0.6 + p * 0.6), s * (1 + p)); mat.opacity = 0.75 * (1 - p * p); });
   }

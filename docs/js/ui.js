@@ -49,7 +49,7 @@ export class UI {
   updateCards(dt, inVR) {
     if (this.cardOn && performance.now() > this.cardOn.until) { this.cardOn = null; $("termcard").hidden = true; $("map").style.visibility = ""; this.cardMesh.visible = false; this.setHold(this.holdReq); }
     if (!this.cardOn && this.cards.length) {
-      const c = this.cardOn = this.cards.shift(); c.until = performance.now() + (this.fast ? 30 : Math.min(9000, Math.max(6000, 2500 + c.body.length * 45)));
+      const c = this.cardOn = this.cards.shift(); c.until = performance.now() + (this.fast ? 30 : Math.min(12000, Math.max(8000, 3000 + c.body.length * 60)));
       $("map").style.visibility = "hidden"; this.subtitle(""); this.setBubble(null, null, null);
       const el = $("termcard"); el.className = c.kind; el.querySelector("b").textContent = c.title; el.querySelector("p").textContent = c.body; el.hidden = false; el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
       const x = this.ccv.getContext("2d"); x.clearRect(0, 0, 1024, 460); const good = c.kind === "good";

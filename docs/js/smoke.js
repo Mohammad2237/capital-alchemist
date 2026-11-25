@@ -6,7 +6,8 @@ import { Supplier, Herb } from "./finance.js";
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const ROWS = [[30, Supplier.Cheap, Herb.Replace, 156, 56], [30, Supplier.Cheap, Herb.UseWilted, 124, 24], [30, Supplier.Premium, Herb.None, 146, 46],
-  [50, Supplier.Cheap, Herb.Replace, 155, 55], [50, Supplier.Cheap, Herb.UseWilted, 130, 30], [50, Supplier.Premium, Herb.None, 145, 45]];
+  [50, Supplier.Cheap, Herb.Replace, 155, 55], [50, Supplier.Cheap, Herb.UseWilted, 130, 30], [50, Supplier.Premium, Herb.None, 145, 45],
+  [30, "mix", Herb.Replace, 147, 47]]; // 6: cheap sage (21) + premium frankincense (21) + premium oil (12) = 54
 
 export async function runSmoke(g, branch) {
   const log = [], ck = (ok, m) => log.push((ok ? "PASS " : "FAIL ") + m);
@@ -45,7 +46,12 @@ export async function runSmoke(g, branch) {
   ck(g.state.revenue === price && g.state.cogs === 25, "first sale once");
   g.revenueAnswer(false); ck(g.phase === 6, "revenue quiz retry"); g.revenueAnswer(true);
   await g.nextChapter(); ck(g.chapter === 2, "scene 3 reached");
-  await until(() => g.trader.arrived); g.buyBatch(sup); if (herb !== Herb.None) g.decideHerb(herb);
+  await until(() => g.trader.arrived);
+  // Buy the scene-3 pieces the way a player does: into each seller's basket, then tap every terminal that asks.
+  const from = { herb: sup === Supplier.Premium ? 1 : 0, crystal: sup === Supplier.Cheap ? 0 : 1, water: sup === Supplier.Cheap ? 0 : 1 };
+  for (const kind of ["herb", "crystal", "water"]) for (const it of g.items.filter(i => i.market?.loose === kind && i.market.stall === from[kind] && !i.consumed).slice(0, 3)) drop(it, g.baskets[from[kind]]);
+  ck(g.pending.length === (sup === "mix" ? 2 : 1), "terminals ask for the order");
+  for (const p of [...g.pending]) g.tapPay(p.pos, "debit"); if (herb !== Herb.None) g.decideHerb(herb);
   await brew(true); ck(g.phase === 11, "three bottles filled");
   for (let i = 0; i < 3; i++) { const p = g.items.find(it => it.kind === "potion" && it.index === i && !it.consumed); drop(p, L.handoff); }
   ck(g.phase === 12, "all accepted or discarded");

@@ -60,6 +60,22 @@ export class Finance {
     for (let i = 0; i < 3; i++) this.s.inventory.push({ id: "batch-" + i, cost: Math.trunc(cost / 3), crafted: false, removed: false });
     return this.post({ id: "batch-purchase", kind: "purchase", cash: -cost, inventory: cost });
   }
+  // Scene 3 bought piece by piece from one or both sellers: each seller is paid at their own terminal...
+  purchasePart(stall, cost) {
+    const id = "batch-part-" + stall;
+    if (!this.s.has("sale-first") || this.s.supplier !== Supplier.None || this.s.has(id) || cost <= 0 || this.s.cash < cost) return false;
+    this.s.inventory.push({ id: "part-" + stall, cost, crafted: false, removed: false });
+    return this.post({ id, kind: "purchase", cash: -cost, inventory: cost });
+  }
+  // ...then the pieces become the three bottles' ingredients (value kept exactly: the remainder goes to the last bottle).
+  finishBatch(sup, allPremium) {
+    const parts = this.s.inventory.filter(l => l.id.startsWith("part-") && !l.removed);
+    if (!parts.length || this.s.supplier !== Supplier.None || sup === Supplier.None) return false;
+    const total = parts.reduce((a, l) => a + l.cost, 0), base = Math.floor(total / 3); parts.forEach(l => l.removed = true);
+    this.s.supplier = sup; if (allPremium) this.s.reputation++;
+    for (let i = 0; i < 3; i++) this.s.inventory.push({ id: "batch-" + i, cost: i === 2 ? total - 2 * base : base, crafted: false, removed: false });
+    return this.post({ id: "batch-purchase", kind: "order" });
+  }
   decideHerb(choice) {
     if (this.s.supplier !== Supplier.Cheap || this.s.herb !== Herb.None || choice === Herb.None) return false;
     if (choice === Herb.Replace && this.s.cash < 5) return false;

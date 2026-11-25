@@ -7,7 +7,7 @@ In a headset (e.g. Meta Quest Browser) press **«ادخل الواقع الاف�
 it, what a bank account, a debit card or a credit card actually does, how digital payments move money, or the
 difference between revenue, profit and the balance in your account. CAPITAL teaches it by living it.
 
-You inherit a **herbal remedy shop** (محل أعشاب طبية). Your 100 coins of capital sit in a **bank account**, and you
+You inherit a **herbal remedy shop** (محل أعشاب). Your 100 coins of capital sit in a **bank account**, and you
 carry a **debit card**. You step through a portal to the market, pick the ingredients a customer ordered, and **tap
 your card on the seller's terminal**. You prepare an energy herbal blend (grind to the right texture, steer the mix on
 the alchemy map, fill bottles with a dropper). Your first customer pays with a **Visa credit card** on your counter
