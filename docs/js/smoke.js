@@ -35,7 +35,7 @@ export async function runSmoke(g, branch) {
   await until(() => g.welcomed);
   const decoy = g.items.find(i => i.market && i.market.key === "m_mush"); drop(decoy, L.basket); ck(g.state.cash === 100 && !decoy.consumed, "wrong ingredient refused, no charge");
   const herb0 = g.items.find(i => i.market && i.market.buy === 0); drop(herb0, L.basket); ck(g.state.cash === 100 && !!g.pay && g.pay.amount === 10, "terminal asks for 10");
-  g.tapPay(g.pay.pos); ck(g.state.cash === 90 && g.bank.tx.length === 1 && g.bank.tx[0].method === "بطاقة خصم", "tap to pay: debit card, bank statement line");
+  g.tapPay(g.pay.pos, "debit"); ck(g.state.cash === 90 && g.bank.tx.length === 1 && g.bank.tx[0].method === "بطاقة خصم", "tap to pay: debit card, bank statement line");
   for (let i = 0; i < 4; i++) { g.purchase(i); g.purchase(i); }
   ck(g.state.cash === 75 && g.state.inventoryValue === 25, "purchase posted once (100->75)");
   await brew(false); ck(g.phase === 3, "first bottle ready");

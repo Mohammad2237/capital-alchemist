@@ -193,6 +193,13 @@ Alchemy map (creative brewing):
 - Desktop: pointer-lock mouse look + crosshair, no automatic camera jumps; non-skippable opening flyover (`this.cine`).
 - Copyright: LICENSE (proprietary), headers in every js file, notice on the loading screen; GitHub main branch protected (no force-push/deletion, admins included).
 
+## 8i. r11 (25 Nov evening)
+- Blender MCP: launched Blender with `scratchpad/blender_mcp_start.py` (enables the add-on and starts its server on 9876; don't call read_factory_settings — it unloads the add-on). Built `docs/assets/custom/pos_terminal.glb` (handheld terminal + dock, mesh "Screen" for the live display) and `bank_card.glb` (mesh "Face" painted per card). Canvas textures on glTF meshes need `flipY = false`.
+- Every payment: tap the terminal → choose debit/credit → card appears in the VR hand (desktop: card flies to the terminal) → tap. Left Y puts the card away. Terminal screen shows amount, method, balance before/after, card debt. Customer randomly pays by debit or credit.
+- Real herbal medicine names: scene 1 شاي الأعشاب المنشّط (كركديه، نعناع، ماء معدني)، decoys بابونج، خزامى، عسل، ملح خشن؛ scene 3 زيت الميرمية العلاجي (ميرمية، راتنج لبان يذوب على الموقد، زيت زيتون). Scene 3 compares 15/bottle (variable quality) vs 20/bottle (95%); quality card shows market value by quality while the merchant's contract price stays fixed (six outcomes unchanged).
+- Market: village mountain/hills/windmill/clouds hidden while in the market; instanced trees, hills and bushes around it.
+- Fixes: VR fader stays on the head (was the black square at the door); merchant waits for the customer to leave; door-frame lintel flicker; steam smaller and fades near your head; bank screen 0.86 m.
+
 ## 9. Next steps
 
 1. **The user tests VR on the headset** at the live URL, then reports what breaks. Fix those issues first.

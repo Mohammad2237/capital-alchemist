@@ -2,7 +2,7 @@
 // Procedural sound (Web Audio) + recorded character voices. No clicks: every buffer has a soft attack and
 // release, and the looping beds crossfade their seam so nothing pops when a loop restarts.
 const RATE = 44100;
-const VOICE_VERSION = "r10"; // bump when voices are regenerated so headsets never replay cached old files
+const VOICE_VERSION = "r11"; // bump when voices are regenerated so headsets never replay cached old files
 export class Audio {
   constructor() {
     this.ctx = null; this.buffers = {}; this.last = {}; this.voiceData = {}; this.voices = {};

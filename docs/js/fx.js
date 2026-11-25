@@ -39,8 +39,9 @@ export class FX {
     const m = new THREE.Sprite(mat); const spin = Math.random() * Math.PI * 2, base = from.clone().add(new THREE.Vector3((Math.random() - 0.5) * 0.6, 0.06, (Math.random() - 0.5) * 0.6));
     const golden = this.golden, life = 3 + Math.random();
     this.add(m, life, p => {
-      const r = 0.05 + p * 0.25; m.position.set(base.x + Math.cos(spin + p * 3) * r, base.y + p * 1.3, base.z + Math.sin(spin + p * 3) * r);
-      m.scale.setScalar(0.18 + p * 0.5); mat.opacity = 0.32 * (1 - p) * Math.min(1, p / 0.2);
+      const r = 0.05 + p * 0.22; m.position.set(base.x + Math.cos(spin + p * 3) * r, base.y + 0.16 + p * 1.2, base.z + Math.sin(spin + p * 3) * r);
+      m.scale.setScalar(0.1 + p * 0.3); const near = this.eye ? THREE.MathUtils.clamp((this.eye.distanceTo(m.position) - 0.45) / 0.7, 0, 1) : 1;
+      mat.opacity = 0.2 * (1 - p) * Math.min(1, p / 0.25) * near;
       if (golden && !this.low && Math.random() < 0.015) this.sparkle(m.position, 1);
     });
   }

@@ -36,7 +36,7 @@ export async function buildShop(scene) {
 
   // ---- walls
   J(P(D("wall_window_open"), -3, 0, 0, 0, { height: 3, collider: true }));
-  J(P(M("entrance_wall"), 0, 0, 0, 0, { scale: 1 }));
+  J(P(M("entrance_wall"), 0, 0, 0, 0, { scale: 1 }).then(o => { o && o.traverse(m => { if (m.name === "Lintel") { m.position.y -= 0.01; m.scale.z *= 1.02; } if (m.name === "Over") m.position.y += 0.006; }); return o; }));
   blocker(U(-1.075, 1.5, 0), new THREE.Vector3(0.85, 3, 0.75)); blocker(U(1.075, 1.5, 0), new THREE.Vector3(0.85, 3, 0.75));
   J(P(D("wall"), 3, 0, 0, 0, { height: 3, collider: true }));
   J(P(D("wall"), -3, 0, 12, 180, { height: 3, collider: true }));
