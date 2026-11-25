@@ -7,30 +7,31 @@ Paste this into the new chat:
 
 ---
 
-## 1. What the project is
+## 1. What the project is (current: banking edition, build r12)
 
-- An Arabic VR financial-literacy game for a school competition.
-  - Arabic title: «رأس المال: إرث الكيميائي». The word must be **كيميائي**, never خيميائي.
-  - The player inherits a potion shop. They buy ingredients from a wandering trader, then crush, mix, stir and bottle a potion in a big central cauldron.
-  - They sell to a customer, take a bulk order of 3 from a merchant, face a supplier risk (a wilted herb), and pay the shop's bills.
-  - The point is to learn **revenue, gross profit, net profit and cash**.
-- Firas is a teal hologram guide (KayKit Mage model) who flies between stations.
-- **Deadline:** Thursday 26 Nov 2026. Feature freeze is Wednesday night.
-- The teacher requires the game to **run from a URL hosted on GitHub**, and it must work in a **VR headset browser** (the user has a headset). Phone and desktop must also work.
+- An Arabic VR **financial-literacy + banking** game for a school competition; may also be shown to real banking people.
+  - Title: «رأس المال: إرث الكيميائي» (must be **كيميائي**, never خيميائي).
+  - Mission (loading screen + README): schools/universities rarely teach money management, banks and digital payments; you learn by living it.
+  - You inherit a **herbal remedy shop** (no fantasy wording). Scene 1–2 product: «شاي الأعشاب المنشّط» (كركديه، نعناع، ماء معدني، عبوة). Scene 3 product: «زيت الميرمية العلاجي» (ميرمية، راتنج لبان melted on a brazier، زيت زيتون).
+  - Flow: open the shop door by hand → Firas (hologram guide) welcomes you, explains capital, bank account and the debit/credit cards → walk through a stone-arch **portal** to a far **market square** with 2 sellers → put the ordered herbs in a stall basket → **tap-to-pay** at the stall's card terminal (choose debit or credit; card appears in hand, beeps, then vanishes) → back through the portal → grind to the ordered texture, add to the pot, stir on the alchemy map, fill bottles with a squeeze dropper → scene 2: customer knocks, you open the door, set the price, customer pays by Visa credit or debit on your counter terminal, revenue quiz, merchant offers 3 bottles (pays by bank transfer) → scene 3: market again, compare cheap loose pieces (15/bottle, variable quality) vs premium crate (20/bottle, 95%), maybe a wilted leaf, brew 3 oils (frankincense must be melted, not burnt), hand over, pay bills + credit card from the bank app, net-profit quiz, report + bank statement.
+  - 18 terms unlock as green cards right after a character says the word.
+- **Deadline:** Thursday 26 Nov 2026. Must run from the GitHub Pages URL and in a VR headset browser (user has a Quest-type headset); desktop + phone too.
+- The user is very hands-on and tests every build on the headset; they write casual English + Palestinian Arabic. Keep replies plain, list what changed, always push + verify live.
 
 ## 2. Where everything is
 
 | Thing | Where |
 |---|---|
-| Live game | https://mohammad2237.github.io/capital-alchemist/ |
-| Repo | https://github.com/Mohammad2237/capital-alchemist (branch `main`, Pages serves `/docs`) |
-| Old Unity version | branch `unity-version` (archived; **Unity was dropped because its WebXR broke VR**) |
-| Windows demo zip (Unity) | GitHub release `v1.0-demo` |
+| Live game | https://mohammad2237.github.io/capital-alchemist/ (corner card / desktop hint shows «إصدار rNN») |
+| Repo | https://github.com/Mohammad2237/capital-alchemist (`main`, Pages serves `/docs`; main is branch-protected: no force-push/delete) |
+| Old Unity version | branch `unity-version` (archived) |
 | Local project | `C:\Users\moham\Desktop\VR project` |
 | KayKit source packs (CC0) | `C:\Users\moham\Downloads\capital-assets` |
 | Master spec | `C:\Users\moham\Downloads\CAPITAL_Alchemists_Legacy_Master_Prompt_V3.md` |
+| Voice tool (Python 3.12 venv + Sofelia model) | `C:\Users\moham\AppData\Local\Temp\claude\90e7b197a6ef3cf5\d7d3c9e8-7602-4de2-b482-4af45783075c\scratchpad\sofelia` (venv312 + model; may be wiped — setup steps are in `Tools/voices/make_voices_sofelia.py`) |
+| Blender MCP launcher | `Tools/blender/blender_mcp_start.py` — run `"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" --factory-startup --python Tools/blender/blender_mcp_start.py` (never call read_factory_settings inside it) |
 
-The last commit on `main` is `0e1b3fb`: "Replace Unity with the three.js + WebXR edition". The working tree was clean before this file was added.
+Last commit on `main`: `c5d53b1` (r12), live and verified.
 
 ## 3. Engine and architecture (three.js r170 + WebXR, no build step)
 
@@ -83,17 +84,16 @@ Alchemy map (creative brewing):
 - **Final cash for the six branches (smoke N=0..5): 156 / 124 / 146 / 155 / 130 / 145.**
 - Taxes and financing are excluded and labelled as such in the report.
 
-## 5. Controls
+## 5. Controls (current)
 
 | Desktop | Phone | VR |
 |---|---|---|
-| WASD walk (Shift run), right-mouse look | Left joystick, drag to look | Left stick walk; right stick snap-turn, push forward to teleport |
-| E or click: grab / drop / open door | Tap to grab or drop | Grip: grab; move your hand to stir and crush |
-| F (hold): pour | «اضغط مطولًا للصب» button | Right trigger: pour, press buttons, open the door |
-| Q: station view, Tab: encyclopedia, R: restart | buttons | X: encyclopedia |
+| Click the view once = mouse-look (pointer lock) + crosshair; WASD walk; Esc frees the mouse | Left joystick, drag to look | Left stick walk; right stick snap-turn / push forward = teleport arc (can't cross a shut door) |
+| E or left-click: grab/drop, door, ask a character, pay at a terminal | Tap | Grip: grab (trigger = far grab); grip the door handle to swing it |
+| Hold F / left mouse with the dropper: squeeze | «اضغط مطولًا للعصر» | Trigger while holding the dropper: squeeze |
+| Tab: encyclopedia | button | X: encyclopedia, left Y: put the bank card away, right B: reset eye height |
 
-- On desktop, each step glides the camera to a framed view (above the cauldron while stirring, over the mortar, and so on).
-- In VR the camera is **never** moved for the player. A glowing floor ring shows where to stand, and the player blink-teleports there.
+No teleport/enter/station buttons (user asked): walk in, open the door, walk through the portal. Scene 2 starts when you open the door after the knock.
 
 ## 6. How to run and test
 
@@ -107,11 +107,8 @@ Alchemy map (creative brewing):
   import("./js/smoke.js").then(m => m.runSmoke(window.__capital, N))
   ```
   Expect 0 failures and the final cash above.
-- **Last verified:**
-  - All 6 branches pass locally.
-  - Branch 0 passes on the live site.
-  - `navigator.xr` is present on the live site.
-- **Not verified:** VR on a real headset. This is the top priority.
+- **Cache trap:** the local server lets the browser cache modules, so after editing, a reload may still run OLD code. Load from another origin (`http://127.0.0.1:8090` vs `http://localhost:8090`, or another port) and check `typeof window.__capital.<newFunction>` before trusting a test. Every release bump the build label in `js/main.js` («إصدار rNN»), `VOICE_VERSION` in `js/audio.js` and `main.js?v=rNN` in `index.html`.
+- **Last verified (r12):** all 6 branches pass locally on fresh code; branch 2 passes on the live site.
 
 ## 7. Git and GitHub
 
@@ -121,7 +118,8 @@ Alchemy map (creative brewing):
   ```
 - The commit identity is "Capital Team" (capital-team@users.noreply.github.com).
 - **Never type passwords, and never print the token.** Keep the user's email out of commits and files.
-- After pushing, wait for GitHub Pages to rebuild (about 1 minute), then re-check the live URL.
+- After pushing, wait for GitHub Pages to rebuild (about 1 minute), then re-check the live URL (grep the build label in `js/main.js`).
+- If Pages doesn't update: check `GET /repos/Mohammad2237/capital-alchemist/actions/runs` and the job log (token via `git credential fill`, never printed). On 25 Nov GitHub had an outage; the fix was `POST .../actions/runs/{id}/rerun-failed-jobs` or `POST .../pages/builds` once githubstatus.com said mitigated.
 - `.mcp.json` (the Blender MCP config) is untracked. Leave it out of commits.
 
 ## 8. Things the user asked for (keep honoring them)
@@ -200,17 +198,18 @@ Alchemy map (creative brewing):
 - Market: village mountain/hills/windmill/clouds hidden while in the market; instanced trees, hills and bushes around it.
 - Fixes: VR fader stays on the head (was the black square at the door); merchant waits for the customer to leave; door-frame lintel flicker; steam smaller and fades near your head; bank screen 0.86 m.
 
+## 8j. r12 (25 Nov night)
+- One tap = one bank transaction (`bank.group(label, method, fn)` around `onPaid`).
+- Card payment animation: card grows into the hand with sparkle + shimmer, holographic shine while held; tap = 3 beeps + approved chime (audio buffers beep/approved/shimmer), contactless pad flash, green ring, haptics; card dissolves after (`hideCard(true)`); desktop card flies to the terminal (`cardFly`). `payFx(pos)` also runs when the customer pays.
+- Pot liquid: soft emissive (0.22×colour), glossy swirl texture turning with stirring, small coloured translucent bubbles (was a flat full-bright disc that looked like a lid/bubble).
+- Door frame flicker: posts/jambs/lintel/over no longer share faces (shop.js, after entrance_wall loads); camera near 0.08, far 300.
+- Term cards only between lines (after the line that said the word); dialogue pauses while a card is up; quiz feedback is the card only; the alchemy map hides under a card. In `?fast` mode cards last 30 ms.
+
 ## 9. Next steps
 
-1. **The user tests VR on the headset** at the live URL, then reports what breaks. Fix those issues first.
-2. Check the performance in the Quest browser. Possible fixes: lower the framebuffer scale (currently 0.9), reduce shadows, merge static meshes.
-3. Visual polish:
-   - The shop sign label may sit hidden behind the HUD bar.
-   - The neighbouring buildings.
-   - A visible paddle on desktop while stirring.
-4. Fix the Blender script output path (`web/assets/custom` → `docs/assets/custom`).
-5. Update `TEST_REPORT.md`, `KNOWN_LIMITATIONS.md` and `ASSET_LICENSES.md` for the three.js edition (three.js is MIT).
-6. Optional, and only if the user says so: delete the local Unity caches (`Library`, `Temp`, `Builds`, `Logs`) to free disk space.
+1. The user tests each build on the headset and sends a new list: fix it, run all 6 smoke branches on fresh code, push, verify the live build label.
+2. Keep the six final-cash outcomes exact (156/124/146/155/130/145) and `bank.balance === state.cash` at the end.
+3. Optional leftovers: `Tools/blender/build_custom_models.py` still writes to `web/assets/custom` (should be `docs/assets/custom`); `TEST_REPORT.md`, `KNOWN_LIMITATIONS.md`, `ASSET_LICENSES.md` are from the Unity era; smoother voices would need a Gemini/ElevenLabs key the user creates.
 
 ## 10. History, in short
 
