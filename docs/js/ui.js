@@ -33,7 +33,7 @@ export class UI {
     this.cardMesh.renderOrder = 12; this.cardMesh.visible = false; scene.add(this.cardMesh);
   }
   // While someone is talking, decision boxes wait; they appear when the line is finished.
-  setHold(b) { this.holdReq = b; const h = b; if (this.hold !== h) { this.hold = h; this.dirty = true; this.renderDom("talk"); } }
+  setHold(b) { this.holdReq = b; const h = b || !!this.cardOn || this.cards.length > 0; if (this.hold !== h) { this.hold = h; this.dirty = true; this.renderDom("talk"); } }
   // Small floating label over the item you point at (VR): name, price, quality.
   setTag(text, pos) {
     if (!this.tag) { this.tcv = document.createElement("canvas"); this.tcv.width = 768; this.tcv.height = 110; this.ttex = new THREE.CanvasTexture(this.tcv); this.ttex.colorSpace = THREE.SRGBColorSpace;
@@ -46,9 +46,10 @@ export class UI {
   card3(title, body, kind = "good") { this.cards.push({ title, body, kind }); }
   setChapter(n) { this.chapter = n; this.dirty = true; [...$("timeline").children].forEach((s, i) => { s.className = i === n ? "now" : i < n ? "done" : ""; }); }
   updateCards(dt, inVR) {
-    if (this.cardOn && performance.now() > this.cardOn.until) { this.cardOn = null; $("termcard").hidden = true; this.cardMesh.visible = false; this.setHold(this.holdReq); }
+    if (this.cardOn && performance.now() > this.cardOn.until) { this.cardOn = null; $("termcard").hidden = true; $("map").style.visibility = ""; this.cardMesh.visible = false; this.setHold(this.holdReq); }
     if (!this.cardOn && this.cards.length) {
-      const c = this.cardOn = this.cards.shift(); c.until = performance.now() + Math.min(9000, Math.max(6000, 2500 + c.body.length * 45));
+      const c = this.cardOn = this.cards.shift(); c.until = performance.now() + (this.fast ? 30 : Math.min(9000, Math.max(6000, 2500 + c.body.length * 45)));
+      $("map").style.visibility = "hidden"; this.subtitle(""); this.setBubble(null, null, null);
       const el = $("termcard"); el.className = c.kind; el.querySelector("b").textContent = c.title; el.querySelector("p").textContent = c.body; el.hidden = false; el.style.animation = "none"; void el.offsetWidth; el.style.animation = "";
       const x = this.ccv.getContext("2d"); x.clearRect(0, 0, 1024, 460); const good = c.kind === "good";
       const g = x.createLinearGradient(0, 0, 0, 460); g.addColorStop(0, good ? "#2f9a63" : "#c0563f"); g.addColorStop(1, good ? "#1d6b45" : "#8f3a2a");

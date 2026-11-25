@@ -2,7 +2,7 @@
 // Procedural sound (Web Audio) + recorded character voices. No clicks: every buffer has a soft attack and
 // release, and the looping beds crossfade their seam so nothing pops when a loop restarts.
 const RATE = 44100;
-const VOICE_VERSION = "r11"; // bump when voices are regenerated so headsets never replay cached old files
+const VOICE_VERSION = "r12"; // bump when voices are regenerated so headsets never replay cached old files
 export class Audio {
   constructor() {
     this.ctx = null; this.buffers = {}; this.last = {}; this.voiceData = {}; this.voices = {};
@@ -38,6 +38,10 @@ export class Audio {
     lp = 0; this.buffers.step = make(0.14, t => (lp += (rnd() - lp) * 0.15) * Math.sin(Math.PI * t / 0.14) * 0.5);
     lp = 0; this.buffers.swish = make(0.45, t => (lp += (rnd() - lp) * (0.05 + 0.1 * Math.sin(Math.PI * t / 0.45))) * Math.sin(Math.PI * t / 0.45) * 0.55);
     this.buffers.sparkle = make(0.9, t => [2100, 2800, 3500].reduce((v, f, k) => { const d = t - k * 0.06; return d > 0 ? v + Math.sin(2 * Math.PI * f * d) * Math.exp(-d * 6) * Math.min(1, d * 300) : v; }, 0) * 0.04);
+    // Card payment sounds: the reader's beep and the "approved" chime.
+    this.buffers.beep = make(0.09, t => Math.sin(2 * Math.PI * 1850 * t) * 0.22);
+    this.buffers.approved = make(0.8, t => [[0, 1046], [0.12, 1318], [0.24, 1568], [0.36, 2093]].reduce((v, [s, f]) => { const d = t - s; return d > 0 ? v + Math.sin(2 * Math.PI * f * d) * Math.exp(-d * 6) * Math.min(1, d * 400) : v; }, 0) * 0.12);
+    lp = 0; this.buffers.shimmer = make(0.6, t => (lp += (rnd() - lp) * 0.6) * Math.sin(Math.PI * t / 0.6) * 0.15 + Math.sin(2 * Math.PI * (2400 + 1600 * t) * t) * Math.exp(-t * 5) * 0.05);
     this.buffers.thud = make(0.3, t => Math.sin(2 * Math.PI * (110 - 80 * t) * t) * Math.exp(-t * 14) * 0.5);
     // Looping beds: a warm, smooth hearth rumble (no crackle impulses) and soft bubbling; seams crossfaded.
     const loopBuf = (sec, f) => { const n = sec * RATE, x = RATE * 0.5, raw = new Float32Array(n + x); for (let i = 0; i < n + x; i++) raw[i] = f(i / RATE);

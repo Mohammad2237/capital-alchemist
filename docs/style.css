@@ -61,7 +61,7 @@ button.ui, #top button, #talk button, #modal button, #actions button {
 #timeline span { padding: 3px 12px; border-radius: 20px; font-size: clamp(14px, 1.5vw, 19px); background: rgba(20, 27, 23, .7); border: 1px solid #5c4320; color: #b9a988; }
 #timeline span.now { background: #1f5a44; border-color: #ffcf7a; color: #ffe7b0; font-weight: 700; }
 #timeline span.done { color: #7dffc0; }
-#termcard { position: absolute; top: 24%; left: 50%; transform: translateX(-50%); width: min(720px, 88vw); padding: 18px 26px; border-radius: 16px; text-align: center;
+#termcard { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); width: min(640px, 86vw); z-index: 30; box-sizing: border-box; padding: 18px 26px; border-radius: 16px; text-align: center;
   border: 3px solid #ffe08a; box-shadow: 0 10px 30px rgba(0, 0, 0, .55); pointer-events: none; animation: pop .35s ease-out; }
 #termcard.good { background: linear-gradient(#2f9a63, #1d6b45); color: #f2fff6; }
 #termcard.bad { background: linear-gradient(#c0563f, #8f3a2a); color: #fff3ee; }

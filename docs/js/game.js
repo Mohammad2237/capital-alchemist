@@ -137,7 +137,7 @@ class Dialogue {
   say(...ids) { for (const id of ids) if (this.lines[id] && !this.queue.includes(id)) this.queue.push(id); }
   update(dt) {
     if (this.speaking) { this.left -= dt; if (this.left <= 0) { this.speaking = false; this.speaker = ""; this.g.ui.subtitle(""); this.g.audio.setSpeaking(false); this.gap = 0.25; } return; }
-    if ((this.gap -= dt) > 0 || !this.queue.length) return;
+    if ((this.gap -= dt) > 0 || !this.queue.length || this.g.ui.cardOn || this.g.ui.cards.length) return;
     const id = this.queue.shift(), l = this.lines[id]; this.speaking = true; this.speaker = l.speaker; this.text = l.text; this.left = this.g.fast ? 0.05 : l.dur;
     this.g.ui.subtitle(l.speaker + ": " + l.text); this.g.audio.setSpeaking(true); this.g.onLine(l.text);
     if (!this.g.fast) this.g.audio.speak(id).then(d => { if (d && this.speaker === l.speaker) this.left = Math.max(this.left - (l.dur - d - 0.3), 0.3); });
@@ -149,8 +149,10 @@ class Dialogue {
 // posted by the finance engine, so the six outcomes stay exact; the bank is how the player sees and moves it.
 class Bank {
   constructor(g) { this.g = g; this.tx = []; this.last = 100; this.credit = 0; }
+  // Group several postings paid in one tap into a single transaction.
+  group(label, method, fn) { this.grouping = true; try { fn(); } finally { this.grouping = false; } this.record(label, method); }
   record(label, method) {
-    const cash = this.g.state.cash, d = cash - this.last; if (!d) return; this.last = cash;
+    if (this.grouping) return; const cash = this.g.state.cash, d = cash - this.last; if (!d) return; this.last = cash;
     if (method === "بطاقة ائتمان") this.credit += -d;
     const tx = { label, method, amount: d, balance: cash + this.credit }; this.tx.push(tx); this.g.onBankTx(tx);
   }
@@ -162,7 +164,7 @@ class POS {
   constructor(scene, pos, yaw) {
     this.g = new THREE.Group(); this.g.position.copy(pos); this.g.rotation.y = yaw; scene.add(this.g);
     this.cv = document.createElement("canvas"); this.cv.width = 320; this.cv.height = 300; this.tex = new THREE.CanvasTexture(this.cv); this.tex.colorSpace = THREE.SRGBColorSpace; this.tex.flipY = false; // glTF UVs
-    this.ready = place(this.g, "assets/custom/pos_terminal.glb", new THREE.Vector3(), { scale: 1.25 }).then(m => { m && m.traverse(o => { if (o.isMesh && o.name === "Screen") o.material = new THREE.MeshBasicMaterial({ map: this.tex }); }); });
+    this.ready = place(this.g, "assets/custom/pos_terminal.glb", new THREE.Vector3(), { scale: 1.25 }).then(m => { m && m.traverse(o => { if (o.isMesh && o.name === "Screen") o.material = new THREE.MeshBasicMaterial({ map: this.tex }); if (o.isMesh && o.name === "NFCPad") { o.material = o.material.clone(); this.nfc = o.material; } }); });
     this.idle(100);
   }
   get at() { return this.g.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.19, 0)); }
@@ -250,7 +252,7 @@ export class Game {
     this.ray = new THREE.Raycaster(); this.pointer = new THREE.Vector2(); this.inVR = false; this.filled = 0; this.quizTries = 0;
   }
   async init() {
-    this.ui = new UI(this.scene, this.camera); this.audio = new Audio(); this.fx = new FX(this.scene, this.audio);
+    this.ui = new UI(this.scene, this.camera); this.ui.fast = this.fast; this.audio = new Audio(); this.fx = new FX(this.scene, this.audio);
     this.dialogue = new Dialogue(this); await this.dialogue.load(); this.bank = new Bank(this);
     this.firas = await Firas.create(this.scene);
     this.trader = await NPC.create(this.scene, "assets/kaykit/Characters/Barbarian.glb", 1.78, "Trader", "التاجر المتجول", L.customerSpot);
@@ -392,13 +394,22 @@ export class Game {
     if (method) p.method = method;
     if (!p.method) { this.askPayMethod(p); return false; }
     this.pays[p.i] = null; const before = this.bank.balance, debtBefore = this.bank.credit;
-    this.payMethodNow = p.method === "credit" ? "بطاقة ائتمان" : "بطاقة خصم"; p.onPaid(); this.payMethodNow = null;
+    this.payMethodNow = p.method === "credit" ? "بطاقة ائتمان" : "بطاقة خصم"; this.bank.group(p.label, this.payMethodNow, () => p.onPaid()); this.payMethodNow = null;
     const after = this.bank.balance, debt = this.bank.credit, isCredit = p.method === "credit";
-    this.audio.play("glass", 2.2, 0.6);
+    this.payFx(p.pos);
     p.pos.screen3([["تمّت العملية ✓", 30, "#6dffa8"], [`−${p.amount} عملة`, 50, "#ff9a7a"], [isCredit ? `على بطاقة الائتمان • الدين ${debt}` : `بطاقة الخصم • انخصم من رصيدك`, 22, "#cfe8ff"],
       [isCredit ? `رصيدك ما تغيّر: ${after}` : `قبل ${before}  ←  بعد ${after}`, 24, "#ffffff"]]);
     setTimeout(() => this.pos && p.pos.idle(this.bank.balance), 5000);
-    setTimeout(() => this.hideCard(), 900); return true;
+    setTimeout(() => this.hideCard(true), 1100); return true;
+  }
+  payFx(pos) {
+    [0, 110, 220].forEach(ms => setTimeout(() => this.audio.play("beep", 1, 0.9), ms)); setTimeout(() => this.audio.play("approved", 1, 0.9), 360);
+    const pad = pos.nfc; if (pad) this.fx.add(new THREE.Object3D(), 1.2, k => { pad.emissiveIntensity = 1 + 6 * Math.max(0, Math.sin(k * Math.PI * 4)) * (1 - k); pad.emissive.setHex(k > 0.3 ? 0x40ff90 : 0x40c8ff); });
+    this.fx.sparkle(pos.at.clone(), 14, 0x6dffa8);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.02, 0.03, 32), new THREE.MeshBasicMaterial({ color: 0x6dffa8, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+    ring.position.copy(pos.at); ring.lookAt(this.camera.getWorldPosition(new THREE.Vector3()));
+    this.fx.add(ring, 0.7, k => { ring.scale.setScalar(1 + k * 6); ring.material.opacity = 1 - k; });
+    const h = this.cardHand?.source?.gamepad?.hapticActuators?.[0]; if (h) [0, 110, 220, 380].forEach((ms, i) => setTimeout(() => h.pulse?.(i === 3 ? 0.8 : 0.4, i === 3 ? 120 : 40), ms));
   }
   askPayMethod(p) {
     this.asking = "pos"; this.audio.play("paper", 1, 0.5);
@@ -428,13 +439,24 @@ export class Game {
   }
   showCard(m) {
     this.hideCard(); const card = this.cards?.[m]; if (!card) return; const h = this.hands.find(h => h.hand === "left" && h.source) || this.hands.find(h => h.source); if (!h) return;
-    card.position.set(0, 0.015, -0.07); card.rotation.set(-0.5, 0, Math.PI / 2); h.grip.add(card); this.cardHand = h; this.audio.play("paper", 1.4, 0.5);
+    card.position.set(0, 0.015, -0.07); card.rotation.set(-0.5, 0, Math.PI / 2); card.scale.setScalar(0.001); h.grip.add(card); this.cardHand = h; this.cardHeld = card;
+    this.audio.play("shimmer", 1, 0.8); this.audio.play("pop", 1.3, 0.5); h.source?.gamepad?.hapticActuators?.[0]?.pulse?.(0.25, 40);
+    this.fx.sparkle(h.grip.getWorldPosition(new THREE.Vector3()), 10, m === "credit" ? 0xffd27a : 0x8fd0ff);
+    this.fx.add(new THREE.Object3D(), 0.35, k => { card.scale.setScalar(1.15 * (k < 0.8 ? k / 0.8 * 1.08 : 1.08 - (k - 0.8) / 0.2 * 0.08)); });
   }
-  hideCard() { if (this.cardHand) { for (const c of Object.values(this.cards || {})) this.cardHand.grip.remove(c); this.cardHand = null; } }
+  // Paid: the card shrinks away in a sparkle and leaves your hand.
+  hideCard(animate) {
+    const h = this.cardHand, card = this.cardHeld; if (!h || !card) { this.cardHand = null; return; } this.cardHand = null; this.cardHeld = null;
+    if (!animate) { h.grip.remove(card); card.scale.setScalar(1.15); return; }
+    const p = h.grip.getWorldPosition(new THREE.Vector3()); this.fx.sparkle(p, 12, 0xfff0b0); this.audio.play("shimmer", 1.4, 0.6);
+    this.fx.add(new THREE.Object3D(), 0.4, k => { card.scale.setScalar(1.15 * (1 - k)); card.rotation.z = Math.PI / 2 + k * 3; if (k >= 1) { h.grip.remove(card); card.scale.setScalar(1.15); card.rotation.z = Math.PI / 2; } });
+  }
   cardFly(m, pos) {
     const card = this.cards?.[m]; if (!card) return Promise.resolve(); const from = this.camera.getWorldPosition(new THREE.Vector3()).add(this.camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(0.35)).add(new THREE.Vector3(0, -0.12, 0));
     const to = pos.at.clone().add(new THREE.Vector3(0, 0.02, 0)); this.scene.add(card); card.rotation.set(-1.1, 0, 0);
-    return new Promise(res => this.fx.add(new THREE.Object3D(), 0.55, k => { card.position.lerpVectors(from, to, k * k * (3 - 2 * k)); if (k >= 1) setTimeout(() => { this.scene.remove(card); res(); }, 250); }));
+    this.audio.play("shimmer", 1, 0.7); card.scale.setScalar(1.15);
+    return new Promise(res => this.fx.add(new THREE.Object3D(), 0.6, k => { card.position.lerpVectors(from, to, k * k * (3 - 2 * k)); card.rotation.z = Math.sin(k * Math.PI) * 0.3;
+      if (k >= 1) { res(); setTimeout(() => { this.fx.sparkle(card.position.clone(), 12, 0xfff0b0); this.fx.add(new THREE.Object3D(), 0.35, q => { card.scale.setScalar(1.15 * (1 - q)); if (q >= 1) { this.scene.remove(card); card.scale.setScalar(1.15); } }); }, 700); } }));
   }
   // Light scenery around the market square (instanced, unlit-cheap, no shadows) so it doesn't feel empty.
   buildMarketScenery() {
@@ -616,7 +638,7 @@ export class Game {
   }
   unlock(i) { if (this.state.terms.includes(i)) return; this.state.terms.push(i); (this.pendingTerms = this.pendingTerms || []).push(i); this.termWait = 0; }
   showTerm(i) { this.pendingTerms = this.pendingTerms.filter(k => k !== i); this.ui.card3("مصطلح جديد: " + TERMS[i][0], TERM_CARDS[i], "good"); this.audio.play("crystal", 1.3, 0.5); }
-  onLine(text) { for (const i of [...(this.pendingTerms || [])]) if (text.includes(TERM_WORDS[i])) this.showTerm(i); }
+  onLine(text) { for (const i of this.pendingTerms || []) if (text.includes(TERM_WORDS[i])) (this.mentioned = this.mentioned || new Set()).add(i); }
   glossary(page) {
     this.paused = true; const s = this.state, open = s.terms.includes(page), N = TERMS.length;
     this.ui.modal(`الموسوعة المالية   ${s.terms.length} / ${N}`, open ? `${TERMS[page][0]}\n\n${TERMS[page][1]}` : "مصطلح مغلق\nستكتشفه أثناء التجربة",
@@ -677,7 +699,7 @@ export class Game {
       const credit = this.custCredit = Math.random() < 0.5, before = this.bank.balance;
       this.bank.record("بيع شاي الأعشاب", credit ? "فيزا • بطاقة ائتمان الزبون" : "بطاقة خصم الزبون"); if (credit) this.unlock(7);
       this.counterPOS?.screen3([["دفع الزبون ✓", 30, "#6dffa8"], [`+${s.firstPrice} عملة`, 50, "#6dffa8"], [credit ? "فيزا • بطاقة ائتمان" : "بطاقة خصم", 22, "#cfe8ff"], [`رصيدك: ${before} ← ${this.bank.balance}`, 24, "#ffffff"]]);
-      setTimeout(() => this.counterPOS?.idle(this.bank.balance), 6000); this.audio.play("glass", 2.2, 0.6);
+      setTimeout(() => this.counterPOS?.idle(this.bank.balance), 6000); if (this.counterPOS) this.payFx(this.counterPOS);
       for (const t of [8, 9, 10]) this.unlock(t); this.dialogue.say(credit ? "S2_CARD" : "S2_DEBIT", credit ? "S2_TAP" : "S2_TAP_D", s.firstPrice === 30 ? "S2_FA" : "S2_FB");
     } else if (this.phase === P.BatchHandoff && this.fin.deliverBatchBottle(index)) {
       const reject = index === 2 && s.herb === Herb.UseWilted; this.merchant.react(!reject);
@@ -687,7 +709,7 @@ export class Game {
     this.refresh(); return true;
   }
   revenueAnswer(ok) {
-    if (this.phase !== P.RevenueQuiz) return; this.dialogue.say(ok ? "S2_Q_OK" : "S2_Q_NO");
+    if (this.phase !== P.RevenueQuiz) return;
     const s = this.state;
     if (ok) this.ui.card3("صح! هاد إيراد", `الإيراد = كل مبلغ البيع (${s.revenue}). الربح بيجي بعد ما تطرح التكلفة: ${s.revenue} − ${s.cogs} = ${s.revenue - s.cogs}.`, "good");
     else this.ui.card3("مش هيك، بس قرّبت", `المبلغ اللي استلمته كله (${s.revenue}) اسمه إيراد. الربح أقل منه لأنه لازم تطرح التكلفة ${s.cogs}.`, "bad");
@@ -716,7 +738,7 @@ export class Game {
     this.unlock(15); this.phase = P.FinalQuiz; this.quizTries = 0; this.correctLeft = Math.random() > 0.5; this.dialogue.say("S3_NET"); this.refresh();
   }
   finalAnswer(ok) {
-    if (this.phase !== P.FinalQuiz) return; this.dialogue.say(ok ? "S3_Q_OK" : "S3_Q_NO");
+    if (this.phase !== P.FinalQuiz) return;
     const s = this.state, sub = s.spoilage > 0 ? `المصروفات ${s.opex} والتلف ${s.spoilage}` : `المصروفات ${s.opex}`;
     if (ok) this.ui.card3("صح عليك! هاد صافي الربح", `إجمالي الربح ${s.grossProfit} ناقص ${sub} = ${s.netProfit}. هاد اللي ربحته فعلًا اليوم.`, "good");
     else this.ui.card3("هاد إجمالي الربح، مش الصافي", `إجمالي الربح ${s.grossProfit} صح، بس لسّا لازم تطرح ${sub}، فبيطلع الصافي أقل.`, "bad");
@@ -1112,7 +1134,7 @@ export class Game {
       for (const pp of this.pending) if (gripPos.distanceTo(pp.pos.at) < 0.16) {
         if (pp.method && this.cardHand === h) { gp.hapticActuators?.[0]?.pulse?.(0.6, 90); this.tapPay(pp.pos); }
         else if (!pp.method && !this.ui.st.talk && performance.now() > (this.askPosT || 0)) { this.askPosT = performance.now() + 4000; this.askPayMethod(pp); } }
-      if (h.hand === "left" && down(5) && this.cardHand) { this.hideCard(); for (const pp of this.pending) pp.method = null; this.ui.toast("رجّعت البطاقة"); }
+      if (h.hand === "left" && down(5) && this.cardHand) { this.hideCard(true); for (const pp of this.pending) pp.method = null; this.ui.toast("رجّعت البطاقة"); }
       if (h.hand === "left" && down(4)) this.paused ? (this.paused = false, this.refresh()) : this.glossary(0);
       // Locomotion: left stick walks (head-relative), right stick snap-turns or aims a teleport arc.
       if (h.hand === "left" && stick.lengthSq() > 0.04 && !this.paused) {
@@ -1184,7 +1206,9 @@ export class Game {
     this.ui.setHold(this.dialogue.busy && !this.asking && !this.paused);
     if (this.locked && (this.ui.st.modal || (this.ui.st.talk && !this.ui.hold))) document.exitPointerLock();
     this.updateHeat(dt);
-    if (this.pendingTerms?.length) { this.termWait = this.dialogue.busy ? 0 : (this.termWait || 0) + dt; if (this.termWait > 0.6) this.showTerm(this.pendingTerms[0]); }
+    if (this.pendingTerms?.length && !this.dialogue.speaking && !this.ui.cardOn) { // right after the line that said the word, or once the talking is over
+      this.termWait = this.dialogue.busy ? 0 : (this.termWait || 0) + dt; const said = this.pendingTerms.find(i => this.mentioned?.has(i));
+      if (said !== undefined) this.showTerm(said); else if (this.termWait > 0.6) this.showTerm(this.pendingTerms[0]); }
     if (this.phase === P.Purchase && !this.welcomed && !this.dialogue.busy) { this.welcomed = true; this.refresh(); }
     if (this.phase === P.Intro && !this.doorOpened && this.fx.doorRot > 0.6) { this.doorOpened = true; this.refresh(); }
     if (this.phase === P.Ready && !this.changing) { if (this.fx.doorRot < 0.25) this.readyShut = true; else if (this.readyShut && this.fx.doorRot > 0.6) this.nextChapter(); }
@@ -1217,6 +1241,7 @@ export class Game {
     if (shopping) this.vendors.forEach((v, i) => { const key = this.phase + ":" + i; if (!this.greeted.has(key) && eye.distanceTo(v.holder.position) < 3.8) { this.greeted.add(key); this.dialogue.say(this.phase === P.Supplier ? STALL_INFO[i].offer : STALL_INFO[i].hello); } });
     (this.basketRings || []).forEach(r => r.visible = shopping);
     if (this.portalMat) this.portalMat.uniforms.t.value = t;
+    if (this.cardHeld) this.cardHeld.traverse(o => { if (o.isMesh && o.name === "Face") { o.material.emissive = o.material.emissive || new THREE.Color(); o.material.emissive.setHex(0xffffff); o.material.emissiveIntensity = 0.08 + 0.1 * Math.max(0, Math.sin(t * 3)); } });
     const inMk = this.region() === "market"; if (this.villageBackdrop && this.backdropIn !== inMk) { this.backdropIn = inMk; this.villageBackdrop.forEach(o => o.visible = !inMk); this.marketScenery.visible = inMk; }
     if (this.portals && !this.traveling && !this.changing && performance.now() > (this.portalCool || 0)) { const pp = this.inVR ? eye : this.rig.position;
       for (const p of this.portals) if (Math.hypot(pp.x - p.at.x, pp.z - p.at.z) < 0.6) { this.travel(); break; } }
@@ -1237,7 +1262,11 @@ export class Game {
     this.fx.activity = (this.phase === P.Brew || this.phase === P.BatchBrew) ? (b.readyToBottle ? 0.6 : b.readyToStir ? 0.35 + b.stirring * 0.65 : 0) : 0;
     this.fx.tint = this.map.tint; this.fx.golden = this.map.inZone;
     if (refs.liquid) { const rc = this.recipe.potion, target = new THREE.Color(0x14261f).lerp(this.state.herb === Herb.UseWilted && this.batch ? new THREE.Color(0x6a6a3a) : new THREE.Color(rc[this.batch && this.state.supplier === Supplier.Premium ? 1 : 0]), b.stirring);
-      refs.liquid.material.color.lerp(target, Math.min(1, dt * 3)); refs.liquid.material.emissive.copy(refs.liquid.material.color); refs.liquid.position.y = L.liquid.y + Math.sin(t * 3) * 0.004; }
+      const lm = refs.liquid.material; lm.color.lerp(target, Math.min(1, dt * 3)); lm.emissive.copy(lm.color).multiplyScalar(0.22);
+      if (!lm.map) { const cv = document.createElement("canvas"); cv.width = cv.height = 256; const c = cv.getContext("2d"); c.fillStyle = "#b0b0b0"; c.fillRect(0, 0, 256, 256);
+        for (let k = 0; k < 7; k++) { c.strokeStyle = `rgba(255,255,255,${0.12 + k * 0.03})`; c.lineWidth = 6 + k; c.beginPath(); for (let a = 0; a < 9; a += 0.05) { const r = 8 + a * 12 + k * 3; c.lineTo(128 + Math.cos(a + k * 0.9) * r, 128 + Math.sin(a + k * 0.9) * r); } c.stroke(); }
+        lm.map = new THREE.CanvasTexture(cv); lm.map.colorSpace = THREE.SRGBColorSpace; lm.roughness = 0.18; lm.metalness = 0.05; lm.needsUpdate = true; }
+      refs.liquid.rotation.y += dt * (0.25 + (this.swirl || 0) * 0.8); refs.liquid.position.y = L.liquid.y + Math.sin(t * 2) * 0.002; }
     if (this.pourT > 0) { this.pourT -= dt; } this.audio.setPouring(this.pourT > 0);
     if ((this.lightT = (this.lightT || 0) - dt) <= 0) { this.lightT = 0.4; this.budgetLights(); }
     this.fx.update(dt, t, this);

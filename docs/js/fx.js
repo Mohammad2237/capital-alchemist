@@ -46,9 +46,10 @@ export class FX {
     });
   }
   bubble() {
-    const m = new THREE.Mesh(sphere, new THREE.MeshBasicMaterial({ color: this.tint.clone().multiplyScalar(1.3) }));
-    m.position.copy(L.liquid).add(new THREE.Vector3((Math.random() - 0.5) * 0.36, 0.02, (Math.random() - 0.5) * 0.36));
-    const s = 0.012 + Math.random() * 0.012; this.add(m, 0.8, p => { m.position.y += 0.0008; m.scale.setScalar(s * (1 + p * 0.6)); });
+    const base = refs.liquid ? refs.liquid.material.color.clone().lerp(new THREE.Color(0xffffff), 0.3) : this.tint.clone();
+    const mat = new THREE.MeshStandardMaterial({ color: base, roughness: 0.1, transparent: true, opacity: 0.75 }), m = new THREE.Mesh(sphere, mat);
+    const r = Math.sqrt(Math.random()) * 0.4, a = Math.random() * Math.PI * 2; m.position.copy(L.liquid).add(new THREE.Vector3(Math.cos(a) * r, 0.004, Math.sin(a) * r));
+    const s = 0.006 + Math.random() * 0.008; this.add(m, 0.7, p => { m.scale.set(s * (1 + p), s * (0.6 + p * 0.6), s * (1 + p)); mat.opacity = 0.75 * (1 - p * p); });
   }
   coinsTo(amount, from) {
     const n = Math.max(3, Math.min(9, Math.floor(amount / 6))); this.audio.play("coins");

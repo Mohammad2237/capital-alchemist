@@ -35,7 +35,7 @@ scene.add(sun, sun.target);
 
 // Player rig: feet at rig origin; desktop eye height 1.62 m (in VR the headset sets the height).
 const rig = new THREE.Group(); rig.name = "Player";
-const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.04, 400);
+const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.08, 300);
 camera.position.y = 1.62; rig.add(camera); scene.add(rig);
 rig.position.copy(L.outsideStart); rig.rotation.y = L.outsideYaw;
 
@@ -69,7 +69,7 @@ let game;
     renderer.render(scene, camera);
   });
   window.__capital = game; // handy for automated checks
-  const BUILD = "إصدار r11"; game.ui.build = BUILD; const k = document.getElementById("keys"); k.textContent += "  •  " + BUILD;
+  const BUILD = "إصدار r12"; game.ui.build = BUILD; const k = document.getElementById("keys"); k.textContent += "  •  " + BUILD;
   const sm = new URLSearchParams(location.search).get("smoke");
   if (sm !== null) import("./smoke.js").then(m => m.runSmoke(game, +sm)).catch(e => { window.__smoke = { failed: 1, log: ["FAIL " + e.message] }; document.title = "SMOKE FAIL"; console.error(e); });
 })();
