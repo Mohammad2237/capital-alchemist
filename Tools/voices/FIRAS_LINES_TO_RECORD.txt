@@ -1,3 +1,6 @@
+DONE in r17: these lines were re-voiced in the team's Firas voice with Tools/voices/clone_firas.py.
+Recording them yourself is optional (name the file by id, e.g. S1_BANK.mp3).
+
 Firas lines still using the computer voice. Generate each one with the SAME voice/settings as before,
 and name the file exactly as the id (e.g. S1_BANK.mp3), then drop them in Downloads\Voices.
 

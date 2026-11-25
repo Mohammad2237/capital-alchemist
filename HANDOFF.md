@@ -7,7 +7,7 @@ Paste this into the new chat:
 
 ---
 
-## 1. What the project is (current: banking edition, build r16)
+## 1. What the project is (current: banking edition, build r17)
 
 - An Arabic VR **financial-literacy + banking** game for a school competition; may also be shown to real banking people.
   - Title: «رأس المال: إرث الكيميائي» (must be **كيميائي**, never خيميائي).
@@ -230,6 +230,10 @@ No teleport/enter/station buttons (user asked): walk in, open the door, walk thr
 - ONE build number now: `window.__BUILD` in docs/index.html. The import map pins every module to `?v=<build>`, and main.js label, VOICE_VERSION and DIALOGUE.csv all read it. A release = change "r16" in index.html (3 places in that file: __BUILD, import map entries, main.js?v=). This stops the headset mixing new and cached old scripts after a push.
 - No intro flyover; sky dome follows the camera (the market is 117 m from the origin, you saw past the dome's dark bottom); market meadow to the horizon, 70 far trees, 16 mountains, 14 cottages, all instanced (~43 draw calls in the market).
 - Pot: popping bubbles removed, steam lower and softer, zone sparkle once per brew. Shop sign board and text moved in front of the white wall block (they were 2 cm behind it), text bigger and bold.
+
+## 8o. r17: all of Firas in the team's voice
+- The 36 Firas lines without a team recording were re-voiced with OpenVoice V2's tone-colour converter (MIT): `Tools/voices/clone_firas.py <openvoice_v2 dir> <recordings folder> <ids>` (TAU env, default 0.3; S1_PAY/S1_BANK/S3_HOT/S3_GIVE/S3_SPOIL used 0.15, S3_BURN 0.45). The words come from the ar-JO-Taim reading kept in `Tools/voices/taim_source/`; the target voice is the average of the team's recordings in Downloads\Voices. Checked with faster-whisper: intelligibility about the same as the source. Installed into venv312 with `--no-deps` (only the converter is used, not openvoice/api.py). Checkpoint: myshell-ai/OpenVoiceV2 converter/ in the sofelia scratch folder.
+- If a Firas text changes: regenerate the neural reading (make_voices.py), copy it to taim_source/<id>.mp3, run clone_firas.py for that id, bump the build in index.html.
 
 ## 9. Next steps
 
